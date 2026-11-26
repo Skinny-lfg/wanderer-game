@@ -10,11 +10,11 @@ const P=[
  ['blood','executioner','Executioner','Strike a bleeding foe at 30% HP or less for 150% of one combined Bleed tick (4s cooldown; no consumption).'],
  ['blood','blood_drinker','Blood Drinker','Hits on a bleeding foe heal up to 1.5% maximum HP (4s cooldown).'],
  ['blood','sanguine_fury','Sanguine Fury','Critical hits inflict Bleed; damage against bleeding foes increases by 8%.'],
- ['decay','toxic_touch','Corrupting Touch','Hits may apply one Rot stack (1.3s cooldown).'],
+ ['decay','corrupting_touch','Corrupting Touch','Hits may apply one Rot stack (1.3s cooldown).'],
  ['decay','virulent_rot','Virulent Rot','Rot ticks deal 18% more damage per rank.'],
  ['decay','wasting_curse','Wasting Curse','Rotted enemies deal 8% less damage per rank.'],
  ['decay','wither','Withering Hex','Rot reduces healing by 35% and direct attack damage by 3% per rank (70% healing cap).'],
- ['decay','blight','Blightburst','Strike a rotted enemy for a capped corruption burst (7s cooldown).'],
+ ['decay','blightburst','Blightburst','Strike a rotted enemy for a capped corruption burst (7s cooldown).'],
  ['radiance','strong_heart','Strong Heart','Increase maximum Health by 10% per rank.'],
  ['radiance','renewal','Renewal','Recover 0.55% maximum Health per combat second per rank.'],
  ['radiance','last_stand','Last Stand','Survive one lethal hit per Expedition, recovering 6% HP.'],
@@ -33,12 +33,12 @@ const P=[
  ['arcane','arcane_focus','Arcane Focus','Increase Spell Power, including Arcane.'],
  ['arcane','mana_spring','Mana Spring','Increase Mana regeneration by 18% per rank.'],
  ['arcane','efficient_cast','Efficient Casting','Reduce elemental cast cost by 12% per rank.'],
- ['arcane','arcane_echo','Elemental Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
+ ['arcane','elemental_echo','Elemental Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
  ['arcane','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
  ['arcane','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
  ['arcane','deep_winter','Deep Winter','Funded Frost casts Chill; chilled foes take a bounded 18% Spell Power burst every 4s. Boss Chill lasts at most 1.2s.',[],'frost'],
  ['arcane','overcharge','Overcharge','Funded Lightning casts bounce up to five times for 60%, 45%, 33%, 23%, then 16% of the primary hit. Each jump leaves a Static Mark that detonates when a later chain revisits. Four player charges discharge; charges persist between Realms.',[],'lightning'],
- ['blood','crimson_rush','Crimson Onslaught','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
+ ['blood','crimson_onslaught','Crimson Onslaught','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','arcane']],
  ['radiance','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['radiance','aegis']],
  ['radiance','fervent_life','Fervent Life','Critical strikes restore 2% Max HP + 3% Attack Power; overhealing grants Barrier (4s cooldown).',['radiance','fury']],
@@ -49,18 +49,18 @@ const P=[
  ['radiance','guardians_oath',"Guardian's Oath",'When your Barrier breaks, restore 4.5% maximum Health once per encounter.',['radiance','aegis']],
  ['radiance','redline','Redline','Below half Health, attacks deal 33% bonus damage every 8s, but you take 10% more damage for 3s.',['radiance','fury']],
  ['aegis','prismatic_rebound','Prismatic Rebound','Barrier absorption charges your next Magic cast, up to 6% Max HP + 10% Spell Power.',['aegis','arcane']],
-].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blight','last_stand','retaliation'].includes(id)?1:5}));
+].map(([family,id,name,description,requires=[],element=null])=>Object.freeze({family,id,name,description,requires,element,max:requires.length||['executioner','blightburst','last_stand','retaliation'].includes(id)?1:5}));
 const descriptions={
  bleeding_edge:'Hits have a 42% base chance to inflict Bleed (+4 percentage points per rank). Bleed deals 16% of the triggering hit including critical scaling per tick, lasts 4s and refreshes all stacks on application (0.6s cooldown; no stack cap).',
  deep_cuts:'Bleed you inflict deals 15% more damage per rank.',
  executioner:'At 30% HP or less, deal 150% of one combined tick of all active Bleed stacks without consuming them (4s cooldown).',
  blood_drinker:'Hits on bleeding foes heal up to 0.8% Max HP at rank 1 (+0.25 percentage points per rank; 4s cooldown). Healing reduction applies.',
  sanguine_fury:'Critical hits inflict Bleed for 14% of the critical-scaled hit per tick and deal 8% direct damage (+2 percentage points per rank; 2.5s cooldown).',
- toxic_touch:'Hits have a 42% base chance to apply Rot (+4 percentage points per rank); spend 4 Mana to apply persistent Rot dealing 4% of base weapon damage plus Spell Power combined per tick (1.3s cooldown; six stacks maximum).',
+ corrupting_touch:'Hits have a 42% base chance to apply Rot (+4 percentage points per rank); spend 4 Mana to apply persistent Rot dealing 4% of base weapon damage plus Spell Power combined per tick (1.3s cooldown; six stacks maximum).',
  virulent_rot:'New Rot stacks deal 15% more damage per rank.',
  wasting_curse:'Rotted enemies deal 4% less damage per rank. Combined damage reduction cannot exceed 28%.',
  wither:'Rotted foes heal 20% less at rank 1 (+10% per rank) and deal 2% less attack damage per rank. Player healing is unaffected.',
- blight:'On hit, spend 8 Mana to apply one persistent Rot stack and deal 38% base hit damage plus 35% Spell Power, capped at 2.5% enemy Max HP (7s cooldown).',
+ blightburst:'On hit, spend 8 Mana to apply one persistent Rot stack and deal 38% base hit damage plus 35% Spell Power, capped at 2.5% enemy Max HP (7s cooldown).',
  strong_heart:'Max Health +10% at Rank 1; smaller gains at higher ranks.',
  renewal:'Heal 0.55% Max HP per second at Rank 1; smaller gains at higher ranks. Healing reduction applies.',
  last_stand:'Once per Expedition, survive a lethal hit and recover 6% Max HP.',
@@ -79,7 +79,7 @@ const descriptions={
  arcane_focus:'Spell Power +15% at rank 1, including Arcane Infusion; gains decrease at higher ranks.',
  mana_spring:'Mana regeneration +12% at Rank 1; smaller gains at higher ranks.',
  efficient_cast:'Magic casts cost 1 less Mana per rank, down to a minimum of 3.',
- arcane_echo:'Every fourth funded Magic or Arcane Infusion hit echoes for 25% Spell Power (+5 percentage points per rank; no recursive effects).',
+ elemental_echo:'Every fourth funded Magic or Arcane Infusion hit echoes for 25% Spell Power (+5 percentage points per rank; no recursive effects).',
  elemental_force:'Funded Magic casts and Arcane Infusion gain 12% power per rank.',
  kindling:'Funded Fire casts apply Burn.',
  deep_winter:'Funded Frost casts Chill. Chilled foes take a Spell Power burst every 4s (18% at rank 1, +3 percentage points per rank; capped at 5% of normal foes’ Max HP or 1.5% of bosses’). Boss Chill lasts at most 1.2s.',
@@ -107,11 +107,11 @@ function barrierAmount(maxHealth,spellPower,healthFraction,spellFraction=0){
 function barrierSpellPower(c){return Math.max(0,Number(c?.power??c?.player?.stats?.spellPower)||0);}
 function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  bleeding_edge:{chance:.42+.04*t,bleed:.16,icd:.6},deep_cuts:{bleedBonus:.15*r},executioner:{burst:1.5,threshold:.30,icd:4},blood_drinker:{hp:.008+.0025*t,base:.10+.025*t,icd:4},sanguine_fury:{bleed:.14,burst:.08+.02*t,icd:2.5},
- toxic_touch:{chance:.42+.04*t,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blight:{burst:.38,enemyCap:.025,icd:7},
+ corrupting_touch:{chance:.42+.04*t,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blightburst:{burst:.38,enemyCap:.025,icd:7},
  strong_heart:{maxhp:.10*sqrt},renewal:{heal:Math.min(.0125,.0055*sqrt)},last_stand:{hp:.06,uses:1},second_breath:{heal:.015+.004*t},life_bloom:{heal:Math.min(.006,.0025*sqrt),mana:Math.min(3.4,1.5*sqrt)},
  iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{barrier:.03+.006*t,spellBarrier:.06+.012*t,icd:6},retaliation:{burst:.30,icd:4},
  quick_hands:{speed:.08*r},precision:{crit:Math.round(19*(1-Math.exp(-r/3)))},brutal_crit:{burst:Math.min(.65,.12*sqrt)},double_strike:{chance:Math.min(.60,.10*sqrt),burst:.30},adrenaline:{speed:.10+.025*t,duration:3,icd:3},
- arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},arcane_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{burst:.18+.03*t,bossCap:.015,normalCap:.05,icd:4},overcharge:{burst:.32+.06*t,enemyCap:.035,charges:4}
+ arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},elemental_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{burst:.18+.03*t,bossCap:.015,normalCap:.05,icd:4},overcharge:{burst:.32+.06*t,enemyCap:.035,charges:4}
  })[id]||{};}
 function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0));}
@@ -224,12 +224,12 @@ function applyRot(b,c,power,origin=null){
  const stacks=e.v012Rot||(e.v012Rot=[]);
  if(origin==='rotguard'&&stacks.length>=6)return;
  if(stacks.length>=6)stacks.shift();
- const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');
+ const primary=origin==='paid_primary_corrupting_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');
  const potency=power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0));
  const d={ticks:0,damage:dotPotency(primary||ability||origin==='weapon'||origin==='rotguard'?Math.max(0,potency):Math.max(1,Math.round(potency)),c.player?.stats),remaining:primary||ability?4:(specialized(b,'lingering_rot')?6:4),...(primary?{primaryPaid:true}:{}),...(ability?{abilityOrigin:origin}:{}),...(origin==='weapon'?{secondaryOrigin:'weapon'}:{}),...(origin==='rotguard'?{reactive:true}:{})};
  stacks.push(d);if(ability)c.metric?.('anchorSpreadSource_'+origin,1);
  c.log('☠ Rot '+stacks.length+'/6');
- if(origin==='paid_primary_toxic_touch')paidRotApplied(b,c,d);
+ if(origin==='paid_primary_corrupting_touch')paidRotApplied(b,c,d);
  if(origin==='paid_primary_cycle_extra')c.metric?.('decayPrimaryPaidExtraStacks',1);
 }
 function rotguardRetaliate(b,c){
@@ -302,7 +302,7 @@ function spendDarkMana(c,amount){if(c.spendMana)return c.spendMana(amount);if(!N
 function onSecondaryWeaponStatus(b,c,q=.5,p=.5){
  const e=c.enemy,base=Math.max(0,c.base||0);
  if(!e||e.hp<=0||base<=0)return;
- const br=rank(b,'bleeding_edge'),rr=rank(b,'toxic_touch');
+ const br=rank(b,'bleeding_edge'),rr=rank(b,'corrupting_touch');
  if(br){
   const v=values('bleeding_edge',br);
   if(c.now>=(e.secondaryBleedReady||0)&&c.random()<v.chance*q){
@@ -312,7 +312,7 @@ function onSecondaryWeaponStatus(b,c,q=.5,p=.5){
   }
  }
  if(rr){
-  const v=values('toxic_touch',rr);
+  const v=values('corrupting_touch',rr);
   if(c.now>=(e.secondaryRotReady||0)&&c.random()<v.chance*q&&spendDarkMana(c,4)){
    applyRot(b,c,rotPotency(c)*p,'weapon');e.secondaryRotReady=c.now+v.icd;
    const d=e.v012Rot?.at(-1);if(d)d.secondaryOrigin='weapon';
@@ -337,10 +337,10 @@ function onAttack(b,c){
    c.metric?.('living_forceActivations',1);if(Number.isFinite(actual)&&actual>0)c.metric?.('living_forceDamage',actual);
   }
  }
- if(b.runtime.prepared==='fury_recovery'&&c.player.hp>0&&c.player.hp<c.player.maxhp*.35&&b.runtime.furyRecoveryWave!==(c.waveKey??e)){b.runtime.furyRecoveryWave=c.waveKey??e;b.runtime.furyRecoveryUntil=c.now+4;activated(b,'fury_recovery');heal(b,c,c.player.maxhp*.08);c.log('❤ Defiant Surge');}
+ if(b.runtime.prepared==='defiant_surge'&&c.player.hp>0&&c.player.hp<c.player.maxhp*.35&&b.runtime.defiantSurgeWave!==(c.waveKey??e)){b.runtime.defiantSurgeWave=c.waveKey??e;b.runtime.defiantSurgeUntil=c.now+4;activated(b,'defiant_surge');heal(b,c,c.player.maxhp*.08);c.log('❤ Defiant Surge');}
  if(specialized(b,'affinity_fury')&&e.baseDef>0&&c.now>=(e.nextFurySunder||0)&&c.random()<.15){const baseDef=e.baseDef,applied=e.furySunder||0,reduction=Math.max(0,Math.min(baseDef*.04,baseDef*.20-applied,e.def-baseDef*.25));if(reduction>0){e.def-=reduction;e.furySunder=applied+reduction;e.nextFurySunder=c.now+1;c.log('⚔ Sunder: enemy Defense reduced.');}}
- if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'relentless_assault')&&e.furySunder>0&&ready(b,'relentlessAssault',c.now,3))c.damage(base*.20,'🗡 Sundering Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
- if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Third Cut');}
+ if(['battle_tempo','sundering_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'sundering_assault')&&e.furySunder>0&&ready(b,'sunderingAssault',c.now,3))c.damage(base*.20,'🗡 Sundering Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
+ if(e.bleedStacks>0&&specialized(b,'third_cut')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Third Cut');}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3))c.damage(base*(e.hp<e.maxhp*.5?.60:.40),'🩸 Heart of Carnage');
  if(rank(b,'bleeding_edge')&&(b.cooldowns.bleedEdge??-1e10)<=c.now&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&ready(b,'bleedEdge',c.now,.6)&&activated(b,'bleeding_edge')) c.dot('bleed',(c.bloodCritBase??base)*.16);
  // Blood Pursuit retains the purchased node ID and stat paths.
@@ -350,11 +350,11 @@ function onAttack(b,c){
  }
  if(rank(b,'executioner')&&e.hp>0&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,4)&&activated(b,'executioner'))c.damage((e.dots?.bleed||[]).filter(d=>d.remaining>0).reduce((sum,d)=>sum+d.damage,0)*1.5,'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
- if(e.hp>0&&rank(b,'toxic_touch')&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,4)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_toxic_touch'); }
+ if(e.hp>0&&rank(b,'corrupting_touch')&&(b.cooldowns.corruptingTouch??-1e10)<=c.now&&c.random()<values('corrupting_touch',rank(b,'corrupting_touch')).chance&&spendDarkMana(c,4)&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_corrupting_touch'); }
  corruptionOverflow(b,c);
  corruptionCycle(b,c);
- if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blightburst');}
- if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Onslaught');
+ if(e.hp>0&&rank(b,'blightburst')&&(b.cooldowns.blightburst??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blightburst',c.now,7)&&activated(b,'blightburst')){applyRot(b,c,rotPotency(c),'ability_blightburst');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blightburst');}
+ if(rank(b,'crimson_onslaught')&&crit&&e.bleedStacks>0&&activated(b,'crimson_onslaught'))c.damage(base*.15,'🩸 Crimson Onslaught');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
  if(rank(b,'double_strike')&&!c.suppressDoubleStrike&&c.random()<Math.min(.60,.10*Math.sqrt(rank(b,'double_strike')))&&activated(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
  if(rank(b,'fervent_life')&&crit&&ready(b,'ferventLife',c.now,4)&&activated(b,'fervent_life')){const attack=Number(c.player?.stats?.attack);const amount=c.player.maxhp*.02+(Number.isFinite(attack)?Math.max(0,attack)*.03:0),restorable=amount*(c.healingMultiplier??1),actual=heal(b,c,amount);if(actual<restorable)c.barrier((restorable-actual)*.5);}
@@ -426,7 +426,7 @@ function onCast(b,c){
   b.runtime.staticCharges=Math.min(4,(b.runtime.staticCharges||0)+1);
   if(b.runtime.staticCharges===4){b.runtime.staticCharges=0;c.damage(Math.min(power*values('overcharge',rank(b,'overcharge')).burst,e.maxhp*.035),'⚡ Static Discharge');}
  }
- if(rank(b,'arcane_echo')&&b.runtime.magicHits%4===0&&activated(b,'arcane_echo'))c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Elemental Echo');
+ if(rank(b,'elemental_echo')&&b.runtime.magicHits%4===0&&activated(b,'elemental_echo'))c.damage(power*values('elemental_echo',rank(b,'elemental_echo')).power,'✨ Elemental Echo');
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))c.damage(power*.25+c.enemy.v012Rot.reduce((n,r)=>n+r.damage,0),'☠ Hex Bolt');
  if(rank(b,'runic_shield')&&ready(b,'runicShield',c.now,3)&&activated(b,'runic_shield'))c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.02,.08));
  if(rank(b,'elemental_blight')&&e.v012Rot?.length&&ready(b,'elementalBlight',c.now,7)&&activated(b,'elemental_blight')){
@@ -511,14 +511,14 @@ function onDefend(b,c,blocked,barrierAbsorbed){
 function onKill(b,c){
  if(specialized(b,'blood_harvest')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed))heal(b,c,c.player.maxhp*.03);
  if(specialized(b,'sanguine_reserve')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)){b.runtime.pursuitWave=c.waveKey??c.enemy;b.runtime.pursuitCharges=2;b.runtime.pursuitUntil=c.now+5;activated(b,'sanguine_reserve');c.metric?.('bloodPursuitKills',1);}
- if(specialized(b,'blood_transfer')){
+ if(specialized(b,'sanguine_echo')){
   const target=c.player.enemies?.find(e=>e!==c.enemy&&e.hp>0),dots=(c.enemy.dots?.bleed||[]).filter(d=>d.remaining>0&&d.damage>0).slice().sort((a,b)=>b.damage-a.damage);
   if(target&&dots.length){
-   const copies=dots.map(d=>({damage:Math.floor(d.damage*.5),remaining:4,transferred:true,secondaryOrigin:'blood_transfer'})).filter(d=>d.damage>0);
+   const copies=dots.map(d=>({damage:Math.floor(d.damage*.5),remaining:4,transferred:true,secondaryOrigin:'sanguine_echo'})).filter(d=>d.damage>0);
    if(copies.length){target.dots??={};target.dots.bleed??=[];target.dots.bleed.push(...copies);target.bleedStacks=target.dots.bleed.length;c.synchronizeDots?.(target);
-    activated(b,'blood_transfer');c.metric?.('bloodTransferApplications',copies.length);c.metric?.('bloodTransferActivations',1);
+    activated(b,'sanguine_echo');c.metric?.('sanguineEchoApplications',copies.length);c.metric?.('sanguineEchoActivations',1);
     const amount=copies.reduce((sum,d)=>sum+d.damage,0),actual=c.secondaryHit?.(target,amount)||0;
-    if(actual>0){c.metric?.('bloodTransferDamage',actual);c.trigger?.('blood_transfer_burst');}
+    if(actual>0){c.metric?.('sanguineEchoDamage',actual);c.trigger?.('blood_transfer_burst');}
    }
   }
  }else if(c.traits?.includes('blood_transfer')){
@@ -540,12 +540,12 @@ function onKill(b,c){
  const key=c.waveKey??c.enemy;if(c.waveComplete!==false&&rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
 function survive(b,c){if(specialized(b,'unbreakable')&&!b.runtime.unbreakableUsed){b.runtime.unbreakableUsed=true;b.runtime.unbreakableUntil=c.now+5;c.player.hp=1;c.barrier(c.player.maxhp*.20);c.log('🏰 Unbreakable');return true;}if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
-function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(1+(specialized(b,'battle_tempo')?.03*(b.runtime.battleTempo||0):0))*(b?.runtime?.furyRecoveryUntil>now?1.12:1)*(b?.runtime?.unbreakableUntil>now?.8:1);}
+function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(1+(specialized(b,'battle_tempo')?.03*(b.runtime.battleTempo||0):0))*(b?.runtime?.defiantSurgeUntil>now?1.12:1)*(b?.runtime?.unbreakableUntil>now?.8:1);}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?values('wither',rank(b,'wither')).healingReduction:0);}
 function enemyDefense(b,e){const defense=Math.max(0,Number(e?.def)||0),base=Math.max(0,Number(e?.baseDef)||0),reduction=e?.v012Rot?.length?Math.min(.10,b?.runtime?.talentBonuses?.rotDefense||0):0;return reduction?Math.min(defense,Math.max(base*.25,defense*(1-reduction))):defense;}
 function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-rank(b,'efficient_cast'));}
 function resetWave(b,e){e.v012Rot=[];e.v012Shock=0;}
-function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('arcane')||['kindling','deep_winter','overcharge','arcane_focus','arcane_echo','hex_bolt','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
+function canCast(b){return !!b&&!!b.element&&(b.runtime?.permanentBuild&&b.unlockedFamilies?.includes('arcane')||['kindling','deep_winter','overcharge','arcane_focus','elemental_echo','hex_bolt','elemental_blight','prismatic_rebound','runic_shield'].some(id=>rank(b,id)));}
 function validate(b){
  if(!b||b.version!==3||!Array.isArray(b.families)||b.families.length>(b.runtime?.permanentBuild?FAMILIES.length:3)||new Set(b.families).size!==b.families.length||!b.families.every(f=>FAMILIES.includes(f))||b.element!==null&&(!(elements.includes(b.element)||b.element==='arcane')||!hasFamily(b,'arcane'))||!Array.isArray(b.picks)||b.picks.length>20)throw Error('Invalid saved build');
   if(!Array.isArray(b.unlockedFamilies)||new Set(b.unlockedFamilies).size!==b.unlockedFamilies.length||!b.unlockedFamilies.every(f=>hasFamily(b,f)))throw Error('Invalid unlocked affinity');
@@ -643,13 +643,13 @@ function onInfusionHit(b,c){
  // Physical main hits receive their own paid-enchantment hybrid triggers.
  // Wand/Staff already handled those callbacks on their native funded cast.
  if(!c.magical&&r.magicInfusionHits%3===0){
-  const spellEchoRank=(r.specializations||[]).filter(id=>id==='spell_echo'||/^spell_echo_rank\d+$/.test(id)).length;
-  if(spellEchoRank)c.damage(Math.max(1,Math.round(amount*.10*spellEchoRank)),'✨ Resonant Sequence');
+  const resonantSequenceRank=(r.specializations||[]).filter(id=>id==='resonant_sequence'||/^resonant_sequence_rank\d+$/.test(id)).length;
+  if(resonantSequenceRank)c.damage(Math.max(1,Math.round(amount*.10*resonantSequenceRank)),'✨ Resonant Sequence');
 
  }
  // Infusion direct damage can crit, but is NOT a second attack, paid action or proc trigger.
- if(rank(b,'arcane_echo')&&r.magicInfusionHits%4===0&&activated(b,'arcane_echo'))
-  c.damage(power*values('arcane_echo',rank(b,'arcane_echo')).power,'✨ Elemental Echo');
+ if(rank(b,'elemental_echo')&&r.magicInfusionHits%4===0&&activated(b,'elemental_echo'))
+  c.damage(power*values('elemental_echo',rank(b,'elemental_echo')).power,'✨ Elemental Echo');
  if(rank(b,'hex_bolt')&&e.v012Rot?.length&&ready(b,'hexBolt',c.now,3)&&activated(b,'hex_bolt'))
   c.damage(power*.25+e.v012Rot.reduce((n,rot)=>n+rot.damage,0),'☠ Hex Bolt');
  if(rank(b,'elemental_blight')&&e.v012Rot?.length&&ready(b,'elementalBlight',c.now,7)&&activated(b,'elemental_blight'))

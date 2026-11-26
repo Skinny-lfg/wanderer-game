@@ -40,7 +40,7 @@ audit('clarity',()=>{const [base,boost]=pair('clarity','Wand');assert(manaRegen(
 audit('efficiency',()=>{const [base,boost]=pair('efficiency','Wand');const paid=x=>{const mp=x.r.mp;hit(x);return mp-x.r.mp;};assert(paid(boost)<paid(base));for(const x of [base,boost]){x.r.mp=100;assert(x.a.combatContext(x.r).spendMana(10));}assert(boost.r.mp>base.r.mp);});
 audit('corruption',()=>{
  for(const kind of ['bleed','burn']){const [base,boost]=pair('corruption');const damage=x=>{x.a.combatContext(x.r).dot(kind,100);const potency=x.e.dots[kind].at(-1).damage;x.r.tDot=1;const hp=x.e.hp;x.a.tick();return {potency,damage:hp-x.e.hp};};const b=damage(base),v=damage(boost),factor=1+boost.r.stats.dotPower;assert(Math.abs(v.potency-b.potency*factor)<1e-8,kind+' snapshot');assert.equal(v.damage,Math.round(b.damage*factor),kind+' once');}
- const [base,boost]=pair('corruption');const rot=x=>{const b=B.create(),ctx=x.a.combatContext(x.r);B.applyRot(b,ctx,100,'paid_primary_toxic_touch');const potency=x.e.v012Rot[0].damage,hp=x.e.hp;B.tickRot(b,ctx);return {potency,damage:hp-x.e.hp};};const b=rot(base),v=rot(boost),factor=1+boost.r.stats.dotPower;assert(Math.abs(v.potency-b.potency*factor)<1e-8);assert.equal(v.damage,Math.round(b.damage*factor),'native Rot tick scales once');
+ const [base,boost]=pair('corruption');const rot=x=>{const b=B.create(),ctx=x.a.combatContext(x.r);B.applyRot(b,ctx,100,'paid_primary_corrupting_touch');const potency=x.e.v012Rot[0].damage,hp=x.e.hp;B.tickRot(b,ctx);return {potency,damage:hp-x.e.hp};};const b=rot(base),v=rot(boost),factor=1+boost.r.stats.dotPower;assert(Math.abs(v.potency-b.potency*factor)<1e-8);assert.equal(v.damage,Math.round(b.damage*factor),'native Rot tick scales once');
 });
 audit('bastion',()=>{const [base,boost]=pair('bastion');assert(boost.a.grantBarrier(100,boost.r)>base.a.grantBarrier(100,base.r));});
 audit('renewal',()=>{const [base,boost]=pair('renewal');const heal=x=>{x.r.hp=1;return x.a.heal(x.r,20);};assert(heal(boost)>heal(base));});
@@ -49,7 +49,7 @@ audit('guard',()=>{const [base,boost]=pair('guard','Sword',true);const roll=(bas
 test('Every current Anchor Rune family has a native combat audit case',()=>{assert.deepEqual([...covered].sort(),R.FAMILIES.map(x=>x.id).sort());});
 
 test('Corruption Rune powers Cycle stack component once, not direct AP/SP',()=>{
- const result=power=>{const b=B.create();B.syncPermanent(b,buy(['toxic_touch','corruption_cycle']));const e={hp:100000,maxhp:100000,v012Rot:[],dots:{bleed:[],burn:[]}},r={hp:100,maxhp:100,mp:100,maxmp:100,enemies:[e],stats:{attack:100,spellPower:50,attacksPerSec:1,dotPower:power}},metrics={};
+ const result=power=>{const b=B.create();B.syncPermanent(b,buy(['corrupting_touch','corruption_cycle']));const e={hp:100000,maxhp:100000,v012Rot:[],dots:{bleed:[],burn:[]}},r={hp:100,maxhp:100,mp:100,maxmp:100,enemies:[e],stats:{attack:100,spellPower:50,attacksPerSec:1,dotPower:power}},metrics={};
  const c={player:r,enemy:e,now:1,base:100,power:50,random:()=>.9999,waveKey:'dot',log(){},dot(){},damage(n){e.hp-=n;},dotDamage(n){e.hp-=n;},metric(k,n){metrics[k]=(metrics[k]||0)+n;},heal(){return 0;},barrier(){},mana(n){r.mp+=n;}};
  for(let i=0;i<3;i++)B.applyRot(b,c,10,'paid_primary_cycle_extra');
  const stored=e.v012Rot.reduce((n,d)=>n+d.damage,0);B.onAttack(b,c);
@@ -62,6 +62,6 @@ test('Corruption Rune does not rescale copied stacks or already snapshotted peri
  assert.equal(burn.controlledBase,100*factor);assert.equal(burn.damage,125*factor);
  const before=x.e.hp;ctx.dotDamage(100,'already stored Rot');assert.equal(before-x.e.hp,100);
  const b=B.create();B.syncPermanent(b,buy(['contagious_touch']));const target={hp:10000,maxhp:10000,v012Rot:[]};x.r.enemies=[x.e,target];
- B.applyRot(b,ctx,100,'paid_primary_toxic_touch');B.applyRot(b,ctx,100,'paid_primary_toxic_touch');
+ B.applyRot(b,ctx,100,'paid_primary_corrupting_touch');B.applyRot(b,ctx,100,'paid_primary_corrupting_touch');
  assert.equal(target.v012Rot.length,1);assert(Math.abs(target.v012Rot[0].damage-x.e.v012Rot[0].damage)<1e-8);
 });

@@ -55,7 +55,7 @@ function independent({cycle=false,shared=false,overflowSeed=false,blightSeed=fal
  const src=candidate(false,shared);let b=src[B];
  // All new direct skill stacks carry their own provenance; they are persistent,
  // snapshot native Rot potency, and NEVER earn Corrupting Touch action credit.
- b=replace(b,"const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra';","const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');");
+ b=replace(b,"const primary=origin==='paid_primary_corrupting_touch'||origin==='paid_primary_cycle_extra';","const primary=origin==='paid_primary_corrupting_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');");
  b=replace(b,"primary||origin==='weapon'||origin==='rotguard'?","primary||ability||origin==='weapon'||origin==='rotguard'?");
  b=replace(b,"remaining:primary?4:","remaining:primary||ability?4:");
  b=replace(b,"...(primary?{primaryPaid:true}:{}),","...(primary?{primaryPaid:true}:{}),...(ability?{abilityOrigin:origin}:{}),");
@@ -72,7 +72,7 @@ function independent({cycle=false,shared=false,overflowSeed=false,blightSeed=fal
   b=replace(b,"ready(b,'corruptionOverflow',c.now,4);activated(b,'corruption_nova');","ready(b,'corruptionOverflow',c.now,4);activated(b,'corruption_nova');c.metric?.('anchorSpreadOverflowCasts',1);applyRot(b,c,rotPotency(c),'ability_overflow');const stacks=(source.v012Rot||[]).filter(burstEligibleRot);if(stacks.length<3){c.metric?.('anchorSpreadOverflowSeedOnly',1);c.metric?.('corruptionOverflowMana',Math.max(0,before-c.player.mp));return;}");
  }
  if(blightSeed){
-  b=replace(b,"if(e.hp>0&&rank(b,'blight')&&e.v012Rot?.length&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');","if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}");
+  b=replace(b,"if(e.hp>0&&rank(b,'blightburst')&&e.v012Rot?.length&&(b.cooldowns.blightburst??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blightburst',c.now,7)&&activated(b,'blightburst'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');","if(e.hp>0&&rank(b,'blightburst')&&(b.cooldowns.blightburst??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blightburst',c.now,7)&&activated(b,'blightburst')){applyRot(b,c,rotPotency(c),'ability_blightburst');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}");
  }
  src[B]=b;return src;
 }
@@ -132,11 +132,11 @@ function checkedProfile(id){
  assert(Object.hasOwn(WEAPONS,id));const [weapon,offhandType,armorType]=WEAPONS[id],configs={};
  const candidates=T.NODES.filter(n=>n.family==='decay'&&!n.pair&&!n.pending&&!n.advanced&&['stat','basic'].includes(n.kind)).sort((a,b)=>(a.kind==='stat'?0:1)-(b.kind==='stat'?0:1)||((a.tier||1)-(b.tier||1))||a.id.localeCompare(b.id));
  for(const arm of arms){
-  const skills=['affinity_decay','toxic_touch','contagious_touch','blight',...(arm.cycle?['corruption_cycle']:[]),...(arm.overflow?['corruption_nova']:[])];
+  const skills=['affinity_decay','corrupting_touch','contagious_touch','blightburst',...(arm.cycle?['corruption_cycle']:[]),...(arm.overflow?['corruption_nova']:[])];
   let t=buy(skills,{xp:30*T.POINT_XP});assert(t.nodes.length<=30,id+'/'+arm.id+' mandatory budget');
   // Same priority order in every arm. Excluded active/focused/extension nodes
   // cannot be acquired by filler; spend released points in legal supporting nodes.
-  for(const skill of ['toxic_touch','virulent_rot']){
+  for(const skill of ['corrupting_touch','virulent_rot']){
    while(t.nodes.length<30){const next=T.allocate(t,skill);if(!next)break;t=next;}
   }
   for(let pass=0;pass<30&&t.nodes.length<30;pass++){
@@ -172,23 +172,23 @@ function smoke(){
  for(const key of ['full','rot85','burst75','combined']){
   const api=native(key);
   // Independent abilities: no Corrupting Touch, no free paid credits.
-  const f=fixture(api,['corruption_cycle','corruption_nova','blight'],0);
+  const f=fixture(api,['corruption_cycle','corruption_nova','blightburst'],0);
   api.onAttack(f.b,f.c);
   assert.equal(f.r.mp,76);
   assert.equal(f.m.anchorSpreadSource_ability_cycle,2);
   assert.equal(f.m.anchorSpreadSource_ability_overflow,1);
-  assert.equal(f.m.anchorSpreadSource_ability_blight,1);
+  assert.equal(f.m.anchorSpreadSource_ability_blightburst,1);
   assert.equal(f.m.anchorSpreadCycleCasts,1);
   assert.equal(f.m.corruptionCycleActivations,1);
   assert.equal(f.m.anchorSpreadOverflowSeedOnly,1);
   assert.equal(f.e.v012Rot.length,1);
-  assert.equal(f.e.v012Rot[0].abilityOrigin,'ability_blight');
+  assert.equal(f.e.v012Rot[0].abilityOrigin,'ability_blightburst');
   assert.equal(f.m.decayPrimaryPaidApplications||0,0);
   assert.equal(f.m.contagiousTouchActivations||0,0);
   api.onAttack(f.b,f.c);assert.equal(f.r.mp,76,'same-time attack cannot repeat cast');
   for(let i=0;i<8;i++){f.c.now++;api.tickRot(f.b,f.c);}
   assert.equal(f.e.v012Rot.length,1);
-  const t=fixture(api,['affinity_decay','toxic_touch','corruption_cycle'],0);t.c.random=()=>0;t.b.cooldowns.corruptionCycle=99;api.onAttack(t.b,t.c);
+  const t=fixture(api,['affinity_decay','corrupting_touch','corruption_cycle'],0);t.c.random=()=>0;t.b.cooldowns.corruptionCycle=99;api.onAttack(t.b,t.c);
   assert.equal(t.e.v012Rot.length,1);assert.equal(t.r.mp,96);assert.equal(t.m.decayPrimaryPaidApplications,1);
   const g=fixture(api,['corruption_nova'],3,3);
   api.corruptionOverflow(g.b,g.c);
@@ -199,7 +199,7 @@ function smoke(){
  const observed={};
  for(const key of ['full','rot85','burst75','combined']){
   const api=native(key),f=fixture(api,['corruption_cycle'],1);api.onAttack(f.b,f.c);
-  const b=fixture(api,['blight'],0);api.onAttack(b.b,b.c);
+  const b=fixture(api,['blightburst'],0);api.onAttack(b.b,b.c);
   observed[key]={burst:f.m.corruptionCycleRawBurst,potency:b.e.v012Rot[0].damage};
  }
  const near=(a,b)=>assert(Math.abs(a-b)<1e-7,a+' != '+b);

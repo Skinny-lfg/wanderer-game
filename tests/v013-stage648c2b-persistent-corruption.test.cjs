@@ -12,8 +12,8 @@ function fixture(mode,ids){
 test('all arms compile and only paid primary stacks survive repeated ticks',()=>{
  for(const mode of MODES){
   new Function(diagnosticSource(mode));
-  const h=fixture(mode,['toxic_touch']);
-  h.B.applyRot(h.b,h.c,20,'paid_primary_toxic_touch');
+  const h=fixture(mode,['corrupting_touch']);
+  h.B.applyRot(h.b,h.c,20,'paid_primary_corrupting_touch');
   h.B.applyRot(h.b,h.c,20);
   h.e.v012Rot.push({damage:5,remaining:2,primaryPaid:false,transferred:true});
   h.e.v012Rot.push({damage:5,remaining:2,spread:true,secondaryOrigin:'test'});
@@ -25,13 +25,13 @@ test('all arms compile and only paid primary stacks survive repeated ticks',()=>
  }
 });
 test('native cap and per-application damage are preserved',()=>{
- const a=fixture('baseline',['toxic_touch']),b=fixture('persistent',['toxic_touch']);
- for(const h of [a,b])for(let i=0;i<9;i++)h.B.applyRot(h.b,h.c,20+i,'paid_primary_toxic_touch');
+ const a=fixture('baseline',['corrupting_touch']),b=fixture('persistent',['corrupting_touch']);
+ for(const h of [a,b])for(let i=0;i<9;i++)h.B.applyRot(h.b,h.c,20+i,'paid_primary_corrupting_touch');
  assert.deepEqual(b.e.v012Rot,a.e.v012Rot);assert.equal(b.e.v012Rot.length,6);assert.equal(b.m.decayPrimaryPaidPersistentPrimaryCapReached,1);
 });
 test('Cycle order isolated and three-stack burst is finite with unchanged mana and cooldown',()=>{
  for(const mode of ['persistent','persistent-after','persistent-burst']){
-  const h=fixture(mode,['toxic_touch','corruption_cycle']);
+  const h=fixture(mode,['corrupting_touch','corruption_cycle']);
   h.e.v012Rot=[{damage:10,remaining:4,primaryPaid:true},{damage:10,remaining:4,primaryPaid:true}];
   h.B.onAttack(h.b,h.c);
   assert.equal(h.m.corruptionCycleActivations||0,mode==='persistent'?0:1);
@@ -40,7 +40,7 @@ test('Cycle order isolated and three-stack burst is finite with unchanged mana a
   if(mode!=='persistent')assert.equal(h.b.cooldowns.corruptionCycle,6);
   if(mode==='persistent-burst'){assert.equal(h.m.decayPrimaryPaidPersistentBurstStacksConsumed,3);assert(Number.isFinite(h.m.corruptionCycleRawBurst));}
  }
- const h=fixture('persistent-burst',['toxic_touch','corruption_cycle']);
+ const h=fixture('persistent-burst',['corrupting_touch','corruption_cycle']);
  h.c.random=()=>1;h.e.v012Rot=Array.from({length:3},()=>({damage:10,remaining:5,primaryPaid:true}));
  h.B.onAttack(h.b,h.c);assert.equal(h.m.corruptionCycleRawBurst,80);assert.equal(h.r.mp,96);
 });

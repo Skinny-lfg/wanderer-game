@@ -17,7 +17,7 @@ function extract(source,name){
 function lightning(storm=false,active=4){
  const source=read('combat/v012-combat-runtime.js');
  const calls=[],metrics={},ports={
-  state:{automaticTalents:{nodes:storm?['overcharge','storm_mastery']:['overcharge']}},
+  state:{automaticTalents:{nodes:storm?['overcharge','forked_lightning']:['overcharge']}},
   phase1Build:{runtime:{talentBonuses:{}}},
   floatText(){},
   phase6Metric(r,key,n){metrics[key]=(metrics[key]||0)+n;},
@@ -64,7 +64,7 @@ test('Lightning scales jumps with available active enemies, rather than multiply
 });
 test('Sanguine Echo transfers active Bleed and one immediate tick, never targeting reserves',()=>{
  const source=read('combat/v012-buildcraft.js');
- const context={rank:()=>0,specialized:(b,id)=>id==='blood_transfer',activated:()=>true,heal:()=>{},ready:()=>false};
+ const context={rank:()=>0,specialized:(b,id)=>id==='sanguine_echo',activated:()=>true,heal:()=>{},ready:()=>false};
  vm.createContext(context);
  vm.runInContext(extract(source,'onKill'),context);
  function exercise(active){

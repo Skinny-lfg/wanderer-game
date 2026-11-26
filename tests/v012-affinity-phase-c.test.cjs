@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');const {api,build,context,base}=require('./v012-affinity-fixture.cjs');
 function fixture(p,negative=false){
- const starter={blood:'bleeding_edge',decay:'toxic_touch',radiance:'renewal',aegis:'barrier_pulse',fury:'precision',arcane:'overcharge'},b=build([...p.requires.map(f=>starter[f]),...(p.requires.includes('aegis')?['guarded_block']:[]),p.id],p.requires);b.runtime.draftStats={...base,blockChance:10};
+ const starter={blood:'bleeding_edge',decay:'corrupting_touch',radiance:'renewal',aegis:'barrier_pulse',fury:'precision',arcane:'overcharge'},b=build([...p.requires.map(f=>starter[f]),...(p.requires.includes('aegis')?['guarded_block']:[]),p.id],p.requires);b.runtime.draftStats={...base,blockChance:10};
  const f=context(b);f.c.player.barrier=0;f.c.barrierBroken=true;
  if(negative){Object.assign(f.c,{critical:false,funded:false,barrierBroken:false,random:()=>1});f.c.enemy.bleedStacks=0;f.c.enemy.dots.bleed=[];f.c.enemy.v012Rot=[];f.c.player.hp=f.c.player.maxhp;f.c.player.mp=f.c.player.maxmp;}
  return {b,...f};

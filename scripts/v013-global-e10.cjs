@@ -6,7 +6,7 @@ const W={daggers:['Daggers','Off-Hand Dagger','Leather'],sword:['Sword','Shield'
 const P={};
 function add(id,families,w,skills,role,element,prepared){assert(!P[id]);P[id]={id,families,w,skills,role,element,prepared};}
 add('blood-daggers',['blood'],'daggers',['accelerated_bleeding','deep_cuts','blood_harvest'],'single');
-add('blood-sword',['blood'],'sword',['blood_drinker','crimson_feast','blood_harvest'],'sustain');
+add('blood-sword',['blood'],'sword',['blood_drinker','third_cut','blood_harvest'],'sustain');
 add('blood-twohand',['blood'],'twohand',['cleave_mastery','accelerated_bleeding','deep_cuts'],'aoe');
 add('fury-daggers',['fury'],'daggers',['fan_of_blades','double_strike','quick_hands'],'aoe');
 add('fury-bow',['fury'],'bow',['bow_pierce','precision','quick_hands'],'aoe');
@@ -21,10 +21,10 @@ for(const w of ['daggers','sword','twohand','bow','wand','staff']){
  add('decay-cycle-'+w,['decay'],w,['corruption_cycle','contagious_touch','corruption_nova'],'aoe');
  add('decay-focus-'+w,['decay'],w,['plagueheart','contagious_touch'],'sustain');
 }
-const ELEMENT_SKILLS={arcane:['arcane_resonance','arcane_nova','mana_spring'],fire:['kindling','fire_spread','controlled_burn'],frost:['deep_winter','frost_resonance','glacial_echo'],lightning:['overcharge','storm_mastery','static_focus']};
+const ELEMENT_SKILLS={arcane:['arcane_resonance','arcane_nova','mana_spring'],fire:['kindling','fire_spread','controlled_burn'],frost:['deep_winter','frost_resonance','glacial_echo'],lightning:['overcharge','forked_lightning','static_focus']};
 for(const [element,skills] of Object.entries(ELEMENT_SKILLS))for(const w of ['sword','wand','staff'])add('arcane-'+element+'-'+w,['arcane'],w,['element_choice','arcane_focus',...skills],element==='frost'?'control':'aoe',element);
-add('hybrid-blood-fury',['blood','fury'],'daggers',['crimson_rush','reapers_cadence','red_guillotine'],'single',null,'red_guillotine');
-add('hybrid-fury-radiance',['fury','radiance'],'twohand',['fervent_life','redline','fury_recovery'],'sustain',null,'fury_recovery');
+add('hybrid-blood-fury',['blood','fury'],'daggers',['crimson_onslaught','reapers_cadence','red_guillotine'],'single',null,'red_guillotine');
+add('hybrid-fury-radiance',['fury','radiance'],'twohand',['fervent_life','redline','defiant_surge'],'sustain',null,'defiant_surge');
 add('hybrid-radiance-aegis',['radiance','aegis'],'mace',['sanctuary','guardians_oath','last_bastion'],'sustain',null,'last_bastion');
 add('hybrid-aegis-arcane',['aegis','arcane'],'orb',['runic_shield','prismatic_rebound','arcane_bastion'],'sustain','arcane','arcane_bastion');
 add('hybrid-arcane-decay',['arcane','decay'],'wand',['hex_bolt','elemental_blight','grave_bloom'],'aoe','arcane','grave_bloom');

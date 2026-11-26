@@ -14,7 +14,7 @@ const replace=(s,a,b)=>{assert.equal(s.split(a).length,2,'source anchor '+a.slic
 let observer=replace(runtime,"  const attackType=ports.enemyAttackType(e);","  const attackType=ports.enemyAttackType(e);\n  ports.phase6Metric(r,'auditEnemyAttacks',1);ports.phase6Metric(r,attackType==='physical'?'auditPhysicalAttacks':'auditNonPhysicalAttacks',1);ports.phase6Metric(r,'auditPreAvoidDamage',raw);");
 observer=replace(observer,"   ports.phase6Metric(r,'dodges',1);","   ports.phase6Metric(r,'dodges',1);ports.phase6Metric(r,'auditDodgePrevented',raw);");
 const SUPPORT={blood:['blood_drinker','bleeding_edge'],radiance:['strong_heart','renewal'],aegis:['guarded_block','barrier_pulse']};
-const drainExtras={basic:[],harvest:['blood_harvest'],feast:['crimson_feast'],both:['blood_harvest','crimson_feast'],mixed:['crimson_rush']};
+const drainExtras={basic:[],harvest:['blood_harvest'],feast:['third_cut'],both:['blood_harvest','third_cut'],mixed:['crimson_onslaught']};
 const M=['pure','radiance','aegis'].map(id=>({id}));
 const U=['pure','basic','harvest','feast','both','mixed'].map(id=>({id}));
 const B=['basic','harvest','feast','both'].map(id=>({id}));
@@ -31,7 +31,7 @@ function fill(p,families,mandatory){
  for(const id of p.t.nodes){if(t.nodes.length>=POINTS)break;if(t.nodes.includes(id))continue;
   const n=nodesById.get(id.replace(/_rank\d+$/,''));if(!n||!families.includes(n.family)||n.pair||n.advanced||n.pending)continue;
   // Keep Blood Harvest and Third Cut separate unless explicitly requested.
-  if(['blood_harvest','crimson_feast','crimson_rush'].includes(n.id)&&!mandatory.includes(n.id))continue;
+  if(['blood_harvest','third_cut','crimson_onslaught'].includes(n.id)&&!mandatory.includes(n.id))continue;
   const next=T.allocate(t,id);if(next)t=next;
  }
  const candidates=T.NODES.filter(n=>n.kind==='stat'&&families.includes(n.family)&&!n.pair&&!n.pending&&(!n.element||n.element===(p.element||'arcane')));

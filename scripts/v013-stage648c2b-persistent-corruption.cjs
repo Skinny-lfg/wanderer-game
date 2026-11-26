@@ -12,13 +12,13 @@ function diagnosticSource(mode){
  assert(start>=0&&end>start);
  const trigger=s.slice(start,end);
  assert(trigger.includes("corruptionCycleConsumedRawRot"));
- const toxic=" if(rank(b,'toxic_touch')&&(c.player?.mp||0)>=1&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,1)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch'))applyRot(b,c,base*.065+Math.max(0,c.power||0)*.025,'paid_primary_toxic_touch');";
+ const toxic=" if(rank(b,'corrupting_touch')&&(c.player?.mp||0)>=1&&(b.cooldowns.corruptingTouch??-1e10)<=c.now&&c.random()<values('corrupting_touch',rank(b,'corrupting_touch')).chance&&spendDarkMana(c,1)&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch'))applyRot(b,c,base*.065+Math.max(0,c.power||0)*.025,'paid_primary_corrupting_touch');";
  // All counters are observer-only. Neither sampling nor target tracking consumes game RNG.
  const check=" if(specialized(b,'corruption_cycle')){const stacks=e.v012Rot?.length||0;const m=(k,v=1)=>c.metric?.('corruptionCycleDiagnostic'+k,v);m('AttackChecks');m('Stacks'+Math.min(6,stacks));if(e.hp<=0)m('DeadTarget');else if(stacks<3)m('InsufficientStacks');else if((c.player?.mp||0)<4)m('InsufficientMana');else if((b.cooldowns.corruptionCycle??-1e10)>c.now)m('Cooldown');else m('Eligible');}\n";
  const persistent=mode!=='baseline',isAfter=mode==='persistent-after'||mode==='persistent-burst',burst=mode==='persistent-burst';
  const cycle=burst?replace(trigger,"const rot=e.v012Rot.shift(),remaining=rot.damage*rot.remaining,raw=remaining+Math.max(0,c.power||0)*.20;","const spent=e.v012Rot.splice(0,3),remaining=spent.reduce((n,d)=>n+d.damage*(primaryPaidRot(d)?2:Math.min(2,d.remaining)),0),raw=remaining+Math.max(0,c.power||0)*.20;c.metric?.('decayPrimaryPaidPersistentBurstStacksConsumed',spent.length);"):trigger;
  s=replace(s,trigger,isAfter?'':check+cycle);
- s=replace(s,toxic,toxic+"\n if(rank(b,'toxic_touch')&&e.hp>0){const n=e.v012Rot?.length||0;c.metric?.('decayPrimaryPaidDiagnosticPostAttack'+Math.min(6,n),1);}\n"+(isAfter?check+cycle:''));
+ s=replace(s,toxic,toxic+"\n if(rank(b,'corrupting_touch')&&e.hp>0){const n=e.v012Rot?.length||0;c.metric?.('decayPrimaryPaidDiagnosticPostAttack'+Math.min(6,n),1);}\n"+(isAfter?check+cycle:''));
  // Instrument the pre-existing primary paid application, not free/secondary Rot.
  s=replace(s," if(d.primaryPaid)paidRotApplied(b,c,d);"," if(d.primaryPaid){c.metric?.('decayPrimaryPaidDiagnosticAppliedWithStacks'+Math.min(6,stacks.length),1);c.metric?.('decayPrimaryPaidDiagnosticRawPerStack',d.damage);c.metric?.('decayPrimaryPaidDiagnosticScheduledTicks',d.remaining);paidRotApplied(b,c,d);}");
  // Keep a finite original tick budget as the legacy detonation/transfer reference.

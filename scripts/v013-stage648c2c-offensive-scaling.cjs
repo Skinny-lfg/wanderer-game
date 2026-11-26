@@ -23,7 +23,7 @@ function statSource(arm){
 }
 function talent(family){
  const f=family==='blood'?'blood':'decay';
- const ids=f==='blood'?['accelerated_bleeding','crimson_feast','blood_harvest']:['corruption_cycle','corruption_nova','soul_drain'];
+ const ids=f==='blood'?['accelerated_bleeding','third_cut','blood_harvest']:['corruption_cycle','corruption_nova','soul_drain'];
  const t=buy(ids,{xp:POINTS*T.POINT_XP});
  assert(T.valid(t));assert.equal(T.earned(t),POINTS);assert(t.nodes.includes('affinity_'+f));
  assert(t.nodes.every(id=>!id.startsWith('affinity_')||id==='affinity_'+f));

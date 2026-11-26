@@ -12,7 +12,7 @@ test('Leather Duelist now develops native Blood sustain without any flat stat in
  assert.deepEqual(p.families,['fury','blood']);
  assert(p.targets.indexOf('bleeding_edge')<p.targets.indexOf('blood_drinker'));
  assert(p.targets.indexOf('blood_drinker')<p.targets.indexOf('blood_harvest'));
- assert(p.targets.indexOf('blood_drinker')<p.targets.indexOf('crimson_rush'));
+ assert(p.targets.indexOf('blood_drinker')<p.targets.indexOf('crimson_onslaught'));
  assert(p.targets.includes('quick_hands')&&p.targets.includes('double_strike'));
  assert.equal(p.preparedTargets[0],'red_guillotine');
  assert.equal(p.healAt,.42);assert.equal(p.retreatAt,.25);assert.equal(p.risk,1);

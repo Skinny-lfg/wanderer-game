@@ -5,7 +5,7 @@ const B=globalThis.WandererV012Buildcraft;
 const create=require('./v012-economy-harness.cjs');
 
 test('current v15 affinity, Basic and Magic purchases use actual prerequisites and earned XP',()=>{
- for(const id of ['affinity_blood','affinity_decay','affinity_aegis','affinity_radiance','affinity_fury','affinity_arcane','bleeding_edge','toxic_touch','quick_hands','guarded_block']){
+ for(const id of ['affinity_blood','affinity_decay','affinity_aegis','affinity_radiance','affinity_fury','affinity_arcane','bleeding_edge','corrupting_touch','quick_hands','guarded_block']){
   const p=buy([id]);assert(p.nodes.includes(id),id);
   assert(T.earned(p)>=p.nodes.length,id);
  }
@@ -36,7 +36,7 @@ test('Staff and Wand retain different native funded Mana costs',()=>{
  assert.equal(B.nextCost(b,9),4);
 });
 test('purchased Blood Transfer chains all active stacks at half potency, but never targets waiting reserves',()=>{
- const b=B.create();b.runtime.specializations=['blood_transfer'];
+ const b=B.create();b.runtime.specializations=['sanguine_echo'];
  const source={hp:0,bleedStacks:3,dots:{bleed:[{damage:20,remaining:4},{damage:8,remaining:2,transferred:true},{damage:1,remaining:1}]}};
  const first={hp:30,dots:{bleed:[]}},next={hp:30,dots:{bleed:[]}},queued={hp:30,dots:{bleed:[]}};
  const calls=[],synced=[];

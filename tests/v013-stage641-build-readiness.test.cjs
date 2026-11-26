@@ -12,7 +12,7 @@ test('Lightning AoE unlock precedes its amplifier at E10-size legal point budget
  assert(T.valid({...hypotheticalBudget(15),nodes:plan.expectedNodes,element:plan.expectedElement}));
  assert.equal(plan.expectedElement,'lightning');
  assert(plan.expectedNodes.includes('overcharge'));
- assert(!plan.expectedNodes.includes('storm_mastery'));
+ assert(!plan.expectedNodes.includes('forked_lightning'));
 });
 test('Fire AoE planner follows the ordered Kindling -> Wildfire route',()=>{
  const first=P.propose(T,hypotheticalBudget(15),'arcane-fire-pure');

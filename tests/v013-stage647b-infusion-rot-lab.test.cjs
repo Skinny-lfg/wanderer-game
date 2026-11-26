@@ -64,5 +64,5 @@ test('Spread stacks reach native tickRot and have secondary attribution',()=>{
 test('Old cast-triggered Bloom removed; Spell Echo remains',()=>{
  const h=harness();assert(!h.src.runtime.includes('function v013GraveBloomPulse('));
  assert(!h.src.build.includes("if(r.prepared==='grave_bloom'){"));
- assert(h.src.runtime.includes("if(cast&&learned('spell_echo'))"));
+ assert(h.src.runtime.includes("if(cast&&learned('resonant_sequence'))"));
 });

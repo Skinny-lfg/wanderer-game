@@ -6,7 +6,7 @@ test('Decay agents have distinct legal talent plans, without other specializatio
  const a=create(123),T=a.talents,progress=T.award(a.state().automaticTalents,3000);
  for(const [id,p] of Object.entries(P.BUILDS).filter(([id,p])=>p.decayRole)){
   const x=P.propose(T,progress,id);assert(T.valid({...progress,nodes:x.expectedNodes}));
-  assert(x.expectedNodes.includes('affinity_decay'));assert(x.expectedNodes.includes('blight'));
+  assert(x.expectedNodes.includes('affinity_decay'));assert(x.expectedNodes.includes('blightburst'));
   assert.equal(x.expectedNodes.includes('corruption_cycle'),['cycle','hybrid'].includes(p.decayRole));
   assert.equal(x.expectedNodes.includes('corruption_nova'),['overflow','hybrid'].includes(p.decayRole));
  }
@@ -20,7 +20,7 @@ test('Rune score checks all 23 actual stat fields and rejects inactive resource 
   assert(Number.isFinite(score),f.id);
   if(['abyss','clarity','efficiency','archmage','corruption','bastion','renewal','phantom'].includes(f.id))assert.equal(score,0,f.id);
  }
- const rune=a.makeRune('corruption',1,'Rare'),context={base:{...base,mana:100,dotPower:0},projected:{...base,mana:100,dotPower:.135},nodes:['affinity_decay','corruption_cycle','blight'],weapon:'Sword',evasionGain:0};
+ const rune=a.makeRune('corruption',1,'Rare'),context={base:{...base,mana:100,dotPower:0},projected:{...base,mana:100,dotPower:.135},nodes:['affinity_decay','corruption_cycle','blightburst'],weapon:'Sword',evasionGain:0};
  assert(N.runeScore(rune,N.PROFILES['smart-decay-cycle-twohand'],context)>0);
 });
 test('Agent chooses prepared Rot target only when Cycle is affordable and ready',()=>{

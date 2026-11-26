@@ -32,14 +32,14 @@ test('Real v15 descriptions and talent prerequisites are read by the agent, not 
  const a=newAccount(),T=a.talents;
  assert(T.NODES.some(x=>x.id==='root_blood'));
  assert(T.NODES.some(x=>x.id==='blood_harvest'&&x.description));
- assert(T.NODES.some(x=>x.id==='crimson_rush'&&x.kind==='mixed'));
+ assert(T.NODES.some(x=>x.id==='crimson_onslaught'&&x.kind==='mixed'));
  assert(T.NODES.some(x=>x.id==='arcane_bastion'&&x.advanced));
  const blood=PLANNER.getPlan('blood-pure');
  const route=PLANNER.routeTo(T,earned(a,30),'blood_harvest',blood,['blood']);
  assert(route?.includes('affinity_blood'),JSON.stringify(route));
  assert(route?.includes('blood_harvest'),JSON.stringify(route));
- const mixed=PLANNER.routeTo(T,earned(a,60),'crimson_rush',PLANNER.getPlan('blood-fury'),['blood','fury']);
- assert(mixed&&mixed.includes('crimson_rush')&&mixed.includes('affinity_blood')&&mixed.includes('affinity_fury'),JSON.stringify(mixed));
+ const mixed=PLANNER.routeTo(T,earned(a,60),'crimson_onslaught',PLANNER.getPlan('blood-fury'),['blood','fury']);
+ assert(mixed&&mixed.includes('crimson_onslaught')&&mixed.includes('affinity_blood')&&mixed.includes('affinity_fury'),JSON.stringify(mixed));
 });
 test('A pure focused build never spends talent points on foreign Affinities',()=>{
  const a=newAccount(),T=a.talents,before=earned(a,30);

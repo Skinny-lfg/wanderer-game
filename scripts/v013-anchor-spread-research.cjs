@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const S=require('./simulate-progression.cjs'),G=require('./v013-global-e10.cjs'),{T,buy}=require('../tests/v013-current-talent-helper.cjs');
 require('../combat/v012-runes.js');
 const F=['blood','decay','radiance','aegis','fury','arcane'],ELITES=G.SC.filter(s=>s.kind==='elite').map(s=>s.elite),SC=['normal-1','normal-4','normal-8','normal-12','elite','boss'],N=50,OUT='reports/anchor-spread-research';
-G.P['blood-spread-twohand']={id:'blood-spread-twohand',families:['blood'],w:'twohand',skills:['blood_transfer','cleave_mastery','accelerated_bleeding'],role:'aoe'};
+G.P['blood-spread-twohand']={id:'blood-spread-twohand',families:['blood'],w:'twohand',skills:['sanguine_echo','cleave_mastery','accelerated_bleeding'],role:'aoe'};
 const PROFILES=['decay-cycle-wand','hybrid-arcane-decay','hybrid-decay-blood','blood-spread-twohand','arcane-fire-wand'];
 const B='combat/v012-buildcraft.js',C='combat/v012-combat-runtime.js',E='online/v012-expedition-runtime.js',O='online/v013-expedition-boons.js';
 const originals=Object.fromEntries([B,C,E,O].map(p=>[p,fs.readFileSync(p,'utf8')]));
@@ -66,7 +66,7 @@ function smoke(){
   new Function('globalThis','module',src[B])(root,undefined);new Function('globalThis','module',src[O])(root,undefined);
   const Bc=root.WandererV012Buildcraft,boon=root.WandererV013ExpeditionBoons,b=Bc.create(),fallen={hp:0,v012Rot:[{damage:100,remaining:4}]},e={hp:10000,maxhp:10000,v012Rot:[],dots:{bleed:[],burn:[]}},r={hp:100,mp:100,maxmp:100,boonIds:['rotbound_echo'],enemies:[fallen,e],stats:{dotPower:0}},c={enemy:e,player:r,now:1,log(){},metric(){}};
   assert.equal(boon.spreadOnDeath(r,fallen),1);assert.equal(e.v012Rot[0].damage,full?100:30);assert(e.v012Rot[0].spread);assert.equal(e.v012Rot[0].remaining,2);
-  Bc.applyRot(b,c,100,'paid_primary_toxic_touch');assert.deepEqual(e.v012Rot.map(d=>d.damage),[full?100:30,100]);assert(e.v012Rot[1].primaryPaid);assert.equal(e.v012Rot[0].primaryPaid,undefined);
+  Bc.applyRot(b,c,100,'paid_primary_corrupting_touch');assert.deepEqual(e.v012Rot.map(d=>d.damage),[full?100:30,100]);assert(e.v012Rot[1].primaryPaid);assert.equal(e.v012Rot[0].primaryPaid,undefined);
   assert.equal(boon.spreadOnDeath(r,fallen),0);
   for(let i=0;i<4;i++)Bc.applyRot(b,c,100,'paid_primary_cycle_extra');assert.equal(e.v012Rot.length,6);Bc.applyRot(b,c,110,'paid_primary_cycle_extra');assert.deepEqual(e.v012Rot.map(d=>d.damage),[100,100,100,100,100,110]);
   for(const kind of ['bleed','burn']){const srcEnemy={hp:0,dots:{[kind]:[{damage:115,remaining:3}]}},target={hp:1000,dots:{bleed:[],burn:[]}},rr={boonIds:['rotbound_echo'],enemies:[srcEnemy,target]};assert.equal(boon.spreadOnDeath(rr,srcEnemy,()=>{}),1);assert.equal(target.dots[kind][0].damage,full?115:Math.round(115*.3));assert(target.dots[kind][0].spread);}

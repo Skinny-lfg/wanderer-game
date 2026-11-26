@@ -41,7 +41,7 @@ test('Executioner deals 150% of combined tick without consuming stacks',()=>{
  B.onAttack(b,c);assert.equal(hits.length,1);c.now=4;B.onAttack(b,c);assert.equal(hits.length,2);
 });
 test('Blood Transfer copies all active stacks at half potency, including previously transferred stacks, to active targets only',()=>{
- const {e,r,b,c}=fixture(['blood_transfer']);e.hp=0;e.dots.bleed=[{damage:10,remaining:2},{damage:8,remaining:3,transferred:true},{damage:1,remaining:1}];e.bleedStacks=3;
+ const {e,r,b,c}=fixture(['sanguine_echo']);e.hp=0;e.dots.bleed=[{damage:10,remaining:2},{damage:8,remaining:3,transferred:true},{damage:1,remaining:1}];e.bleedStacks=3;
  const target={hp:100,dots:{bleed:[{damage:3,remaining:2}]}},reserve={hp:100,dots:{bleed:[]}};r.enemies=[e,target];r.groupReserve=[reserve];let sync=0;
  c.synchronizeDots=()=>sync++;c.secondaryHit=(mob,amount)=>{assert.equal(mob,target);mob.hp-=amount;return amount;};
  B.onKill(b,c);assert.equal(target.hp,91);assert.deepEqual(target.dots.bleed.map(d=>d.damage),[3,5,4]);assert.equal(sync,1);assert.equal(reserve.dots.bleed.length,0);

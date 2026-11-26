@@ -35,13 +35,13 @@ const AGENT=require('./v013-agent-strategy.cjs');
 const P=globalThis.WandererExpeditionProgression;
 const byNode=new Map(T.NODES.map(n=>[n.id,n]));
 const BUILDS=Object.freeze([
- {id:'blood-fury',name:'Blood/Fury',weapon:'Daggers',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_rush']},
+ {id:'blood-fury',name:'Blood/Fury',weapon:'Daggers',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_onslaught']},
  {id:'aegis-radiance',name:'Aegis/Radiance',weapon:'Mace',families:['aegis','radiance'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
- {id:'arcane-decay',name:'Arcane/Decay',weapon:'Wand',families:['arcane','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'fire'},
- {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','toxic_touch','virulent_rot','plague_spread']},
+ {id:'arcane-decay',name:'Arcane/Decay',weapon:'Wand',families:['arcane','decay'],skills:['arcane_focus','mana_spring','corrupting_touch','virulent_rot','hex_bolt'],element:'fire'},
+ {id:'blood-decay',name:'Blood/Decay',weapon:'Two-Handed',families:['blood','decay'],skills:['bleeding_edge','deep_cuts','corrupting_touch','virulent_rot','plague_spread']},
   {id:'aegis-sword',name:'Aegis/Radiance Sword & Shield',weapon:'Sword',families:['aegis','radiance'],skills:['guarded_block','barrier_pulse','strong_heart','renewal','sanctuary']},
-  {id:'fury-bow',name:'Blood/Fury Archer',weapon:'Bow',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_rush']},
-  {id:'arcane-storm',name:'Arcane/Decay Lightning Staff',weapon:'Staff',families:['arcane','decay'],skills:['arcane_focus','mana_spring','toxic_touch','virulent_rot','hex_bolt'],element:'lightning'},
+  {id:'fury-bow',name:'Blood/Fury Archer',weapon:'Bow',families:['blood','fury'],skills:['bleeding_edge','deep_cuts','quick_hands','double_strike','crimson_onslaught']},
+  {id:'arcane-storm',name:'Arcane/Decay Lightning Staff',weapon:'Staff',families:['arcane','decay'],skills:['arcane_focus','mana_spring','corrupting_touch','virulent_rot','hex_bolt'],element:'lightning'},
   {id:'arcane-frost',name:'Magic Frost Staff',weapon:'Staff',families:['arcane'],skills:['arcane_focus','mana_spring','deep_winter'],element:'frost'}
 ]);
 const DEFAULTS=Object.freeze({mode:'encounter',levels:[1,5,15,35,70,100,250,1000],seeds:[9101,9102,9103],builds:BUILDS.map(b=>b.id),points:24,rarity:'Rare',gear:'current',runes:false,tickLimit:4500,

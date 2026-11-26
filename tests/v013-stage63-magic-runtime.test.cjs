@@ -87,7 +87,7 @@ test('Arcane mastery restores Mana on empowered hits with its original 5-second 
  assert.equal(x.events.filter(e=>e.type==='mana').length,1);
 });
 test('Infusion alone is not a spell cast and does not trigger elemental statuses',()=>{
- const b=build(['arcane_echo']),x=context();B.activateInfusion(b,0);
+ const b=build(['elemental_echo']),x=context();B.activateInfusion(b,0);
  B.onInfusionActivation(b,x.c);B.onInfusionHit(b,x.c);
  assert(!x.events.some(e=>/burn|chill|lightning|spell/i.test(e.kind||'')));
 });
@@ -97,7 +97,7 @@ test('All production Magic Stage 6.3 modules match their GitHub Pages counterpar
 });
 
 test('Spell Echo adds a third-hit echo on non-caster infused attacks, not extra casts',()=>{
- const b=build(['spell_echo']),x=context();
+ const b=build(['resonant_sequence']),x=context();
  B.activateInfusion(b,0);B.onInfusionHit(b,x.c);B.onInfusionHit(b,{...x.c,now:2});
  assert(!x.events.some(e=>e.kind==='✨ Spell Echo'));
  B.activateInfusion(b,6);B.onInfusionHit(b,{...x.c,now:6.5,magical:false});
@@ -112,7 +112,7 @@ test('Prepared Grave Bloom activates on third infused main hit with Rot without 
  assert(!b.runtime.specializations.includes('element_choice'));
 });
 test('Paid Wand/Staff attacks must not get an additional Spell Echo or Grave Bloom on the same infusion hit',()=>{
- const b=build(['spell_echo','grave_bloom']),x=context();b.runtime.prepared='grave_bloom';
+ const b=build(['resonant_sequence','grave_bloom']),x=context();b.runtime.prepared='grave_bloom';
  x.enemy.v012Rot=[{damage:12,remaining:4}];
  B.activateInfusion(b,0);B.onInfusionHit(b,{...x.c,magical:true});
  B.onInfusionHit(b,{...x.c,now:2,magical:true});
@@ -137,7 +137,7 @@ test('All elemental affinities retain baseline Infusion with their own spell opt
 });
 test('Funded Wand/Staff attacks cannot activate secondary Decay procs twice',()=>{
  for(const weapon of ['Wand','Staff']){
-  const b=build(['hex_bolt','arcane_echo']),x=context();x.enemy.v012Rot=[{damage:7,remaining:3}];
+  const b=build(['hex_bolt','elemental_echo']),x=context();x.enemy.v012Rot=[{damage:7,remaining:3}];
   B.activateInfusion(b,0);
   const power=B.infusionConfig(b,weapon).power;
   assert(Math.abs(B.onInfusionHit(b,{...x.c,weaponSubtype:weapon,magical:true})-100*power)<1e-8);

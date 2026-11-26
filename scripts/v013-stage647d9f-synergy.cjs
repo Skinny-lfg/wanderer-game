@@ -14,9 +14,9 @@ const CUSTOM={
    "Daggers"
   ],
   "targets": [
-   "toxic_touch",
+   "corrupting_touch",
    "virulent_rot",
-   "blight",
+   "blightburst",
    "contagious_touch",
    "corruption_nova",
    "soul_drain"
@@ -34,7 +34,7 @@ const CUSTOM={
    "Daggers"
   ],
   "targets": [
-   "toxic_touch",
+   "corrupting_touch",
    "virulent_rot",
    "contagious_touch",
    "corruption_nova",
@@ -53,8 +53,8 @@ const CUSTOM={
    "Tome"
   ],
   "targets": [
-   "toxic_touch",
-   "blight",
+   "corrupting_touch",
+   "blightburst",
    "soul_drain",
    "corruption_cycle",
    "corruption_nova"
@@ -69,8 +69,8 @@ const CUSTOM={
   ],
   "armor": "Cloth",
   "targets": [
-   "toxic_touch",
-   "blight",
+   "corrupting_touch",
+   "blightburst",
    "soul_drain",
    "corruption_nova"
   ]
@@ -84,7 +84,7 @@ const CUSTOM={
   ],
   "armor": "Plate",
   "targets": [
-   "toxic_touch",
+   "corrupting_touch",
    "virulent_rot",
    "contagious_touch",
    "corruption_nova"
@@ -210,7 +210,7 @@ const CUSTOM={
    "mana_spring",
    "element_choice",
    "arcane_resonance",
-   "toxic_touch",
+   "corrupting_touch",
    "hex_bolt",
    "grave_bloom"
   ],
@@ -262,7 +262,7 @@ function selftest(){
 }
 function profile(id){
  assert(PROFILES.includes(id),'Unknown campaign profile: '+id);
- const base=N.PROFILES[id]||(CUSTOM[id]?{name:id,style:'focused',...CUSTOM[id]}:null)||{name:'Physical Decay + Blood',families:['decay','blood'],targets:['toxic_touch','bleeding_edge','plague_spread','contagious_touch','septic_wound'],preparedTargets:['septic_wound'],armor:'Leather',weapons:['Sword','Daggers'],style:'mixed',target:'mechanics',shop:true};
+ const base=N.PROFILES[id]||(CUSTOM[id]?{name:id,style:'focused',...CUSTOM[id]}:null)||{name:'Physical Decay + Blood',families:['decay','blood'],targets:['corrupting_touch','bleeding_edge','plague_spread','contagious_touch','septic_wound'],preparedTargets:['septic_wound'],armor:'Leather',weapons:['Sword','Daggers'],style:'mixed',target:'mechanics',shop:true};
  return {...base,synergyAudit:true,fixedResearchBuild:true,researchGearPreference:true,risk:0,healAt:.70,retreatAt:.43,target:'mechanics',shop:true};
 }
 function write(dest,o){fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,JSON.stringify(o,null,2)+'\n');}

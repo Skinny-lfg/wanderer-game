@@ -59,6 +59,6 @@ test('Funded Wand/Staff Infusion cannot double-count the already counted cast',(
 test('The old physical and spell resolvers are removed; spell echo has its own counter',()=>{
  const h=harness();assert(!h.src.runtime.includes('function v013GraveBloomPulse('));
  assert(!h.src.build.includes("if(r.prepared==='grave_bloom'){"));
- assert(h.src.runtime.includes("if(cast&&learned('spell_echo'))"));
+ assert(h.src.runtime.includes("if(cast&&learned('resonant_sequence'))"));
  assert.equal((h.src.runtime.match(/WandererV012Buildcraft\.graveBloomAction\(/g)||[]).length,2);
 });

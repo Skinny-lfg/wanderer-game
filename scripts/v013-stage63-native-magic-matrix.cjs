@@ -7,7 +7,7 @@ const cases=[
  {mode:'fire',skills:['element_choice','arcane_focus','mana_spring','kindling'],families:['arcane'],weapons:['Sword','Wand','Staff']},
  {mode:'frost',skills:['element_choice','arcane_focus','mana_spring','deep_winter'],families:['arcane'],weapons:['Sword','Wand','Staff']},
  {mode:'lightning',skills:['element_choice','arcane_focus','mana_spring','overcharge'],families:['arcane'],weapons:['Sword','Wand','Staff']},
- {mode:'arcane-decay',skills:['affinity_decay','element_choice','arcane_focus','toxic_touch','hex_bolt'],families:['arcane','decay'],weapons:['Sword','Wand','Staff']},
+ {mode:'arcane-decay',skills:['affinity_decay','element_choice','arcane_focus','corrupting_touch','hex_bolt'],families:['arcane','decay'],weapons:['Sword','Wand','Staff']},
  {mode:'arcane-aegis',skills:['affinity_aegis','element_choice','arcane_focus','guarded_block','runic_shield'],families:['arcane','aegis'],weapons:['Sword','Wand','Staff']}
 ];
 const PROFILES=Object.freeze(cases.flatMap(o=>o.weapons.map(weapon=>Object.freeze({

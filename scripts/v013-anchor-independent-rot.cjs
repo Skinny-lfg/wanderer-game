@@ -55,7 +55,7 @@ function independent({cycle=false,shared=false,overflowSeed=false,blightSeed=fal
  const src=candidate(false,shared);let b=src[B];
  // All new direct skill stacks carry their own provenance; they are persistent,
  // snapshot native Rot potency, and NEVER earn Corrupting Touch action credit.
- b=replace(b,"const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra';","const primary=origin==='paid_primary_toxic_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');");
+ b=replace(b,"const primary=origin==='paid_primary_corrupting_touch'||origin==='paid_primary_cycle_extra';","const primary=origin==='paid_primary_corrupting_touch'||origin==='paid_primary_cycle_extra',ability=typeof origin==='string'&&origin.startsWith('ability_');");
  b=replace(b,"primary||origin==='weapon'||origin==='rotguard'?","primary||ability||origin==='weapon'||origin==='rotguard'?");
  b=replace(b,"remaining:primary?4:","remaining:primary||ability?4:");
  b=replace(b,"...(primary?{primaryPaid:true}:{}),","...(primary?{primaryPaid:true}:{}),...(ability?{abilityOrigin:origin}:{}),");
@@ -72,14 +72,14 @@ function independent({cycle=false,shared=false,overflowSeed=false,blightSeed=fal
   b=replace(b,"ready(b,'corruptionOverflow',c.now,4);activated(b,'corruption_nova');","ready(b,'corruptionOverflow',c.now,4);activated(b,'corruption_nova');c.metric?.('anchorSpreadOverflowCasts',1);applyRot(b,c,rotPotency(c),'ability_overflow');const stacks=(source.v012Rot||[]).filter(burstEligibleRot);if(stacks.length<3){c.metric?.('anchorSpreadOverflowSeedOnly',1);c.metric?.('corruptionOverflowMana',Math.max(0,before-c.player.mp));return;}");
  }
  if(blightSeed){
-  b=replace(b,"if(e.hp>0&&rank(b,'blight')&&e.v012Rot?.length&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');","if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}");
+  b=replace(b,"if(e.hp>0&&rank(b,'blightburst')&&e.v012Rot?.length&&(b.cooldowns.blightburst??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blightburst',c.now,7)&&activated(b,'blightburst'))c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');","if(e.hp>0&&rank(b,'blightburst')&&(b.cooldowns.blightburst??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blightburst',c.now,7)&&activated(b,'blightburst')){applyRot(b,c,rotPotency(c),'ability_blightburst');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}");
  }
  src[B]=b;return src;
 }
-const variants={old:candidate(false,false),shared:candidate(false,true),cycle:independent({cycle:true}),overflow:independent({shared:true,overflowSeed:true}),hybrid:independent({cycle:true,shared:true}),hybridSeed:independent({cycle:true,shared:true,overflowSeed:true}),blight:independent({blightSeed:true}),overflowBlight:independent({shared:true,blightSeed:true})};
+const variants={old:candidate(false,false),shared:candidate(false,true),cycle:independent({cycle:true}),overflow:independent({shared:true,overflowSeed:true}),hybrid:independent({cycle:true,shared:true}),hybridSeed:independent({cycle:true,shared:true,overflowSeed:true}),blightburst:independent({blightSeed:true}),overflowBlight:independent({shared:true,blightSeed:true})};
 const arms=[
  {id:'A',cycle:false,overflow:false,variant:'old',compare:'A'},
- {id:'Ablight',cycle:false,overflow:false,variant:'blight',compare:'A'},
+ {id:'Ablight',cycle:false,overflow:false,variant:'blightburst',compare:'A'},
  {id:'B',cycle:true,overflow:false,variant:'old',compare:'B'},
  {id:'Bnew',cycle:true,overflow:false,variant:'cycle',compare:'B'},
  {id:'C',cycle:false,overflow:true,variant:'shared',compare:'C'},
@@ -109,11 +109,11 @@ function checkedProfile(id){
  assert(Object.hasOwn(WEAPONS,id));const [weapon,offhandType,armorType]=WEAPONS[id],configs={};
  const candidates=T.NODES.filter(n=>n.family==='decay'&&!n.pair&&!n.pending&&!n.advanced&&['stat','basic'].includes(n.kind)).sort((a,b)=>(a.kind==='stat'?0:1)-(b.kind==='stat'?0:1)||((a.tier||1)-(b.tier||1))||a.id.localeCompare(b.id));
  for(const arm of arms){
-  const skills=['affinity_decay','toxic_touch','contagious_touch','blight',...(arm.cycle?['corruption_cycle']:[]),...(arm.overflow?['corruption_nova']:[])];
+  const skills=['affinity_decay','corrupting_touch','contagious_touch','blightburst',...(arm.cycle?['corruption_cycle']:[]),...(arm.overflow?['corruption_nova']:[])];
   let t=buy(skills,{xp:30*T.POINT_XP});assert(t.nodes.length<=30,id+'/'+arm.id+' mandatory budget');
   // Same priority order in every arm. Excluded active/focused/extension nodes
   // cannot be acquired by filler; spend released points in legal supporting nodes.
-  for(const skill of ['toxic_touch','virulent_rot']){
+  for(const skill of ['corrupting_touch','virulent_rot']){
    while(t.nodes.length<30){const next=T.allocate(t,skill);if(!next)break;t=next;}
   }
   for(let pass=0;pass<30&&t.nodes.length<30;pass++){
@@ -156,13 +156,13 @@ function smoke(){
   if(!n){for(let i=0;i<8;i++){f.c.now++;api.tickRot(f.b,f.c);}assert.equal(f.e.v012Rot.length,2);assert(f.e.v012Rot.every(d=>d.abilityOrigin==='ability_cycle'&&!d.primaryPaid));}
  }
  const f=fixture(api,['corruption_cycle'],0);f.r.mp=9;api.onAttack(f.b,f.c);assert.equal(f.e.v012Rot.length,0);assert.equal(f.r.mp,9);
- const t=fixture(api,['affinity_decay','toxic_touch','corruption_cycle'],0);t.c.random=()=>0;t.b.cooldowns.corruptionCycle=99;api.onAttack(t.b,t.c);assert.equal(t.e.v012Rot.length,1);assert.equal(t.r.mp,96);assert.equal(t.m.decayPrimaryPaidApplications,1);
+ const t=fixture(api,['affinity_decay','corrupting_touch','corruption_cycle'],0);t.c.random=()=>0;t.b.cooldowns.corruptionCycle=99;api.onAttack(t.b,t.c);assert.equal(t.e.v012Rot.length,1);assert.equal(t.r.mp,96);assert.equal(t.m.decayPrimaryPaidApplications,1);
  for(const n of [0,2,3,6]){
   const ov=native('overflow'),g=fixture(ov,['corruption_nova'],n,3);ov.corruptionOverflow(g.b,g.c);
   assert.equal(g.r.mp,94);assert.equal(g.e.v012Rot.length,Math.min(6,n+1));assert.equal(g.m.anchorSpreadSource_ability_overflow,1);assert.equal(g.m.corruptionOverflowActivations||0,n>=2?1:0);assert.equal(g.m.decayPrimaryPaidApplications||0,0);
   assert((g.m.anchorSpreadOverflowSecondary||0)<=(g.m.anchorSpreadOverflowBudget||0));
  }
- const bl=native('blight'),h=fixture(bl,['blight'],0);bl.onAttack(h.b,h.c);assert.equal(h.r.mp,92);assert.equal(h.e.v012Rot.length,1);assert.equal(h.m.anchorSpreadSource_ability_blight,1);assert.equal(h.m.decayPrimaryPaidApplications||0,0);
+ const bl=native('blightburst'),h=fixture(bl,['blightburst'],0);bl.onAttack(h.b,h.c);assert.equal(h.r.mp,92);assert.equal(h.e.v012Rot.length,1);assert.equal(h.m.anchorSpreadSource_ability_blightburst,1);assert.equal(h.m.decayPrimaryPaidApplications||0,0);
  for(const id of PROFILES){const p=checkedProfile(id);console.log('INDEPENDENT_ROT_BUILDS='+JSON.stringify({id,configs:Object.fromEntries(Object.entries(p.configs).map(([k,v])=>[k,v.t.nodes]))}));for(const sc of ['normal-1','normal-4','elite','boss'])paired(p,sc,0);}
  console.log('ANCHOR_INDEPENDENT_ROT_SMOKE_OK');
 }

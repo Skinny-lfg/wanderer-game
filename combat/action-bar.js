@@ -1,7 +1,7 @@
 'use strict';
 globalThis.WandererActionBar = (() => {
   const snapshots = new WeakMap();
-  const webpIcons = new Set(["blood_ward","carrion_detonation","counterstrike","crimson_pact","crimson_rush","elemental_blight","fervent_life","guardians_oath","hemal_sigil","hemovore","hex_bleed","hex_bolt","iron_reversal","lifeweave","life_conduit","plague_rupture","prismatic_rebound","reapers_cadence","redline","rot_husk","rot_recovery","rot_symbiosis","rot_ward","runic_shield","sanctuary","sanguine_reprisal","spellblade","spell_surge","toxic_precision","venom_shatter"]);
+  const webpIcons = new Set(["blood_ward","carrion_detonation","counterstrike","crimson_pact","crimson_onslaught","elemental_blight","fervent_life","guardians_oath","hemal_sigil","hemovore","hex_bleed","hex_bolt","iron_reversal","lifeweave","life_conduit","plague_rupture","prismatic_rebound","reapers_cadence","redline","rot_husk","rot_recovery","rot_symbiosis","rot_ward","runic_shield","sanctuary","sanguine_reprisal","spellblade","spell_surge","toxic_precision","venom_shatter"]);
   const passiveIcon = id => "passives/"+id+(webpIcons.has(id)?".webp":".png");
   const weaponActions = {
     arcaneGuard:{name:'Arcane Guard',icon:'passives/barrier_pulse.png'},

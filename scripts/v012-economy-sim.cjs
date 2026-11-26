@@ -4,8 +4,8 @@ const output=process.argv[2]||'/tmp/v012-economy.json';
 const source=require.main===module&&process.argv[3]?fs.readFileSync(process.argv[3],'utf8'):undefined;
 const priorities={
  sustain:{families:['radiance','aegis','blood'],picks:['renewal','second_breath','blood_drinker','strong_heart','fortified','sanctuary','hemovore'],route:'safe'},
- offense:{families:['fury','blood','decay'],picks:['quick_hands','bleeding_edge','toxic_touch','deep_cuts','executioner','double_strike','precision'],route:'waves'},
- elemental:{families:['arcane','decay','aegis'],picks:['arcane_focus','toxic_touch','mana_spring','efficient_cast','barrier_pulse','wasting_curse'],route:'safe'}
+ offense:{families:['fury','blood','decay'],picks:['quick_hands','bleeding_edge','corrupting_touch','deep_cuts','executioner','double_strike','precision'],route:'waves'},
+ elemental:{families:['arcane','decay','aegis'],picks:['arcane_focus','corrupting_touch','mana_spring','efficient_cast','barrier_pulse','wasting_curse'],route:'safe'}
 };
 function equipBest(a,weapon){
  const s=a.state();

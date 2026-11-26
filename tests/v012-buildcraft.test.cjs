@@ -53,7 +53,7 @@ test('every advertised passive is unique, finite, and changes at least one execu
   assert(p.description.length>15,'tooltip/behavior '+p.id);
   assert(p.requires.every(f=>api.FAMILIES.includes(f)),p.id+' valid hybrid');
   if(p.element)assert(api.ELEMENTS.includes(p.element),p.id+' valid element');
-  const prerequisites=({sanctuary:['renewal'],life_conduit:['renewal'],deep_cuts:['bleeding_edge'],virulent_rot:['toxic_touch'],elemental_force:['overcharge']})[p.id]||[];
+  const prerequisites=({sanctuary:['renewal'],life_conduit:['renewal'],deep_cuts:['bleeding_edge'],virulent_rot:['corrupting_touch'],elemental_force:['overcharge']})[p.id]||[];
   const baseline=replay(null,p.family,p.element||'lightning',prerequisites);
   const withPassive=replay(p.id,p.family,p.element||'lightning',prerequisites);
   if(JSON.stringify(withPassive)===JSON.stringify(baseline)){
@@ -94,7 +94,7 @@ test('hybrids require both families; simulated DOT, shock, healing, barrier, att
   const b=api.create();b.families=[p.family];b.element=p.element||null;
   assert(!api.eligible(b,p.family).some(x=>x.id===p.id),'locked hybrid '+p.id);
   b.families=[...new Set(p.requires)];b.unlockedFamilies=[...b.families];
-  if(b.families.includes('arcane'))b.element='fire';b.realmIndex=10;b.picks=b.families.map(f=>({blood:'bleeding_edge',decay:'toxic_touch',radiance:'renewal',aegis:'barrier_pulse',fury:'precision',arcane:'kindling'})[f]);if(b.families.includes('aegis'))b.picks.push('guarded_block');
+  if(b.families.includes('arcane'))b.element='fire';b.realmIndex=10;b.picks=b.families.map(f=>({blood:'bleeding_edge',decay:'corrupting_touch',radiance:'renewal',aegis:'barrier_pulse',fury:'precision',arcane:'kindling'})[f]);if(b.families.includes('aegis'))b.picks.push('guarded_block');
   assert(api.eligible(b,p.family).some(x=>x.id===p.id),'unlocked hybrid '+p.id);
  }
  for(const family of api.FAMILIES){
@@ -178,7 +178,7 @@ test('Staff/Wand amplify all Magic schools without consuming extra status rolls'
 
 
 test('alternative hybrids are exclusive per affinity pair, cap three, and unlock progressively',()=>{
- const b=api.create();b.families=['blood','decay','arcane'];b.unlockedFamilies=[...b.families];b.element='fire';b.realmIndex=4;b.picks=['bleeding_edge','toxic_touch','kindling'];
+ const b=api.create();b.families=['blood','decay','arcane'];b.unlockedFamilies=[...b.families];b.element='fire';b.realmIndex=4;b.picks=['bleeding_edge','corrupting_touch','kindling'];
  assert(!api.options(b,'blood',()=>.4).some(p=>p.requires.length),'hybrids should not appear before Realm 5');
  b.realmIndex=6;
  const available=api.eligible(b,'blood');
@@ -220,7 +220,7 @@ test('Realm passive drafts stay in the completed Realm affinity with upgrades, h
  const onlyUpgrade=api.options(upgrade,'blood',()=>0);
  assert.equal(onlyUpgrade.length,1);assert.equal(onlyUpgrade[0].id,'bleeding_edge');assert.equal(onlyUpgrade[0].category,'Upgrade');
 
- const hybrid=api.create();hybrid.families=['blood','decay'];hybrid.unlockedFamilies=['blood','decay'];hybrid.realmIndex=10;hybrid.picks=['bleeding_edge','toxic_touch'];hybrid.runtime.hybridPity={'blood:decay':2};
+ const hybrid=api.create();hybrid.families=['blood','decay'];hybrid.unlockedFamilies=['blood','decay'];hybrid.realmIndex=10;hybrid.picks=['bleeding_edge','corrupting_touch'];hybrid.runtime.hybridPity={'blood:decay':2};
  const bloodHybrids=api.eligible(hybrid,'blood').filter(p=>p.requires.length);
  assert(bloodHybrids.length>0);
  const forced=api.options(hybrid,'blood',()=>.99);

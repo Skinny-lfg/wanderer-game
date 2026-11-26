@@ -14,10 +14,10 @@ function transform(runtime,build,cfg){
  const old=runtime.slice(runtime.indexOf('function v013GraveBloomPulse('),runtime.indexOf('function groupElementalEffects('));
  if(!old.startsWith('function v013GraveBloomPulse')||!old.includes('groupSecondaryDamage'))throw Error('Wrong runtime baseline');
  runtime=one(runtime,old,'','retire old resolver');
- runtime=one(runtime,"if(cast&&(learned('spell_echo')||prepared('grave_bloom'))){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=learned('spell_echo')?Math.max(1,Math.round(damage*.1*learned('spell_echo'))):0;damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);damage+=v013GraveBloomPulse(r,e,s.spellPower||0);}}",
- "if(cast&&learned('spell_echo')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=Math.max(1,Math.round(damage*.1*learned('spell_echo')));damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);}}","weapon spell echo only");
- runtime=one(runtime,"if(learned('spell_echo')||prepared('grave_bloom')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){if(learned('spell_echo'))spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));spellDamage+=v013GraveBloomPulse(r,r.enemy,ctx.power||0);}}",
- "if(learned('spell_echo')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount)spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));}","elemental spell echo only");
+ runtime=one(runtime,"if(cast&&(learned('resonant_sequence')||prepared('grave_bloom'))){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=learned('resonant_sequence')?Math.max(1,Math.round(damage*.1*learned('resonant_sequence'))):0;damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);damage+=v013GraveBloomPulse(r,e,s.spellPower||0);}}",
+ "if(cast&&learned('resonant_sequence')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=Math.max(1,Math.round(damage*.1*learned('resonant_sequence')));damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);}}","weapon spell echo only");
+ runtime=one(runtime,"if(learned('resonant_sequence')||prepared('grave_bloom')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){if(learned('resonant_sequence'))spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('resonant_sequence')));spellDamage+=v013GraveBloomPulse(r,r.enemy,ctx.power||0);}}",
+ "if(learned('resonant_sequence')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount)spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('resonant_sequence')));}","elemental spell echo only");
  const start=build.indexOf("  if(r.prepared==='grave_bloom'){",build.indexOf('function onInfusionHit(')),end=build.indexOf('\n  }\n }',start);
  if(start<0||end<0)throw Error('Physical legacy block not found');
  build=build.slice(0,start)+build.slice(end+4);

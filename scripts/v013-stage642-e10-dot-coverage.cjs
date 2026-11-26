@@ -9,14 +9,14 @@ const S=require('./simulate-progression.cjs');
 const VARIANTS=Object.freeze({
  'decay-blood-spread':Object.freeze({
   name:'Decay + Blood DoT Spread E10 Research',risk:0,
-  targets:['toxic_touch','bleeding_edge','plague_spread'],
+  targets:['corrupting_touch','bleeding_edge','plague_spread'],
   families:['decay','blood'],armor:'Leather',weapons:['Sword','Daggers'],
   style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,
   researchGearPreference:true
  }),
  'arcane-decay-bloom':Object.freeze({
   name:'Magic + Decay Grave Bloom E10 Research',risk:0,
-  targets:['arcane_focus','toxic_touch','hex_bolt','elemental_blight','grave_bloom'],
+  targets:['arcane_focus','corrupting_touch','hex_bolt','elemental_blight','grave_bloom'],
   families:['arcane','decay'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],
   style:'focused',healAt:.72,retreatAt:.46,target:'mechanics',shop:true,
   researchGearPreference:true

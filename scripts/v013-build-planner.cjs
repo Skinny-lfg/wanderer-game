@@ -7,35 +7,35 @@ const DECAY_WEAPONS={twohand:['Two-Handed','Plate'],staff:['Staff','Cloth'],dagg
 const BUILDS=Object.freeze({
  ...Object.fromEntries(Object.entries(DECAY_WEAPONS).flatMap(([id,[weapon,armor]])=>
  ['cycle','overflow','hybrid'].map(role=>['decay-'+role+'-'+id,{primary:'decay',model:'pure',weapons:[weapon],armor,focus:'rot',decayRole:role,
- milestones:['blight',...(role==='overflow'?['corruption_nova','contagious_touch']:role==='cycle'?['corruption_cycle','contagious_touch']:['corruption_cycle','corruption_nova','contagious_touch'])],orderedMilestones:true}]))),
- 'decay-plagueheart':{primary:'decay',model:'pure',weapons:['Wand','Staff'],armor:'Cloth',focus:'rot',decayRole:'plagueheart',milestones:['blight','contagious_touch','plagueheart','soul_drain'],orderedMilestones:true},
- 'blood-pure':{primary:'blood',model:'pure',weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
- 'blood-fury':{primary:'blood',secondary:'fury',secondAt:12,model:'two',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','reapers_cadence'],focus:'bleed'},
- 'blood-fury-radiance':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_rush','fervent_life','reapers_cadence'],focus:'bleed'},
- 'blood-fury-radiance-no-mixed':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'three',mix:false,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','battle_tempo','living_recovery','heart_of_carnage'],focus:'bleed'},
- 'fury-blood-aegis':{primary:'fury',secondary:'blood',third:'aegis',secondAt:12,thirdAt:30,model:'adaptive',mix:true,weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','crimson_rush','relentless_assault'],focus:'speed'},
- 'fury-pure':{primary:'fury',model:'pure',weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
+ milestones:['blightburst',...(role==='overflow'?['corruption_nova','contagious_touch']:role==='cycle'?['corruption_cycle','contagious_touch']:['corruption_cycle','corruption_nova','contagious_touch'])],orderedMilestones:true}]))),
+ 'decay-plagueheart':{primary:'decay',model:'pure',weapons:['Wand','Staff'],armor:'Cloth',focus:'rot',decayRole:'plagueheart',milestones:['blightburst','contagious_touch','plagueheart','soul_drain'],orderedMilestones:true},
+ 'blood-pure':{primary:'blood',model:'pure',weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','third_cut','heart_of_carnage'],focus:'bleed'},
+ 'blood-fury':{primary:'blood',secondary:'fury',secondAt:12,model:'two',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_onslaught','reapers_cadence'],focus:'bleed'},
+ 'blood-fury-radiance':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_onslaught','fervent_life','reapers_cadence'],focus:'bleed'},
+ 'blood-fury-radiance-no-mixed':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'three',mix:false,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','third_cut','battle_tempo','living_recovery','heart_of_carnage'],focus:'bleed'},
+ 'fury-blood-aegis':{primary:'fury',secondary:'blood',third:'aegis',secondAt:12,thirdAt:30,model:'adaptive',mix:true,weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','crimson_onslaught','sundering_assault'],focus:'speed'},
+ 'fury-pure':{primary:'fury',model:'pure',weapons:['Daggers','Bow'],armor:'Leather',milestones:['battle_tempo','sundering_assault','unchained_fury'],focus:'speed'},
  'arcane-arcane-pure':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand','Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
  'arcane-fire-pure':{primary:'arcane',model:'pure',element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','fire_spread','combustion'],focus:'spell',orderedMilestones:true},
  'arcane-fire-aegis':{primary:'arcane',secondary:'aegis',secondAt:14,model:'two',mix:true,element:'fire',weapons:['Wand','Staff'],armor:'Cloth',milestones:['kindling','runic_shield','fire_spread','arcane_bastion'],focus:'spell'},
  'arcane-frost-radiance':{primary:'arcane',secondary:'radiance',secondAt:14,model:'two',mix:false,element:'frost',weapons:['Staff','Wand'],armor:'Cloth',milestones:['deep_winter','frost_spread','living_recovery'],focus:'spell'},
- 'arcane-lightning-pure':{primary:'arcane',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','storm_mastery','chain_discharge'],focus:'spell',orderedMilestones:true},
+ 'arcane-lightning-pure':{primary:'arcane',model:'pure',element:'lightning',weapons:['Staff','Wand'],armor:'Cloth',milestones:['overcharge','forked_lightning','chain_discharge'],focus:'spell',orderedMilestones:true},
  'decay-arcane-aegis':{primary:'decay',secondary:'arcane',third:'aegis',secondAt:13,thirdAt:29,model:'three',mix:true,element:'arcane',weapons:['Wand','Sword'],armor:'Leather',milestones:['lingering_rot','hex_bolt','elemental_blight','grave_bloom'],focus:'rot'},
  'aegis-radiance':{primary:'aegis',secondary:'radiance',secondAt:13,model:'two',mix:true,weapons:['Mace','Sword'],armor:'Plate',milestones:['steadfast_guard','sanctuary','guardians_oath','last_bastion'],focus:'defense'},
  'radiance-pure':{primary:'radiance',model:'pure',weapons:['Mace','Sword'],armor:'Plate',milestones:['living_recovery','overflowing_life','heart_of_the_wild'],focus:'defense'},
  // Controlled weapon and potion-preparation preferences. All share the
  // SAME legal talent plans; no loadout is granted, dropped or forced.
- 'blood-sword':{primary:'blood',model:'pure',weapons:['Sword'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
- 'blood-two-handed':{primary:'blood',model:'pure',weapons:['Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_feast','heart_of_carnage'],focus:'bleed'},
- 'fury-daggers':{primary:'fury',model:'pure',weapons:['Daggers'],armor:'Leather',milestones:['battle_tempo','relentless_assault','unchained_fury'],focus:'speed'},
- 'fury-bow':{primary:'fury',model:'pure',weapons:['Bow'],armor:'Leather',milestones:['bow_pierce','battle_tempo','relentless_assault'],focus:'speed',orderedMilestones:true},
+ 'blood-sword':{primary:'blood',model:'pure',weapons:['Sword'],armor:'Leather',milestones:['blood_harvest','third_cut','heart_of_carnage'],focus:'bleed'},
+ 'blood-two-handed':{primary:'blood',model:'pure',weapons:['Two-Handed'],armor:'Leather',milestones:['blood_harvest','third_cut','heart_of_carnage'],focus:'bleed'},
+ 'fury-daggers':{primary:'fury',model:'pure',weapons:['Daggers'],armor:'Leather',milestones:['battle_tempo','sundering_assault','unchained_fury'],focus:'speed'},
+ 'fury-bow':{primary:'fury',model:'pure',weapons:['Bow'],armor:'Leather',milestones:['bow_pierce','battle_tempo','sundering_assault'],focus:'speed',orderedMilestones:true},
  'arcane-wand':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
  'arcane-staff':{primary:'arcane',model:'pure',element:'arcane',weapons:['Staff'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell'},
  'arcane-wand-offense':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'offense'},
  'arcane-wand-defense':{primary:'arcane',model:'pure',element:'arcane',weapons:['Wand'],armor:'Cloth',milestones:['arcane_resonance','arcane_surge','arcane_mastery'],focus:'spell',potionPolicy:'defense'}
 });
 const OPENING_SKILLS=Object.freeze({blood:'bleeding_edge',fury:'quick_hands',
- radiance:'strong_heart',aegis:'guarded_block',arcane:'arcane_focus',decay:'toxic_touch'});
+ radiance:'strong_heart',aegis:'guarded_block',arcane:'arcane_focus',decay:'corrupting_touch'});
 function getPlan(id){if(!Object.hasOwn(BUILDS,id))throw Error('Unknown strategic agent build '+id);return BUILDS[id];}
 function pressure(history=[]){
  const recent=history.slice(-3),fights=recent.flatMap(t=>t.rooms||[]).filter(f=>f?.hpMax>0);
@@ -113,7 +113,7 @@ function scoreNode(n,plan,active,context={}){
  const rank=(plan.milestones||[]).indexOf(n.id);
  if(rank>=0)score+=8-Math.min(5,rank);
  if(n.gateFor&&plan.milestones?.includes(n.gateFor))score+=1.5;
- if(focus==='rot'&&['toxic_touch','blight','virulent_rot','contagious_touch','corruption_cycle','corruption_nova','soul_drain','wasting_curse','wither'].includes(n.id))score+=3;
+ if(focus==='rot'&&['corrupting_touch','blightburst','virulent_rot','contagious_touch','corruption_cycle','corruption_nova','soul_drain','wasting_curse','wither'].includes(n.id))score+=3;
  if(n.kind==='stat'&&n.id.startsWith('outer_')&&!plan.mix)score-=3;
  if(n.gateFor&&!plan.milestones?.includes(n.gateFor))score-=1.5;
  if(n.kind==='stat'&&n.id.startsWith('root_'))score+=3;

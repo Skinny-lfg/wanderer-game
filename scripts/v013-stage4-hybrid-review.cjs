@@ -7,7 +7,7 @@ const A=require('./v013-affinity-baseline.cjs');
 const S=require('./simulate-progression.cjs');
 const FROZEN=require('../reports/v013-stage3-affinity-freeze.json');
 const PAIRS=Object.freeze([
- ['blood-fury','crimson_rush','blood','fury'],
+ ['blood-fury','crimson_onslaught','blood','fury'],
  ['fury-radiance','fervent_life','fury','radiance'],
  ['radiance-aegis','sanctuary','radiance','aegis'],
  ['aegis-arcane','runic_shield','aegis','arcane'],

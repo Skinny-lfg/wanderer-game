@@ -71,7 +71,7 @@ test('consolidation: no retired talent gates or descriptions remain in current c
 
 
 test('consolidation: approved talent names resolve in the live graph without reviving retired nodes',()=>{
- const expected={"blood_transfer":"Sanguine Echo","toxic_touch":"Corrupting Touch","blight":"Blightburst","relentless_assault":"Sundering Assault","arcane_echo":"Elemental Echo","crimson_rush":"Crimson Onslaught","fury_recovery":"Defiant Surge","storm_mastery":"Forked Lightning","spell_echo":"Resonant Sequence","crimson_feast":"Third Cut","precision":"Precision","storm_conductor":"Storm Conductor","unchained_fury":"Unchained Fury"};
+ const expected={"sanguine_echo":"Sanguine Echo","corrupting_touch":"Corrupting Touch","blightburst":"Blightburst","sundering_assault":"Sundering Assault","elemental_echo":"Elemental Echo","crimson_onslaught":"Crimson Onslaught","defiant_surge":"Defiant Surge","forked_lightning":"Forked Lightning","resonant_sequence":"Resonant Sequence","third_cut":"Third Cut","precision":"Precision","storm_conductor":"Storm Conductor","unchained_fury":"Unchained Fury"};
  for(const [id,name] of Object.entries(expected))assert.equal(T.NODES.find(n=>n.id===id)?.name,name,id);
  for(const id of ['lifeweave','lifeweaver','critical_training'])assert(!T.NODES.some(n=>n.id===id),id);
  assert.equal(T.NODES.find(n=>n.id==='precision').family,'fury');

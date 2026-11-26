@@ -48,12 +48,12 @@ function aoeState(snap){
   weapon==='Mace'&&nodes.includes('mace_shockwave')||
   weapon==='Sword'&&offhand==='Shield'&&nodes.includes('sword_sweep')||
   ['Wand','Staff'].includes(weapon)&&element==='lightning'&&
-   (nodes.includes('overcharge')||nodes.includes('storm_mastery'))&&!nodes.includes('lightning_focus')||
+   (nodes.includes('overcharge')||nodes.includes('forked_lightning'))&&!nodes.includes('lightning_focus')||
   element==='fire'&&nodes.includes('fire_spread')||nodes.includes('plague_spread')||
   nodes.includes('grave_bloom')&&snap.state.automaticTalents.prepared==='grave_bloom';
  return {aoePotential:!!actual,weapon,offhand,element,
   aoeNodes:nodes.filter(x=>['fan_of_blades','mace_shockwave','sword_sweep','cleave_mastery',
-   'bow_pierce','fire_spread','frost_spread','plague_spread','grave_bloom','overcharge','storm_mastery'].includes(x)),
+   'bow_pierce','fire_spread','frost_spread','plague_spread','grave_bloom','overcharge','forked_lightning'].includes(x)),
   earnedTalents:snap.talentSpent,XP:snap.xp,gearPieces:snap.equipPieces};
 }
 function cohort(cfg){

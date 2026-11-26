@@ -83,11 +83,11 @@ function checkedProfile(id){
  assert(Object.hasOwn(WEAPONS,id));const [weapon,offhandType,armorType]=WEAPONS[id],configs={};
  const candidates=T.NODES.filter(n=>n.family==='decay'&&!n.pair&&!n.pending&&!n.advanced&&['stat','basic'].includes(n.kind)).sort((a,b)=>(a.kind==='stat'?0:1)-(b.kind==='stat'?0:1)||((a.tier||1)-(b.tier||1))||a.id.localeCompare(b.id));
  for(const arm of arms){
-  const skills=['affinity_decay','toxic_touch','contagious_touch',...(arm.cycle?['corruption_cycle']:[]),...(arm.overflow?['corruption_nova']:[])];
+  const skills=['affinity_decay','corrupting_touch','contagious_touch',...(arm.cycle?['corruption_cycle']:[]),...(arm.overflow?['corruption_nova']:[])];
   let t=buy(skills,{xp:30*T.POINT_XP});assert(t.nodes.length<=30,id+'/'+arm.id+' mandatory budget');
   // Same priority order in every arm. Excluded active/focused/extension nodes
   // cannot be acquired by filler; spend released points in legal supporting nodes.
-  for(const skill of ['toxic_touch','virulent_rot']){
+  for(const skill of ['corrupting_touch','virulent_rot']){
    while(t.nodes.length<30){const next=T.allocate(t,skill);if(!next)break;t=next;}
   }
   for(let pass=0;pass<30&&t.nodes.length<30;pass++){
@@ -138,7 +138,7 @@ function smoke(){
  for(const key of ['old','double','shared','both']){
   const api=native(key);
   for(const cycle of [false,true]){
-   const f=fixture(api,['affinity_decay','toxic_touch',...(cycle?['corruption_cycle']:[])],0);
+   const f=fixture(api,['affinity_decay','corrupting_touch',...(cycle?['corruption_cycle']:[])],0);
    f.c.random=()=>0;api.onAttack(f.b,f.c);
    const expected=cycle||['double','both'].includes(key)?2:1;
    assert.equal(f.e.v012Rot.length,expected,key+'/'+cycle+' stack count');

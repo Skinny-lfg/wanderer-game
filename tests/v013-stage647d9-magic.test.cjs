@@ -63,7 +63,7 @@ test('Native standalone adaptive Burn cannot feed Conflagration',()=>{
  assert(h.enemies.slice(1).every(e=>e.dots.burn.length===0));
 });
 test('Static Focus reduces secondary damage, retains jump count and does not generate marks on extra targets',()=>{
- const a=fixture('lightning',['storm_mastery']),b=fixture('lightning',['storm_mastery','static_focus']);
+ const a=fixture('lightning',['forked_lightning']),b=fixture('lightning',['forked_lightning','static_focus']);
  const ac=a.runtime.v013LightningChainDamage(a.r,100),bc=b.runtime.v013LightningChainDamage(b.r,100);assert.equal(ac,bc);
  assert.equal(a.metrics.lightningMarksApplied,b.metrics.lightningMarksApplied);
  assert(b.metrics.secondaryTargetDamage<a.metrics.secondaryTargetDamage);assert(b.metrics.static_focusDamage>0);assert.equal(b.reserve.hp,10000);

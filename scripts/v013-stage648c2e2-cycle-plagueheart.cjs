@@ -13,14 +13,14 @@ function cycleSource(arm){
  if(v.double){
   // The second stack has paid-primary provenance for persistence and burst,
   // but does not trigger a second paid action, Soul Drain or Contagious Touch.
-  s=rep(s,"...(origin==='paid_primary_toxic_touch'?{primaryPaid:true}:{})","...(['paid_primary_toxic_touch','paid_primary_cycle_extra'].includes(origin)?{primaryPaid:true}:{})");
-  s=rep(s,"damage:origin==='paid_primary_toxic_touch'?","damage:['paid_primary_toxic_touch','paid_primary_cycle_extra'].includes(origin)?");
-  s=rep(s,"if(d.primaryPaid){c.metric?.('decayPrimaryPaidDiagnosticAppliedWithStacks'","if(origin==='paid_primary_cycle_extra'){c.metric?.('decayPrimaryPaidStageE2ExtraStacks',1);c.metric?.('decayPrimaryPaidStageE2ExtraStackRaw',d.damage);}if(origin==='paid_primary_toxic_touch'){c.metric?.('decayPrimaryPaidDiagnosticAppliedWithStacks'");
-  const from="&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch'))applyRot(b,c,(weaponBase(c.player.stats)+Math.max(0,Number(c.player.stats.spellPower)||0))*0.04,'paid_primary_toxic_touch');";
-  const to="&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch')){const potency=(weaponBase(c.player.stats)+Math.max(0,Number(c.player.stats.spellPower)||0))*0.04;applyRot(b,c,potency,'paid_primary_toxic_touch');if(specialized(b,'corruption_cycle')&&e.hp>0)applyRot(b,c,potency,'paid_primary_cycle_extra');}";
+  s=rep(s,"...(origin==='paid_primary_corrupting_touch'?{primaryPaid:true}:{})","...(['paid_primary_corrupting_touch','paid_primary_cycle_extra'].includes(origin)?{primaryPaid:true}:{})");
+  s=rep(s,"damage:origin==='paid_primary_corrupting_touch'?","damage:['paid_primary_corrupting_touch','paid_primary_cycle_extra'].includes(origin)?");
+  s=rep(s,"if(d.primaryPaid){c.metric?.('decayPrimaryPaidDiagnosticAppliedWithStacks'","if(origin==='paid_primary_cycle_extra'){c.metric?.('decayPrimaryPaidStageE2ExtraStacks',1);c.metric?.('decayPrimaryPaidStageE2ExtraStackRaw',d.damage);}if(origin==='paid_primary_corrupting_touch'){c.metric?.('decayPrimaryPaidDiagnosticAppliedWithStacks'");
+  const from="&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch'))applyRot(b,c,(weaponBase(c.player.stats)+Math.max(0,Number(c.player.stats.spellPower)||0))*0.04,'paid_primary_corrupting_touch');";
+  const to="&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch')){const potency=(weaponBase(c.player.stats)+Math.max(0,Number(c.player.stats.spellPower)||0))*0.04;applyRot(b,c,potency,'paid_primary_corrupting_touch');if(specialized(b,'corruption_cycle')&&e.hp>0)applyRot(b,c,potency,'paid_primary_cycle_extra');}";
   s=rep(s,from,to);
  }
- const start=s.indexOf(" if(specialized(b,'corruption_cycle')){const stacks="),end=s.indexOf(" if(rank(b,'blight')",start);
+ const start=s.indexOf(" if(specialized(b,'corruption_cycle')){const stacks="),end=s.indexOf(" if(rank(b,'blightburst')",start);
  assert(start>=0&&end>start);const old=s.slice(start,end);assert(old.includes('corruptionCycleConsumedRawRot'));
  let next='';
  if(!v.disable){

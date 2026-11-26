@@ -10,7 +10,7 @@ test('retired Decay IDs are absent from live combat, catalog, graph and mirrored
  }
  const progress={...T.create(),xp:10000};
  for(const id of retired){assert(!T.NODES.some(n=>n.id===id||n.passiveId===id||n.effectId===id));assert.equal(T.allocate(progress,id),null);}
- const decay=buy(['toxic_touch','corruption_cycle','corruption_nova','soul_drain']);
+ const decay=buy(['corrupting_touch','corruption_cycle','corruption_nova','soul_drain']);
  const b=globalThis.WandererV012Buildcraft.create();globalThis.WandererV012Buildcraft.syncPermanent(b,decay,true);
  assert.deepEqual(b.picks,[]);
  for(const id of retired)assert.equal(globalThis.WandererV012Buildcraft.rank(b,id),0);

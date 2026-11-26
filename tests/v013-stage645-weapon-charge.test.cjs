@@ -43,10 +43,10 @@ test('Native talent ranks gate secondary Bleed/Rot; missing talent grants no sta
  assert.equal(h.r.mp,20);
 });
 test('Native rank-one 42% chance is halved; real cooldowns and Rot mana cost apply',()=>{
- const a=harness(['bleeding_edge','toxic_touch'],()=>.22);
+ const a=harness(['bleeding_edge','corrupting_touch'],()=>.22);
  a.B.stage645SecondaryStatuses(a.b,a.context(a.enemies[1]));
  assert.equal(a.enemies[1].bleedStacks,0);assert.equal(a.enemies[1].v012Rot.length,0);
- const b=harness(['bleeding_edge','toxic_touch'],()=>.20),e=b.enemies[1];
+ const b=harness(['bleeding_edge','corrupting_touch'],()=>.20),e=b.enemies[1];
  b.B.stage645SecondaryStatuses(b.b,b.context(e));
  assert.equal(e.bleedStacks,1);assert.equal(e.v012Rot.length,1);
  assert.equal(e.dots.bleed[0].damage,8);assert.equal(e.v012Rot[0].damage,4);
@@ -68,7 +68,7 @@ test('Carrion uses actual HP damage, ignores unmarked targets and bursts only af
  h.ctx.stage645Carrion(h.r,e,1000);assert.equal(h.metrics.stage645Bursts,1);
 });
 test('Weapon extras feed their own mark with actual hit damage and preserve selected target',()=>{
- const h=harness(['carrion_detonation','bleeding_edge','toxic_touch']),e=h.enemies[1];
+ const h=harness(['carrion_detonation','bleeding_edge','corrupting_touch']),e=h.enemies[1];
  mark(h,e);const main=h.r.enemy;
  h.ctx.stage645SecondaryWeapon(h.r,e,500,75);
  assert.equal(e.stage645Charge,75);assert.equal(h.r.enemy,main);

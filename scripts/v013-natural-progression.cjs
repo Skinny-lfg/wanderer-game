@@ -25,14 +25,14 @@ const PROFILES=Object.freeze({
  daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',healAt:.35,retreatAt:.16,target:'focus',shop:true},
  'arcane-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'arcane-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['arcane'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
- 'arcane-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],families:['arcane'],element:'lightning',armor:'Cloth',weapons:['Staff','Wand'],style:'focused',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true},
+ 'arcane-lightning':{name:'Lightning Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','overcharge','forked_lightning'],families:['arcane'],element:'lightning',armor:'Cloth',weapons:['Staff','Wand'],style:'focused',preparedTargets:[],healAt:.54,retreatAt:.34,target:'mechanics',shop:true},
  'arcane-arcane':{name:'Arcane Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','arcane_resonance','arcane_surge','arcane_mastery'],families:['arcane'],element:'arcane',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.58,retreatAt:.37,target:'mechanics',shop:true},
  'arcane-wand':{name:'Wand Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Wand'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'arcane-staff':{name:'Staff Specialist (Fire)',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','radiance'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
- 'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_rush'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
+ 'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_onslaught'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
  'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['arcane','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
- 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['toxic_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','arcane'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
+ 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['corrupting_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','arcane'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
  // New catalog-aware agents exist alongside old frozen Stage 6.5 profiles.
  // Their point progression and gear are strictly earned, never injected.
  ...Object.fromEntries(Object.entries(PLANNER.BUILDS).map(([id,build])=>[
@@ -51,7 +51,7 @@ const PIVOTS=Object.freeze({
  balanced:{targets:['strong_heart','guarded_block','renewal'],families:['radiance','aegis'],preparedTargets:['last_bastion']},
  daring:{targets:['guarded_block','barrier_pulse','strong_heart'],families:['aegis','radiance'],preparedTargets:['last_bastion']},
  'arcane-fire':{targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],element:'frost'},
- 'arcane-frost':{targets:['element_choice','arcane_focus','mana_spring','overcharge','storm_mastery'],element:'lightning'},
+ 'arcane-frost':{targets:['element_choice','arcane_focus','mana_spring','overcharge','forked_lightning'],element:'lightning'},
  'arcane-lightning':{targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],element:'fire'}
 });
 function pivotProfile(id){return {...PROFILES[id],...PIVOTS[id],variantId:id+'-pivot'};}
@@ -412,7 +412,7 @@ function runeScore(rune,profile,context=null){
  const magnitude=RUNES.runeValue(f.id,rune.tier,RUNES.rarity(rune))/f.base;
  if(!context)return round((weights[f.id]||0)*magnitude,3);
  const {base,projected,nodes,weapon,offhand,evasionGain}=context,owned=new Set(nodes||[]),has=id=>owned.has(id);
- const actualDecay=has('affinity_decay')&&['toxic_touch','blight','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(has);
+ const actualDecay=has('affinity_decay')&&['corrupting_touch','blightburst','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(has);
  const actualBlood=has('affinity_blood')||has('bleeding_edge'),actualFire=has('affinity_arcane')&&context.element==='fire';
  const actualCaster=['Wand','Staff'].includes(weapon),actualMana=base.mana>0,actualBarrier=offhand==='Orb'||has('affinity_aegis')||has('rotguard')||has('runic_shield')||has('overflowing_life');
  const actualHeal=has('affinity_radiance')||has('blood_drinker')||has('blood_harvest')||offhand==='Charm';
@@ -905,7 +905,7 @@ function boonScore(id,profile,context={}){
  const hp=context.vitals?.maxhp?context.vitals.hp/context.vitals.maxhp:1;
  const mana=context.vitals?.maxmp??0,steps=context.steps??10;
  const blood=context.owned?context.owned.includes('affinity_blood'):profile.families.includes('blood'),decay=context.owned?context.owned.includes('affinity_decay'):profile.families.includes('decay');
- const rotReady=context.owned?decay&&['toxic_touch','blight','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(x=>context.owned.includes(x)):decay;
+ const rotReady=context.owned?decay&&['corrupting_touch','blightburst','corruption_cycle','corruption_nova','rotguard','grave_bloom'].some(x=>context.owned.includes(x)):decay;
  const fireReady=context.owned?context.owned.includes('affinity_arcane')&&context.element==='fire':profile.element==='fire';
  const dotReady=context.bleedReady||blood||rotReady||fireReady;
  switch(id){
@@ -1052,7 +1052,7 @@ function fightNatural(a,profile,tickLimit,context={}){
  const initialNormals=fullInitialRoster.filter(e=>e&&!e.boss&&!e.miniboss&&e.role!=='minion').length;
  const initialRoleCounts=Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>
   [role,fullInitialRoster.filter(e=>e?.role===role).length]));
- const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','storm_mastery','fire_spread','frost_spread','plague_spread','contagious_touch','corruption_nova'];
+ const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','forked_lightning','fire_spread','frost_spread','plague_spread','contagious_touch','corruption_nova'];
  const actualNodes=[...(a.state().automaticTalents?.nodes||[])];
  const actualWeapon=a.state().equip?.weapon?.subtype||null,actualOffhand=a.state().equip?.offhand?.subtype||null;
  const actualElement=a.state().automaticTalents?.element||null;
@@ -1062,12 +1062,12 @@ function fightNatural(a,profile,tickLimit,context={}){
   actualWeapon==='Mace'&&actualNodes.includes('mace_shockwave')||
   actualWeapon==='Sword'&&actualOffhand==='Shield'&&actualNodes.includes('sword_sweep')||
   ['Wand','Staff'].includes(actualWeapon)&&actualElement==='lightning'&&
-   (actualNodes.includes('overcharge')||actualNodes.includes('storm_mastery'))&&!actualNodes.includes('lightning_focus');
+   (actualNodes.includes('overcharge')||actualNodes.includes('forked_lightning'))&&!actualNodes.includes('lightning_focus');
  const aoePotential=!!(aoeFromWeapon||aoePrepared.some(id=>['fire_spread','plague_spread','contagious_touch','corruption_nova'].includes(id)));
  const mpStart=r.mp,maxmp=r.maxmp,metricsBefore=Object.fromEntries(['secondaryTargetDamage','secondaryTargetHits','manaSpent','fundedCasts','infusionActivations','infusionHits','infusionDamage','unfundedCasterAttacks']
   .map(key=>[key,Number(r.metrics?.[key])||0]));
  const measured=key=>Math.max(0,(Number(r.metrics?.[key])||0)-metricsBefore[key]);
- const decayKeys=['decayPrimaryPaidApplications','anchorSpreadSource_ability_cycle','anchorSpreadSource_ability_overflow','anchorSpreadSource_ability_blight','anchorSpreadCycleCasts','anchorSpreadCycleSeedOnly','corruptionCycleActivations','corruptionCycleDamage','corruptionCycleMana','anchorSpreadOverflowCasts','anchorSpreadOverflowSeedOnly','corruptionOverflowActivations','anchorSpreadOverflowPrimary','anchorSpreadOverflowSecondary','anchorSpreadOverflowBudget','corruptionOverflowMana','contagiousTouchSpread','soulDrainMana','decayPrimaryPaidTotalRotDamage','rotguardReactiveRot'];
+ const decayKeys=['decayPrimaryPaidApplications','anchorSpreadSource_ability_cycle','anchorSpreadSource_ability_overflow','anchorSpreadSource_ability_blightburst','anchorSpreadCycleCasts','anchorSpreadCycleSeedOnly','corruptionCycleActivations','corruptionCycleDamage','corruptionCycleMana','anchorSpreadOverflowCasts','anchorSpreadOverflowSeedOnly','corruptionOverflowActivations','anchorSpreadOverflowPrimary','anchorSpreadOverflowSecondary','anchorSpreadOverflowBudget','corruptionOverflowMana','contagiousTouchSpread','soulDrainMana','decayPrimaryPaidTotalRotDamage','rotguardReactiveRot'];
  const decayBefore=Object.fromEntries(decayKeys.map(k=>[k,Number(r.metrics?.[k])||0]));
  const cap=context.capabilities||null,adaptive=context.adaptiveTargets??context.decisionModel==='adaptive';
  let ticks=0,switches=0,thornRedirects=0,minionFocusSeconds=0,minionFocusSwitches=0,minimum=r.maxhp>0?r.hp/r.maxhp:0;

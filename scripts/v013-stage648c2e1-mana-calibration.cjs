@@ -13,13 +13,13 @@ function rep(s,a,b){assert.equal(s.split(a).length,2,'anchor '+a.slice(0,100));r
 function gearSource(factor){assert([1,.75,.5].includes(factor));return factor===1?GEAR:rep(GEAR,'result.power=power(result);','result.manaRegen*= '+factor+';result.power=power(result);');}
 function magicSource(add){assert([0,4].includes(add));return add?rep(BC,'charges:2,cost:12,arcaneCost:10','charges:2,cost:16,arcaneCost:14'):BC;}
 function decaySource(cost,focus=0){
- assert(Object.hasOwn(COST,cost));assert([0,10,18].includes(focus));let s=E.rotSource('rot4');const [rot,blight,cycle,soul]=COST[cost];
+ assert(Object.hasOwn(COST,cost));assert([0,10,18].includes(focus));let s=E.rotSource('rot4');const [rot,blightburst,cycle,soul]=COST[cost];
  // Preserve native order, chance, ICD and affordability prechecks; only vary prices.
  s=rep(s,"c.random()<v.chance*q&&spendDarkMana(c,1)","c.random()<v.chance*q&&spendDarkMana(c,"+rot+")");
- s=rep(s,"rank(b,'toxic_touch')&&(c.player?.mp||0)>=1","rank(b,'toxic_touch')&&(c.player?.mp||0)>="+rot);
- s=rep(s,"&&spendDarkMana(c,1)&&ready(b,'toxicTouch'","&&spendDarkMana(c,"+rot+")&&ready(b,'toxicTouch'");
- s=rep(s,"e.v012Rot?.length&&(c.player?.mp||0)>=3&&ready(b,'blight'","e.v012Rot?.length&&(c.player?.mp||0)>="+blight+"&&ready(b,'blight'");
- s=rep(s,"&&spendDarkMana(c,3)&&activated(b,'blight')","&&spendDarkMana(c,"+blight+")&&activated(b,'blight')");
+ s=rep(s,"rank(b,'corrupting_touch')&&(c.player?.mp||0)>=1","rank(b,'corrupting_touch')&&(c.player?.mp||0)>="+rot);
+ s=rep(s,"&&spendDarkMana(c,1)&&ready(b,'corruptingTouch'","&&spendDarkMana(c,"+rot+")&&ready(b,'corruptingTouch'");
+ s=rep(s,"e.v012Rot?.length&&(c.player?.mp||0)>=3&&ready(b,'blightburst'","e.v012Rot?.length&&(c.player?.mp||0)>="+blightburst+"&&ready(b,'blightburst'");
+ s=rep(s,"&&spendDarkMana(c,3)&&activated(b,'blightburst')","&&spendDarkMana(c,"+blightburst+")&&activated(b,'blightburst')");
  s=rep(s,"e.v012Rot?.length>=3&&(c.player?.mp||0)>=4","e.v012Rot?.length>=3&&(c.player?.mp||0)>="+cycle);
  s=rep(s,"if(spendDarkMana(c,4)&&ready(b,'corruptionCycle'","if(spendDarkMana(c,"+cycle+")&&ready(b,'corruptionCycle'");
  s=rep(s,"(c.player?.mp||0)<4)m('InsufficientMana')","(c.player?.mp||0)<"+cycle+")m('InsufficientMana')");

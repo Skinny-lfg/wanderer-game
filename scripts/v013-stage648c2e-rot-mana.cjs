@@ -18,9 +18,9 @@ function rotSource(mode){
  if(mode.endsWith('-no-cycle'))s=rep(s,"if(specialized(b,'corruption_cycle')&&e.hp>0&&e.v012Rot?.length>=3","if(false&&specialized(b,'corruption_cycle')&&e.hp>0&&e.v012Rot?.length>=3");
  if(mode.startsWith('rot')){
   s=rep(s,'function applyRot(b,c,power,origin=null){',weaponBase.toString()+'\nfunction applyRot(b,c,power,origin=null){');
-  s=rep(s,"base*.065+Math.max(0,c.power||0)*.025,'paid_primary_toxic_touch'","(weaponBase(c.player.stats)+Math.max(0,Number(c.player.stats.spellPower)||0))*"+(Number(mode[3])/100)+",'paid_primary_toxic_touch'");
+  s=rep(s,"base*.065+Math.max(0,c.power||0)*.025,'paid_primary_corrupting_touch'","(weaponBase(c.player.stats)+Math.max(0,Number(c.player.stats.spellPower)||0))*"+(Number(mode[3])/100)+",'paid_primary_corrupting_touch'");
   const factor="power*(1+.15*rank(b,'virulent_rot')+(b.runtime.talentBonuses?.rotBonus||0))";
-  s=rep(s,"damage:Math.max(1,Math.round("+factor+"))","damage:origin==='paid_primary_toxic_touch'?Math.max(0,"+factor+"):Math.max(1,Math.round("+factor+"))");
+  s=rep(s,"damage:Math.max(1,Math.round("+factor+"))","damage:origin==='paid_primary_corrupting_touch'?Math.max(0,"+factor+"):Math.max(1,Math.round("+factor+"))");
  }
  s=rep(s,"  const baseRot=rot.reduce((sum,s)=>sum+s.damage,0);","  const baseRot=rot.reduce((sum,s)=>sum+s.damage,0);\n  const paid=rot.filter(primaryPaidRot);c.metric?.('decayPrimaryPaidStageETickCount',1);c.metric?.('decayPrimaryPaidStageEStackSeconds',paid.length);c.metric?.('decayPrimaryPaidStageERawPrimaryTick',paid.reduce((n,d)=>n+d.damage,0));c.metric?.('decayPrimaryPaidStageETicksAt'+paid.length,1);");
  return s;

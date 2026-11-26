@@ -20,7 +20,7 @@ function summarizeAccount(a){
   clearedE20:a.attempts.some(t=>t.level===20&&t.bossWon),
   finalXp:a.xp,nativeTalentNodes:a.talents?.length||0,
   talentsObserved:Object.fromEntries([
-   'affinity_blood','blood_drinker','blood_harvest','crimson_rush',
+   'affinity_blood','blood_drinker','blood_harvest','crimson_onslaught',
    'affinity_arcane','affinity_decay','affinity_aegis',
    'arcane_resonance','arcane_surge','arcane_mastery',
    'guarded_block','barrier_pulse','hex_bolt','grave_bloom'

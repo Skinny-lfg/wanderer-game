@@ -161,7 +161,7 @@ function compare(opts){
    potency:{damageTaken:x.actual.damageTaken,seconds:x.actual.seconds},
    potionsUsed:x.actual.potionUses.length,
    spent:x.actual.spent,
-   hasMixed:x.actual.actualTalentNodes.some(id=>id==='crimson_rush'||id==='reapers_cadence'),
+   hasMixed:x.actual.actualTalentNodes.some(id=>id==='crimson_onslaught'||id==='reapers_cadence'),
    affinities:x.actual.actualTalentNodes.filter(id=>id.startsWith('affinity_'))})),
   variants:entries,limitation:'Exact source gear and E1–E'+(opts.level-1)+' history. Identical first enemy guaranteed only when first encounter signatures match. Other rooms, tactics, potion stock and future RNG can diverge following legal respec.'};
  return row;

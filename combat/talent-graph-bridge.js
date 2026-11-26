@@ -6,7 +6,7 @@ function project(graph,progress,element='fire',prepared=null){
  const selected=graph.filter(n=>progress.ranks[n.id]),nodes=[],permanentTalents=[];
  for(const n of selected){const rank=progress.ranks[n.id];for(let i=1;i<=rank;i++)nodes.push(i===1?n.id:n.id+'_rank'+i);if(n.passiveId)for(let i=0;i<rank;i++)permanentTalents.push(n.passiveId);}
  // The legacy combat engine supplies these first ranks with their affinity.
- for(const [family,id] of [['blood','bleeding_edge'],['decay','toxic_touch']])if(nodes.includes('affinity_'+family))permanentTalents.push(id);
+ for(const [family,id] of [['blood','bleeding_edge'],['decay','corrupting_touch']])if(nodes.includes('affinity_'+family))permanentTalents.push(id);
  if(prepared!==null&&!selected.some(n=>n.id===prepared&&n.advanced))throw Error('Invalid prepared talent');
  return {nodes,permanentTalents,element,prepared};
 }

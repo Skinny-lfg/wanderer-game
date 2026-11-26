@@ -17,7 +17,7 @@ test('DOT conversions repay the remaining damage consumed over 2/4/8 ticks',()=>
  }
 });
 test('Spell Surge cannot consume on its triggering critical; free echoes cannot create Static',()=>{
- const b=B.create();b.families=['arcane','fury'];b.element='lightning';b.picks=['overcharge','spell_surge','spellblade','arcane_echo'];const {c,effects}=ctx();c.critical=true;B.onAttack(b,c);B.onCast(b,c);assert(!effects.some(e=>e[2]==='✨ Spell Surge'));c.now=1;B.onCast(b,c);assert(effects.some(e=>e[2]==='✨ Spell Surge'));assert.equal(b.runtime.staticCharges,2);B.onCast(b,{...c,funded:false});assert.equal(b.runtime.staticCharges,2);
+ const b=B.create();b.families=['arcane','fury'];b.element='lightning';b.picks=['overcharge','spell_surge','spellblade','elemental_echo'];const {c,effects}=ctx();c.critical=true;B.onAttack(b,c);B.onCast(b,c);assert(!effects.some(e=>e[2]==='✨ Spell Surge'));c.now=1;B.onCast(b,c);assert(effects.some(e=>e[2]==='✨ Spell Surge'));assert.equal(b.runtime.staticCharges,2);B.onCast(b,{...c,funded:false});assert.equal(b.runtime.staticCharges,2);
 });
 
 

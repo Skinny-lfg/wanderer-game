@@ -20,7 +20,7 @@ function formulaSource(mode){
  if(mode==='persistent')return s;
  const formula=mode==='max'?'0.10*Math.max(ap,sp)':mode==='sum'?'0.08*(ap+sp)':'0.10*Math.max(ap,sp)+0.03*Math.min(ap,sp)';
  s=replace(s,'function applyRot(b,c,power,origin=null){','function stage648c2dPower(c){const ap=Math.max(0,Number(c.player.stats?.attack)||0),sp=Math.max(0,Number(c.player.stats?.spellPower)||0);return '+formula+';}\nfunction applyRot(b,c,power,origin=null){');
- const original=" if(rank(b,'toxic_touch')&&(c.player?.mp||0)>=1&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,1)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch'))applyRot(b,c,base*.065+Math.max(0,c.power||0)*.025,'paid_primary_toxic_touch');";
+ const original=" if(rank(b,'corrupting_touch')&&(c.player?.mp||0)>=1&&(b.cooldowns.corruptingTouch??-1e10)<=c.now&&c.random()<values('corrupting_touch',rank(b,'corrupting_touch')).chance&&spendDarkMana(c,1)&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch'))applyRot(b,c,base*.065+Math.max(0,c.power||0)*.025,'paid_primary_corrupting_touch');";
  const revised=original.replace('base*.065+Math.max(0,c.power||0)*.025','stage648c2dPower(c)');
  const clock=mode==='clock'||mode.startsWith('cap-');
  if(clock){
@@ -28,8 +28,8 @@ function formulaSource(mode){
   // A single target-independent opportunity per native second, on the current target.
   // Preserve cost, ICD and rank scaling; no off-hand / extra-attack opportunities.
   const tick='const e=migrateEnemyDots(c.enemy);corruptionNova(b,c);if(e.hp>0)tickRot(b,c);';
-  const chance="Math.min(.95,values('toxic_touch',rank(b,'toxic_touch')).chance*.75)";
-  const pulse=revised.replace("if(rank(b,'toxic_touch')","if(e.hp>0&&c.player.hp>0&&rank(b,'toxic_touch')").replace("values('toxic_touch',rank(b,'toxic_touch')).chance",chance);
+  const chance="Math.min(.95,values('corrupting_touch',rank(b,'corrupting_touch')).chance*.75)";
+  const pulse=revised.replace("if(rank(b,'corrupting_touch')","if(e.hp>0&&c.player.hp>0&&rank(b,'corrupting_touch')").replace("values('corrupting_touch',rank(b,'corrupting_touch')).chance",chance);
   s=replace(s,tick,tick+'\n'+pulse);
  }else s=replace(s,original,revised);
  if(mode.startsWith('cap-')){

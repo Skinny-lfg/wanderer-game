@@ -6,8 +6,8 @@ const round=x=>Math.round(x*100)/100;
 const BOSSES={blood:'leech',decay:'matriarch',radiance:'devourer',aegis:'guardian',fury:'berserker',arcane:'conductor'};
 const FAMILIES=['blood','fury','radiance','aegis','arcane','decay'];
 // Real earned mixed-axis nodes, not the mere intent to buy one in a profile.
-const MIXED_SKILLS=new Set(['crimson_rush','reapers_cadence','red_guillotine',
- 'fervent_life','redline','fury_recovery','sanctuary','guardians_oath','last_bastion',
+const MIXED_SKILLS=new Set(['crimson_onslaught','reapers_cadence','red_guillotine',
+ 'fervent_life','redline','defiant_surge','sanctuary','guardians_oath','last_bastion',
  'runic_shield','prismatic_rebound','arcane_bastion','hex_bolt','elemental_blight',
  'grave_bloom','plague_spread','carrion_detonation','septic_wound']);
 function classify({equipment={},talents={},build={},stats={}}={}){
@@ -28,7 +28,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(main==='Mace'&&has('mace_shockwave'))add('area',1.9,'mace shockwave');
  if(main==='Sword'&&offhand==='Shield'&&has('sword_sweep'))add('area',1.6,'shielded sweep');
  if(fundedMagic&&element==='lightning'&&has('overcharge')&&!has('lightning_focus'))add('area',3.3,'funded chain lightning');
- if(fundedMagic&&element==='lightning'&&has('storm_mastery')&&!has('lightning_focus'))add('area',1.2,'storm mastery chain extension');
+ if(fundedMagic&&element==='lightning'&&has('forked_lightning')&&!has('lightning_focus'))add('area',1.2,'storm mastery chain extension');
  if(fundedMagic&&element==='fire'&&has('fire_spread'))add('area',2.8,'funded wildfire burn');
  if(fundedMagic&&element==='frost'&&has('frost_spread'))add('area',1.9,'funded winter field chill');
  if(has('plague_spread'))add('area',1.6,'on-kill contagion');
@@ -36,10 +36,10 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('grasping_roots'))add('area',1.8,'grasping roots');
  if(has('ward_echo')&&(offhand==='Orb'||has('affinity_aegis')||has('barrier_pulse')))add('area',1.9,'barrier-enabled ward echo');
  if(has('affinity_decay')&&Number(stats.mana)>0&&!has('carrion_detonation')&&talents.prepared!=='grave_bloom'){
-  if(has('contagious_touch')&&has('toxic_touch'))add('area',2.1,'persistent full-potency Rot contagion');
+  if(has('contagious_touch')&&has('corrupting_touch'))add('area',2.1,'persistent full-potency Rot contagion');
   if(has('corruption_nova')){add('area',1.9,'shared Overflow pulse');add('focus',1.3,'independent Overflow');}
   if(has('corruption_cycle'))add('focus',2.2,'independent Cycle burst');
-  if(has('blight'))add('focus',.8,'independent Blight Rot');
+  if(has('blightburst'))add('focus',.8,'independent Blight Rot');
  }
  if(has('carrion_detonation')&&has('affinity_blood')&&has('affinity_decay')&&!magical)add('area',2,'charged carrion detonation');
  if(fundedMagic&&element==='arcane'&&has('arcane_nova')&&talents.prepared!=='grave_bloom')add('area',1.8,'arcane infusion nova');
@@ -63,7 +63,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
  if(has('barrier_pulse'))add('defense',1.2,'barrier pulse');
  if(has('runic_shield'))add('defense',1.4,'runic shield');
  if(has('strong_heart'))add('defense',.9,'strong heart');
- if(has('affinity_decay')&&(has('toxic_touch')||has('blight')||has('corruption_cycle')||has('corruption_nova'))){if(has('wasting_curse'))add('defense',.8,'Rot damage reduction');if(has('wither'))add('defense',.5,'Rot attack reduction');}
+ if(has('affinity_decay')&&(has('corrupting_touch')||has('blightburst')||has('corruption_cycle')||has('corruption_nova'))){if(has('wasting_curse'))add('defense',.8,'Rot damage reduction');if(has('wither'))add('defense',.5,'Rot attack reduction');}
  if(has('renewal'))add('defense',.8,'renewal');
  if(stats.blockChance>0)add('defense',Math.min(2,stats.blockChance*(stats.blockReduction||.35)/12),'actual Guard chance and strength');
  if(stats.barrierPower>0&&(offhand==='Orb'||has('affinity_aegis')||has('overflowing_life')))add('defense',Math.min(1.2,stats.barrierPower*3),'active Barrier Power');
@@ -80,7 +80,7 @@ function classify({equipment={},talents={},build={},stats={}}={}){
   affinities.length>=2?'dual-affinity-only':'not-yet';
  return {role,area:round(area),focus:round(focus),defense:round(defense),
   areaReady,focusReady,weapon:main,offhand,armor,element,earnedNodes:owned.size,
-  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blight'),rotContagion:has('contagious_touch')&&has('toxic_touch')};
+  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blightburst'),rotContagion:has('contagious_touch')&&has('corrupting_touch')};
 }
 // Only uses card fields rendered by renderRealmCards: family, risk,
 // favoured gear, condition and *one* known omen. Remaining omens are hidden.

@@ -22,7 +22,7 @@ test('B new draft is stable after restore; first win gives starter plus one choi
  const id=a.draft().options[0].id;assert(a.passive(id));assert.equal(a.passive(id),false);assert.equal(a.build().picks.length,2);
 });
 test('B triggers and caps, equipment block, one hybrid per pair, controlled exhausted pool',()=>{
- const b=build(['bleeding_edge','toxic_touch'],['blood','decay']);b.realmIndex=4;assert(!api.eligible(b,'blood').some(p=>p.requires.length));b.realmIndex=5;assert(api.eligible(b,'blood').some(p=>p.id==='carrion_detonation'));b.picks.push('carrion_detonation');assert(!api.eligible(b,'blood').some(p=>p.id==='plague_rupture'));
+ const b=build(['bleeding_edge','corrupting_touch'],['blood','decay']);b.realmIndex=4;assert(!api.eligible(b,'blood').some(p=>p.requires.length));b.realmIndex=5;assert(api.eligible(b,'blood').some(p=>p.id==='carrion_detonation'));b.picks.push('carrion_detonation');assert(!api.eligible(b,'blood').some(p=>p.id==='plague_rupture'));
  const a=build(['iron_skin','quick_hands'],['aegis','fury']);assert(!api.eligible(a,'aegis').some(p=>p.id==='counterstrike'));a.runtime.draftStats={...base,blockChance:20};assert(api.eligible(a,'aegis').some(p=>p.id==='counterstrike'));
  const full=build([],['blood']);full.picks=api.CATALOG.filter(p=>p.family==='blood'&&!p.requires.length).flatMap(p=>Array(p.max).fill(p.id));const raw=JSON.stringify(full);assert.deepEqual(Array.from(api.options(full,'blood')),[]);assert.equal(JSON.stringify(full),raw);
  const unlock=(ids)=>{const b=build([...full.picks],['blood']);for(const id of ids){const index=b.picks.lastIndexOf(id);assert(index>=0);b.picks.splice(index,1);}b.runtime.draftStats=base;return b;};

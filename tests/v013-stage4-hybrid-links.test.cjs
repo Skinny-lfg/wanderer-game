@@ -34,7 +34,7 @@ test('Stage 4 all six adjacent links have legal 24-point native v15 allocations'
  }
 });
 test('Stage 4 Crimson Onslaught requires crit and Bleed, without changing Blood + Fury base damage',()=>{
- const b=makeBuild('crimson_rush'),x=encounter();
+ const b=makeBuild('crimson_onslaught'),x=encounter();
  B.onAttack(b,x.c);
  assert(x.events.some(e=>e.kind==='damage'&&e.label.includes('Crimson Onslaught')&&e.amount===15));
  const before=x.events.filter(e=>e.label?.includes('Crimson Onslaught')).length;

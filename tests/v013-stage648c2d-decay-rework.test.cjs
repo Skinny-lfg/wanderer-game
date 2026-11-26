@@ -2,7 +2,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {formulaSource,MODES}=require('../scripts/v013-stage648c2d-decay-rework.cjs');
 const {T,buy}=require('./v013-current-talent-helper.cjs');
-function fixture(mode,ids=['toxic_touch']){
+function fixture(mode,ids=['corrupting_touch']){
  const root={WandererAutomaticTalents:T};new Function('globalThis',formulaSource(mode))(root);
  const B=root.WandererV012Buildcraft,b=B.create();B.syncPermanent(b,buy(ids));
  const e={hp:10000,maxhp:10000,v012Rot:[],dots:{bleed:[],burn:[]}},r={hp:100,maxhp:100,mp:100,maxmp:100,enemies:[e],stats:{attack:100,spellPower:40,attacksPerSec:.5}},m={};
@@ -13,7 +13,7 @@ test('all research variants compile',()=>{for(const m of MODES)new Function(form
 test('formulas use AP and SP, not hit or speed; raw stack uses native modifiers',()=>{
  for(const [mode,power] of [['max',10],['sum',11.2],['hybrid',11.2]]){
   const h=fixture(mode),ref=fixture('persistent');
-  ref.B.applyRot(ref.b,ref.c,power,'paid_primary_toxic_touch');
+  ref.B.applyRot(ref.b,ref.c,power,'paid_primary_corrupting_touch');
   h.c.base=900;h.B.onAttack(h.b,h.c);
   assert.equal(h.e.v012Rot[0].damage,ref.e.v012Rot[0].damage);
   assert.equal(h.r.mp,99);
@@ -33,7 +33,7 @@ test('clock applies on seconds only, respects mana, cooldown and no attack speed
 });
 test('cap detonation requires primary stacks, finite burst, native mana/cooldown',()=>{
  for(const [mode,n,raw] of [['cap-one',1,48],['cap-three',3,68],['cap-none',0,68]]){
-  const h=fixture(mode,['toxic_touch','corruption_cycle']);
+  const h=fixture(mode,['corrupting_touch','corruption_cycle']);
   h.e.v012Rot=Array.from({length:5},()=>({damage:10,remaining:4,primaryPaid:true}));
   h.e.v012Rot.push({damage:99,remaining:3,spread:true});h.B.onAttack(h.b,h.c);
   assert.equal(h.m.corruptionCycleActivations||0,0);
@@ -44,7 +44,7 @@ test('cap detonation requires primary stacks, finite burst, native mana/cooldown
  }
 });
 test('only the live six-stack cap can activate Cycle',()=>{
- const h=fixture('cap-one',['toxic_touch','corruption_cycle']);
+ const h=fixture('cap-one',['corrupting_touch','corruption_cycle']);
  h.e.v012Rot=Array.from({length:3},()=>({damage:10,remaining:4,primaryPaid:true}));
  h.B.onAttack(h.b,h.c);assert.equal(h.m.corruptionCycleActivations||0,0);
  h.e.v012Rot.push(...Array.from({length:3},()=>({damage:10,remaining:4,primaryPaid:true})));

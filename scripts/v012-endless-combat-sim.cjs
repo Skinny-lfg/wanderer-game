@@ -7,7 +7,7 @@ const anchor='const base={hp:27+level*14,atk:4+level*3,def:1+level*.62};';
 if(!original.includes(anchor))throw Error('Combat-core scaling anchor changed; abort rather than simulate different rules');
 const strategies={
   sustain:{families:['radiance','aegis','blood','fury','decay','arcane'],picks:['renewal','strong_heart','second_breath','life_bloom','fortified','barrier_pulse','iron_skin','blood_drinker','guarded_block']},
-  offense:{families:['blood','fury','decay','arcane','radiance','aegis'],picks:['bleeding_edge','toxic_touch','deep_cuts','quick_hands','precision','double_strike','brutal_crit','virulent_rot','arcane_focus']}
+  offense:{families:['blood','fury','decay','arcane','radiance','aegis'],picks:['bleeding_edge','corrupting_touch','deep_cuts','quick_hands','precision','double_strike','brutal_crit','virulent_rot','arcane_focus']}
 };
 const arms=['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'];
 const initial=['blood','decay','radiance','aegis','fury','arcane'];
