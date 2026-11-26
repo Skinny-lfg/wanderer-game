@@ -1,0 +1,145 @@
+name: v0.13 consolidated - final local playtest package
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['.github/workflows/v013-final-playtest-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4e83f4b74d81a008bb19675fcba4b89c2fe28cad
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build exact validated source, isolated local saves
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "4e83f4b74d81a008bb19675fcba4b89c2fe28cad"
+          OUT="$(node scripts/prepare-automatic-preview.mjs)"
+          PREFIX='Isolated automatic RPG preview: '
+          [[ "$OUT" == "$PREFIX"* ]]
+          BUILD="${OUT#"$PREFIX"}"
+          export BUILD
+          node <<'JS'
+          const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+          const root=process.env.BUILD,savePath=path.join(root,'online/v012-save.js'),htmlPath=path.join(root,'index.html');
+          let save=fs.readFileSync(savePath,'utf8'),html=fs.readFileSync(htmlPath,'utf8');
+          const original="PREFIX='wanderer_automatic_rpg_preview_c2_v1_'",isolated="PREFIX='wanderer_v013_consolidated_playtest_1_'";
+          assert.equal(save.split(original).length,2);
+          save=save.replace(original,isolated);
+          fs.writeFileSync(savePath,save);
+          const hash=crypto.createHash('sha256').update(save).digest('hex').slice(0,12);
+          assert.equal([...html.matchAll(/src="online\/v012-save\.js\?v=[^"]+"/g)].length,1);
+          html=html.replace(/src="online\/v012-save\.js\?v=[^"]+"/,'src="online/v012-save.js?v='+hash+'"');
+          fs.writeFileSync(htmlPath,html);
+          assert(html.includes('globalThis.__WANDERER_CLOUD_ONLY__=false;'));
+          assert(html.includes('const PHASE5_VALIDATION=true;'));
+          for(const name of ['firebase-config.mjs','firebase-config-production.mjs','v012-auth-bootstrap.js','v012-account.mjs','v012-cloud-save.mjs','v012-feedback.mjs','v012-leaderboard-ui.mjs'])assert(!fs.existsSync(path.join(root,'online',name)),name);
+          assert(!fs.existsSync(path.join(root,'online/vendor')));
+          for(const p of ['index.html','preview/talent-rebuild/index.html','combat/talent-graph-next.js','combat/talent-catalog.js','assets/passives/elemental_echo.png','assets/passives/corrupting_touch.png','assets/passives/crimson_onslaught.webp','assets/passives/blightburst.png'])assert(fs.existsSync(path.join(root,p)),p);
+          const manifest={version:'v0.13 consolidated playtest',source:'4e83f4b74d81a008bb19675fcba4b89c2fe28cad',validatedRun:45827469025,localSaveNamespace:'wanderer_v013_consolidated_playtest_1_',cloud:false,builtAt:new Date().toISOString()};
+          fs.writeFileSync(path.join(root,'PLAYTEST-MANIFEST.json'),JSON.stringify(manifest,null,2)+'\n');
+          console.log(JSON.stringify(manifest));
+          JS
+          mkdir -p /tmp/wanderer-playtest
+          cp -a "$BUILD/." /tmp/wanderer-playtest/
+          cat > /tmp/wanderer-playtest/README.txt <<'EOF'
+          WANDERER v0.13 — CONSOLIDATED PLAYTEST
+          Source: 4e83f4b74d81a008bb19675fcba4b89c2fe28cad
+          Final regression: https://github.com/Skinny-lfg/wanderer-game/actions/runs/45827469025
+          
+          Extract the complete ZIP before playing.
+          With Node.js installed, run in this folder:
+              node playtest-server.cjs
+          Then open http://127.0.0.1:8013/ in your browser.
+          Windows: double-click PLAY-WINDOWS.bat.
+          Mac: open Terminal in this folder and run node playtest-server.cjs.
+          Stop with Ctrl+C. Keep the same URL/port and browser to preserve local saves.
+          
+          This build uses its own local save namespace. Existing saves are not deleted,
+          but previous preview progress will not appear here. No Firebase, accounts,
+          deployment, or production save access. No npm install is required to play.
+          EOF
+          cat > /tmp/wanderer-playtest/playtest-server.cjs <<'EOF'
+          'use strict';
+          const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+          const root=__dirname,port=8013;
+          const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.jpeg':'image/jpeg','.jpg':'image/jpeg','.gif':'image/gif','.svg':'image/svg+xml','.ico':'image/x-icon','.woff':'font/woff','.woff2':'font/woff2','.ttf':'font/ttf','.avif':'image/avif','.txt':'text/plain; charset=utf-8'};
+          const server=http.createServer((req,res)=>{
+           if(!['GET','HEAD'].includes(req.method))return res.writeHead(405).end();
+           let pathname;
+           try{pathname=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);}catch{return res.writeHead(400).end();}
+           const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
+           if(!file.startsWith(root+path.sep))return res.writeHead(403).end();
+           const ext=path.extname(file).toLowerCase();
+           if(!Object.hasOwn(mime,ext))return res.writeHead(404).end();
+           fs.stat(file,(error,stat)=>{
+            if(error||!stat.isFile())return res.writeHead(404).end();
+            res.writeHead(200,{'Content-Type':mime[ext],'Content-Length':stat.size,'X-Content-Type-Options':'nosniff','Cache-Control':'no-cache'});
+            if(req.method==='HEAD')return res.end();
+            const stream=fs.createReadStream(file);stream.on('error',()=>res.destroy());stream.pipe(res);
+           });
+          });
+          server.on('error',err=>{console.error(err.message);process.exitCode=1;});
+          server.listen(port,'127.0.0.1',()=>console.log('Wanderer v0.13: http://127.0.0.1:'+port+'/'));
+          EOF
+          printf '@echo off\r\ncd /d "%%~dp0"\r\nnode playtest-server.cjs\r\npause\r\n' > /tmp/wanderer-playtest/PLAY-WINDOWS.bat
+          du -sh /tmp/wanderer-playtest
+      - name: Test packaged local HTTP launcher
+        shell: bash
+        run: |
+          cd /tmp/wanderer-playtest
+          node playtest-server.cjs &
+          PID=$!
+          trap 'kill "$PID" 2>/dev/null || true' EXIT
+          for i in {1..20}; do curl -fsS http://127.0.0.1:8013/ -o /tmp/wanderer-playtest-index.html && break; sleep 1; done
+          cmp index.html /tmp/wanderer-playtest-index.html
+          curl -fsS http://127.0.0.1:8013/PLAYTEST-MANIFEST.json
+          curl -fsS http://127.0.0.1:8013/preview/talent-rebuild/index.html -o /dev/null
+          curl -fsS http://127.0.0.1:8013/assets/passives/crimson_onslaught.webp -o /dev/null
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8013/online/firebase-config.mjs)" = 404
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wanderer-v013-consolidated-playtest-4e83f4b
+          path: /tmp/wanderer-playtest/
+          compression-level: 0
+          retention-days: 30
+          if-no-files-found: error
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4e83f4b74d81a008bb19675fcba4b89c2fe28cad
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Separate production and development dependency advisory inventories (no upgrade)
+        shell: bash
+        run: |
+          mkdir -p /tmp/wanderer-dependency-audit
+          npm audit --omit=dev --json > /tmp/wanderer-dependency-audit/production.json || true
+          npm audit --json > /tmp/wanderer-dependency-audit/all.json || true
+          node <<'JS'
+          const fs=require('node:fs');
+          for(const kind of ['production','all']){
+           const j=JSON.parse(fs.readFileSync('/tmp/wanderer-dependency-audit/'+kind+'.json','utf8'));
+           if(j.error||!j.metadata?.vulnerabilities)throw Error('Audit unavailable: '+JSON.stringify(j.error||j));
+           console.log(kind+' '+JSON.stringify(j.metadata.vulnerabilities));
+          }
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit-4e83f4b
+          path: /tmp/wanderer-dependency-audit/
+          retention-days: 30
