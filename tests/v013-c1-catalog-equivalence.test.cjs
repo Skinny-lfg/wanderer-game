@@ -22,10 +22,14 @@ test('C1 clean sheet: representative physical, spell and mixed paths use the nat
 });
 test('C1 clean sheet: only current catalog/runtime are loaded into root and Talent iframe',()=>{
  const page=fs.readFileSync('index.html','utf8'),iframe=fs.readFileSync('preview/talent-rebuild/index.html','utf8');
- assert.match(page,/src="combat\/talent-catalog\.js(?:\?v=[^"]+)?"/);
- assert.match(iframe,/src="\.\.\/\.\.\/combat\/talent-catalog\.js"/);
- assert(!page.includes('src="combat/automatic-talents.js"'));
- assert(!iframe.includes('src="../../combat/automatic-talents.js"'));
+ // Compare script paths rather than cache-busting query strings. Require
+ // exactly one current catalog in each page and no retired runtime.
+ const scripts=html=>[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(m=>m[1].split(/[?#]/,1)[0]);
+ for(const [html,prefix] of [[page,''],[iframe,'../../']]){
+  const loaded=scripts(html);
+  assert.equal(loaded.filter(src=>src===prefix+'combat/talent-catalog.js').length,1);
+  assert(!loaded.includes(prefix+'combat/automatic-talents.js'));
+ }
  assert.equal(T.create().treeVersion,15);
  for(const old of [8,9,10,11,12,13,14])assert.equal(T.valid({...T.create(),treeVersion:old}),false);
 });
