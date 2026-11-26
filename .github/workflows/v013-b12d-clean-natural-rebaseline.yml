@@ -1,0 +1,112 @@
+name: v0.13 B1.2D - clean natural rebaseline H
+on:
+  push:
+    branches: [balance/b1.2d-clean-natural-rebaseline]
+    paths: ['.github/workflows/v013-b12d-clean-natural-rebaseline.yml','scripts/v013-b12d-clean-natural-rebaseline.cjs','tests/v013-b12d-clean-natural-rebaseline.test.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v013-b12d-clean-natural-rebaseline
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      profiles: ${{ steps.matrix.outputs.profiles }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Regression gate
+        run: node --test tests/v013-b12d-clean-natural-rebaseline.test.cjs tests/v013-b12c5-decision-isolation.test.cjs tests/v013-b12c4-adaptive-commitment.test.cjs tests/v013-b12c3-equipment-factorial.test.cjs tests/v013-b12c2-agent-decision.test.cjs tests/v013-b12c1-attunement.test.cjs tests/v013-stage648c1-identity.test.cjs tests/v013-natural-progression.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-s4-agent-consistency.test.cjs tests/v013-b12c-surrender.test.cjs tests/v013-b12a-event-resolution.test.cjs
+      - name: Canonical manifest and all-profile native smoke
+        run: node scripts/v013-b12d-clean-natural-rebaseline.cjs smoke
+      - id: matrix
+        run: node -e "require('fs').appendFileSync(process.env.GITHUB_OUTPUT,'profiles='+JSON.stringify(require('./scripts/v013-b1-e10-rebaseline.cjs').NATURAL)+'\n')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b12d-manifest
+          path: reports/b12d/manifest.json
+  natural:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        profile: ${{ fromJSON(needs.preflight.outputs.profiles) }}
+        half: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fifty new earned accounts per shard
+        env:
+          PROFILE: ${{ matrix.profile }}
+          HALF: ${{ matrix.half }}
+        run: |
+          set -euo pipefail
+          for batch in $(seq $((HALF*10)) $((HALF*10+9))); do
+            node --max-old-space-size=4096 scripts/v013-b12d-clean-natural-rebaseline.cjs batch "$PROFILE" "$batch"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b12d-natural-${{ matrix.profile }}-${{ matrix.half }}
+          path: reports/b12d/batches/${{ matrix.profile }}
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    needs: [preflight, natural]
+    if: always() && needs.preflight.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: b12d-manifest
+          path: reports/b12d
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b12d-natural-*
+          path: input/natural
+      - name: Restore uniquely scoped compressed batches
+        run: |
+          mkdir -p reports/b12d/batches
+          for d in input/natural/b12d-natural-*; do
+            [ -d "$d" ] || continue
+            name=${d##*/b12d-natural-}
+            profile=${name%-*}
+            mkdir -p "reports/b12d/batches/$profile"
+            cp -a "$d"/. "reports/b12d/batches/$profile/"
+          done
+      - name: Verify coverage and summarize E10
+        run: node --max-old-space-size=5120 scripts/v013-b12d-clean-natural-rebaseline.cjs aggregate
+      - if: always()
+        run: |
+          if [ -f reports/b12d/summary.md ]; then cat reports/b12d/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b12d-summary
+          path: |
+            reports/b12d/manifest.json
+            reports/b12d/summary.json
+            reports/b12d/summary.md
+          retention-days: 30
+          if-no-files-found: warn
