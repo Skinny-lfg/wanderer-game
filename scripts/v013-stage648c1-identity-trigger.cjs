@@ -34,10 +34,15 @@ function capture(id){
 }
 function diagnosticSource(){
  const source=fs.readFileSync('combat/v012-buildcraft.js','utf8');
- const anchor=" if(specialized(b,'corruption_cycle')&&e.hp>0&&e.v012Rot?.length>=3&&(c.player?.mp||0)>=4&&(b.cooldowns.corruptionCycle??-1e10)<=c.now){";
- assert.equal(source.split(anchor).length,2);
- const before=" if(specialized(b,'corruption_cycle')){const stacks=e.v012Rot?.length||0;const m=(k,v=1)=>c.metric?.('corruptionCycleDiagnostic'+k,v);m('AttackChecks');m('Stacks'+Math.min(6,stacks));if(e.hp<=0)m('DeadTarget');else if(stacks<3)m('InsufficientStacks');else if((c.player?.mp||0)<4)m('InsufficientMana');else if((b.cooldowns.corruptionCycle??-1e10)>c.now)m('Cooldown');else m('Eligible');}";
- return source.replace(anchor,before+'\n'+anchor);
+ // Current Cycle casts first, adds two stacks and only then checks burst eligibility.
+ // Observe native guards and actual payment result; no duplicate mana check or RNG.
+ const guard=" if(!specialized(b,'corruption_cycle')||c.enemy.hp<=0||c.player.hp<=0||(b.cooldowns.corruptionCycle??-1e10)>c.now)return;";
+ const payment=" const before=c.player.mp;if(!spendDarkMana(c,10))return;";
+ assert.equal(source.split(guard).length,2,'current Corruption Cycle guard changed');
+ assert.equal(source.split(payment).length,2,'current Corruption Cycle payment changed');
+ const probe=" if(specialized(b,'corruption_cycle')){const m=(k)=>c.metric?.('corruptionCycleDiagnostic'+k,1);m('AttackChecks');m('Stacks'+Math.min(6,c.enemy.v012Rot?.length||0));if(c.enemy.hp<=0)m('DeadTarget');else if(c.player.hp<=0)m('DeadPlayer');else if((b.cooldowns.corruptionCycle??-1e10)>c.now)m('Cooldown');}";
+ const paid=" const before=c.player.mp;if(!spendDarkMana(c,10)){c.metric?.('corruptionCycleDiagnosticInsufficientMana',1);return;}c.metric?.('corruptionCycleDiagnosticEligible',1);";
+ return source.replace(guard,probe+'\n'+guard).replace(payment,paid);
 }
 function diagnose(){
  const a=read('input/earned','decay-wand'),b=read('input/baseline','decay-wand'),actors=a.accounts.filter(x=>x.snapshot),source=diagnosticSource(),rows=[],file='reports/stage648c1-trigger.json';
@@ -50,7 +55,7 @@ function diagnose(){
   for(const [v,w] of [[x.resolvedSeed,old.seed],[x.gearFingerprint,old.gear],[x.won,old.won],[x.died,old.died],[x.timedOut,old.timeout],[x.damageDealt,old.damage],[x.secondaryTargetDamage,old.secondary]])assert.equal(v,w,'diagnostic changed combat');
   const metrics=x.decayTalentMetrics||{};
   const get=k=>metrics['corruptionCycleDiagnostic'+k]||0;
-  assert.equal(get('AttackChecks'),get('DeadTarget')+get('InsufficientStacks')+get('InsufficientMana')+get('Cooldown')+get('Eligible'));
+  assert.equal(get('AttackChecks'),get('DeadTarget')+get('DeadPlayer')+get('InsufficientMana')+get('Cooldown')+get('Eligible'));
   assert((metrics.corruptionCycleActivations||0)<=get('Eligible'));
   rows.push({trial:cell.trial,size:cell.size,actor:cell.actor,won:x.won,seconds:x.seconds,metrics});
  }
