@@ -23,7 +23,7 @@ require('../online/v013-expedition-contracts.js');
 const K=globalThis.WandererV013ExpeditionContracts;
 const PROFILES=Object.freeze({
  cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','radiance'],preparedTargets:['last_bastion'],armor:'Plate',weapons:['Mace','Sword'],style:'mixed',healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
- balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:['red_guillotine'],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
+ balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:[],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
  daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',healAt:.35,retreatAt:.16,target:'focus',shop:true},
  'arcane-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'arcane-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['arcane'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},
@@ -34,7 +34,7 @@ const PROFILES=Object.freeze({
  'plate-warden':{name:'Plate Warden',risk:0,targets:['guarded_block','barrier_pulse','steadfast_guard','strong_heart'],families:['aegis','radiance'],armor:'Plate',weapons:['Mace','Sword'],style:'focused',preparedTargets:['last_bastion'],healAt:.68,retreatAt:.46,target:'mechanics',shop:true},
  'leather-duelist':{name:'Leather Duelist',risk:1,targets:['quick_hands','bleeding_edge','blood_drinker','precision','double_strike','blood_harvest','crimson_onslaught'],families:['fury','blood'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',preparedTargets:['red_guillotine'],healAt:.42,retreatAt:.25,target:'focus',shop:true},
  'cloth-battlemage':{name:'Cloth Battlemage',risk:0,targets:['element_choice','arcane_focus','mana_spring','runic_shield','guarded_block','arcane_bastion'],families:['arcane','aegis'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'mixed',preparedTargets:['arcane_bastion'],healAt:.61,retreatAt:.39,target:'mechanics',shop:true},
- 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['corrupting_touch','arcane_focus','affinity_aegis','mana_spring','guarded_block','arcane_resonance','hex_bolt','barrier_pulse','arcane_surge','arcane_mastery'],families:['decay','arcane'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
+ 'hexblade-hybrid':{name:'Hexblade Hybrid',risk:1,targets:['corrupting_touch','arcane_focus','mana_spring','arcane_resonance','hex_bolt','arcane_surge','arcane_mastery'],families:['decay','arcane'],armor:'Leather',weapons:['Sword','Daggers','Wand'],offhands:['Daggers','Orb','Tome'],style:'mixed',preparedTargets:['grave_bloom'],healAt:.5,retreatAt:.29,target:'mechanics',shop:true},
  // New catalog-aware agents exist alongside old frozen Stage 6.5 profiles.
  // Their point progression and gear are strictly earned, never injected.
  ...Object.fromEntries(Object.entries(PLANNER.BUILDS).map(([id,build])=>[
@@ -217,31 +217,18 @@ function gearSnapshot(a){
 }
 // Current v15 graph has no T.path helper; walk its real prerequisites and let
 // T.allocate enforce every purchase, point cap, rank and exclusion.
-function missingPath(T,progress,target){
- const nodes=new Map(T.NODES.map(x=>[x.id,x]));
- const owned=new Set(progress.nodes),visiting=new Set(),path=[];
- function add(id){
-  if(owned.has(id)||path.includes(id))return true;
-  const n=nodes.get(id);
-  if(!n||visiting.has(id)||n.excludes?.some(x=>owned.has(x)||path.includes(x)))return false;
-  visiting.add(id);
-  for(const key of [n.requires,...(n.prerequisites||[])].filter(Boolean))if(!add(key)){visiting.delete(id);return false;}
-  if(n.anyRequires?.length&&!n.anyRequires.some(x=>owned.has(x)||path.includes(x))){
-   const candidate=n.anyRequires.find(x=>add(x));
-   if(!candidate){visiting.delete(id);return false;}
-  }
-  visiting.delete(id);path.push(id);return true;
- }
- return add(target)?path:null;
+// Use the same native graph route planner for explicit profiles and smart profiles.
+function profilePlan(profile,progress){
+ return {primary:profile.families[0],secondary:profile.families[1],mix:profile.style!=='focused'&&profile.families.length>1,element:profile.element||progress.element||'arcane',weapons:profile.weapons,focus:{blood:'bleed',fury:'speed',arcane:'spell',decay:'rot',aegis:'defense',radiance:'defense'}[profile.families[0]],milestones:profile.targets||[]};
 }
 function spendEarnedTalents(a,profile){
  const T=a.talents,s=a.state(),before=s.automaticTalents;
  if(!T.valid(before))throw Error('Invalid natural talent account before spending');
  if(!a.talentActions?.available())throw Error('Talents may only be changed in Camp');
  let progress=before;const bought=[],elements=[];
- const targets=[...profile.targets,...(profile.preparedTargets||[]),...profile.families.map(x=>'affinity_'+x),...profile.families.map(x=>'root_'+x)];
+ const targets=[...(profile.targets||[]),...(profile.preparedTargets||[]),...profile.families.map(x=>'affinity_'+x),...profile.families.map(x=>'root_'+x)];
  function tuneElement(){
-  if(!profile.element||!progress.nodes.includes('element_choice')||progress.element===profile.element)return;
+  if(!profile.element||!progress.nodes.includes('element_choice')||(progress.element||'arcane')===profile.element)return;
   if(!a.talentActions.element(profile.element))throw Error('Native element choice rejected: '+profile.element);
   progress=s.automaticTalents;elements.push(profile.element);
  }
@@ -249,12 +236,13 @@ function spendEarnedTalents(a,profile){
   tuneElement();
   let changed=false;
   for(const target of targets){
-   const route=missingPath(T,progress,target);if(!route?.length)continue;
+   const route=PLANNER.routeTo(T,progress,target,profilePlan(profile,progress),profile.families);if(!route?.length)continue;
    if(!a.talentActions.allocate(route[0]))continue;
    progress=s.automaticTalents;bought.push(route[0]);changed=true;break;
   }
   if(!changed){
-   const legal=T.NODES.filter(n=>!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&
+   const plan=profilePlan(profile,progress);
+   const legal=T.NODES.filter(n=>!n.pending&&!progress.nodes.includes(n.id)&&(!n.family||profile.families.includes(n.family))&&(!n.pair||(plan.mix&&n.pair.every(f=>profile.families.includes(f))))&&
     (!n.element||n.element===(progress.element||'arcane'))&&T.allocate(progress,n.id));
    if(profile.synergyAudit){const focus={blood:'bleed',fury:'speed',arcane:'spell',decay:'rot',aegis:'defense',radiance:'defense'}[profile.families[0]],plan={primary:profile.families[0],secondary:profile.families[1],focus,element:profile.element,mix:profile.families.length>1,milestones:profile.targets||[],statContext:profile.synergyContext?.stats||{}};legal.sort((a,b)=>PLANNER.scoreNode(b,plan,profile.families)-PLANNER.scoreNode(a,plan,profile.families)||a.id.localeCompare(b.id));}
    const alt=legal[0];
@@ -296,7 +284,8 @@ function prepareEarnedAbility(a,profile){
  const all=new Map(T.NODES.map(n=>[n.id,n]));
  const available=p.nodes.filter(id=>all.get(id)?.advanced);
  const preferred=(profile.preparedTargets||[]).find(id=>available.includes(id));
- const chosen=preferred||available.find(id=>!all.get(id).family||profile.families.includes(all.get(id).family))||null;
+ const eligible=id=>{const n=all.get(id);return n&&!n.pending&&(!n.family||profile.families.includes(n.family))&&(!n.pair||n.pair.every(f=>profile.families.includes(f)));};
+ const chosen=(preferred&&eligible(preferred)?preferred:null)||available.find(eligible)||null;
  if(chosen===p.prepared||(!chosen&&!p.prepared))return chosen;
  if(!a.talentActions.prepare(chosen))throw Error('Native prepared ability rejected '+chosen);
  if(a.state().automaticTalents.prepared!==chosen)throw Error('Native prepared ability did not persist');
@@ -568,7 +557,8 @@ function buyEarnedPotions(a,profile,level){
    throw Error('Native Apothecary purchase not settled');
   actions.push({action:'buy',kind:best.kind,cost:best.price});
  }
- if(!owned('health')&&s.gold>=s.apothecary.refreshCost+17){
+ const healthPrice=Math.ceil(POTIONS.CATALOG.find(p=>p.id==='health').base*(1+.12*level));
+ if(!owned('health')&&s.gold>=s.apothecary.refreshCost+healthPrice){
   const before=s.gold,cost=s.apothecary.refreshCost;
   if(a.potions.reroll()){
    if(s.gold!==before-cost)throw Error('Native Apothecary restock cost mismatch');

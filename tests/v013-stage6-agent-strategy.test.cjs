@@ -33,10 +33,10 @@ test('Realm preference sees known Boss counters but no hidden modifiers',()=>{
  const cap=build('Staff',['overcharge'],{element:'lightning'});
  const a=A.realmPreference(cap,{family:'decay',risk:0},{conditionId:'relentless_hunt'});
  const b=A.realmPreference(cap,{family:'radiance',risk:0},{conditionId:'relentless_hunt'});
- assert(a.score>b.score,'area combat should value Matriarch brood more than Mawbuds');
+ assert(a.score>b.score,'Matriarch adds confer damage reduction; Gullet fragments also require destruction');
  assert(!Object.keys(a).includes('unknownBossModifierIds'));
- const focus=build('Wand',['lightning_focus'],{element:'lightning'});
- assert(A.realmPreference(focus,{family:'radiance'},{}).score>A.realmPreference(cap,{family:'radiance'},{}).score);
+ const focus=build('Wand',['storm_conductor'],{element:'lightning'});
+ assert(A.realmPreference(cap,{family:'radiance'},{}).score>A.realmPreference(focus,{family:'radiance'},{}).score);
 });
 test('Adaptive route chooses actual AoE-friendly visible group, baseline still prefers solo',()=>{
  const card={nodes:[{kind:'entrance'},{kind:'combat',range:[1,1]},{kind:'combat',range:[6,12]},{kind:'boss'}],
@@ -60,7 +60,7 @@ test('Target selection handles live Gravecaller minions, Matriarch brood, Heartr
  const cap=build('Sword');
  const leader=boss('matriarch'),m1=minion('decay'),m2=minion('decay');
  assert.equal(A.selectTarget({status:'fight',enemies:[leader,m1,m2]},cap,leader),m1);
- const heart=boss('devourer');assert.equal(A.selectTarget({status:'fight',enemies:[heart,minion('radiance')]},cap,heart),heart);
+ const heart=boss('devourer'),fragment=minion('radiance');assert.equal(A.selectTarget({status:'fight',enemies:[heart,fragment]},cap,heart),fragment);
  const storm=boss('conductor'),anchor={hp:10,role:'minion',stage84Node:true};
  assert.equal(A.selectTarget({status:'fight',enemies:[storm,anchor]},cap,storm),anchor);
  const elite={hp:90,miniboss:true,eliteType:'gravecaller'};

@@ -166,7 +166,7 @@ function allocateRoute(T,progress,target,plan,active){
  return {progress:p,purchased,feasible:true};
 }
 function canOwnMilestone(T,progress,plan,active,id){
- if(!bases(T.NODES).has(id))return false;
+ if(!bases(T.NODES).has(id))return Infinity;
  const hypothetical={...progress,xp:T.POINT_XP*T.MAX_POINTS,nodes:[],prepared:null};
  const result=allocateRoute(T,hypothetical,id,plan,active);
  return result.feasible?result.progress.nodes.length:Infinity;

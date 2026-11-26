@@ -7,7 +7,7 @@ const index=()=>fs.readFileSync('index.html','utf8');
 // This is a static wiring invariant, not proof of clicking every state/seed.
 const metadata=new Set([
  'attack-src','bonus','boss-style','elite-type','exit-from','idle-src',
- 'contract-target','label-side','map-affinity','map-kind','map-state','potion-index',
+ 'contract-target','label-side','map-affinity','map-kind','map-state','potion-index','potion-material',
  'rarity','realm-map','slot','source','stash-potion','stat','stat-source'
 ]);
 test('C8 inventory classifies every data attribute in the live UI as linked or presentation-only',()=>{

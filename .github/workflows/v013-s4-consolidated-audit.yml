@@ -23,12 +23,12 @@ jobs:
         run: npm test
       - name: Current strategic agents and R7 regressions
         if: always()
-        run: node --test tests/v013-strategic-build-agents.test.cjs tests/v013-s3-agent-sync.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage6-agent-strategy.test.cjs tests/v013-decay-natural-agent.test.cjs tests/v013-r7c-integration.test.cjs tests/v013-r7b-potion-economy.test.cjs tests/v013-r6-potion-crafting.test.cjs
+        run: node --test tests/v013-s4-agent-consistency.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-s3-agent-sync.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage6-agent-strategy.test.cjs tests/v013-decay-natural-agent.test.cjs tests/v013-r7c-integration.test.cjs tests/v013-r7b-potion-economy.test.cjs tests/v013-r6-potion-crafting.test.cjs
       - name: Static reference audit
         if: always()
         run: node scripts/v013-c6-final-audit.cjs
   browser-parity:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4

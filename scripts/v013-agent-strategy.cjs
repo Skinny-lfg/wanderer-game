@@ -3,7 +3,8 @@
 // earned native talents and live visible encounter metadata. No gameplay writes.
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const round=x=>Math.round(x*100)/100;
-const BOSSES={blood:'leech',decay:'matriarch',radiance:'devourer',aegis:'guardian',fury:'berserker',arcane:'conductor'};
+require('../combat/v013-expedition-foundation.js');
+const BOSSES=globalThis.WandererV013ExpeditionFoundation.BOSS_STYLE_BY_AFFINITY;
 const FAMILIES=['blood','fury','radiance','aegis','arcane','decay'];
 // Derive capabilities from the live graph, never from retired draft passives.
 require('../combat/v012-buildcraft.js');
@@ -96,7 +97,7 @@ function realmPreference(cap,card,visible={}){
  if(boss==='matriarch')add(cap.area*2.1,'adds protect Decay Boss');
  if(boss==='leech')add(cap.area*1.7,'kill blood vessels before sacrifice');
  if(boss==='conductor')add(cap.focus*.8+cap.area*.35,'focus convergence anchor');
- if(boss==='devourer')add(cap.focus*1.5-cap.area*.9,'avoid accidental mawbud kills');
+ if(boss==='devourer')add(cap.area*1.7+cap.focus*.35,'destroy Gullet fragments before they return');
  if(boss==='guardian')add(cap.focus*.7+cap.defense*.5,'sustain against wards');
  if(boss==='berserker')add(cap.defense*.65+cap.focus*.5,'survive heavy swings');
  // Visible conditions are a mild preference, never privileged knowledge.
@@ -139,8 +140,8 @@ function selectTarget(run,cap,baseline){
   if(style==='conductor')return adds.find(e=>e.stage84Node)||boss;
   if(style==='matriarch'&&adds.filter(e=>e.stage84Minion==='decay').length>=2)
    return adds.find(e=>e.stage84Minion==='decay')||boss;
-  // Killing Mawbuds heals Heartroot. Prefer boss and allow incidental AoE
-  // rather than deliberately targeting the healing adds.
+  // Gullet's living light fragments return and heal the Boss; killing them prevents recovery.
+  if(style==='devourer')return adds.filter(e=>e.stage84Minion==='radiance').sort((a,b)=>(a.fragmentReturnAt??Infinity)-(b.fragmentReturnAt??Infinity)||a.hp-b.hp)[0]||boss;
   return boss;
  }
  if(elite){

@@ -11,7 +11,7 @@ test('Stage 2 uses a frozen Stage 1 fingerprint and 48 complete baseline observa
  assert.match(baseline.sourceSha256,/^[a-f0-9]{64}$/);
 });
 function fixture(){
- const groups=baseline.groups.map(x=>({...x}));
+ const groups=baseline.groups.map(x=>({...x,build:Comparator.archivedBuildId(x.build)}));
  for(const x of groups.filter(x=>x.build==='aegis-arcane'))x.meanBarrierAtEntry+=1;
  return {summary:{valid:48,errors:0,timeouts:0,groups}};
 }

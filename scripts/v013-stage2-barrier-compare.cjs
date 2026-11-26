@@ -5,12 +5,14 @@ const A=require('./v013-affinity-baseline.cjs');
 const baselinePath=path.resolve(__dirname,'../reports/v013-stage1-affinity-summary.json');
 const defaultOut='reports/v013-stage2-affinity-comparison.json';
 const round=n=>Number(Number(n).toFixed(2));
+// Historical report IDs only; never used in live saves, talents or agents.
+const archivedBuildId=id=>({'pure-vitality':'pure-radiance','pure-magic':'pure-arcane','fury-vitality':'fury-radiance','vitality-aegis':'radiance-aegis','aegis-magic':'aegis-arcane','magic-decay':'arcane-decay'}[id]||id);
 function compare(before,after,{postBarrierReset=false,postOffhandReroll=false}={}){
  assert.equal(before.schemaVersion,1);
  assert.equal(after.summary.errors,0,'Stage 2 may not produce native errors');
  assert.equal(after.summary.timeouts,0,'Stage 2 may not produce timeouts');
  assert.equal(after.summary.valid,before.cases.valid,'All 48 baseline scenarios must remain valid');
- const baseline=new Map(before.groups.map(g=>[g.build+'|'+g.level,g]));
+ const baseline=new Map(before.groups.map(g=>[archivedBuildId(g.build)+'|'+g.level,g]));
  const metrics=['meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed','meanHealingPerSecond','meanDotPerSecond','meanManaSpent','meanSpellPower'];
  const groups=after.summary.groups.map(now=>{
   const prev=baseline.get(now.build+'|'+now.level);assert(prev,'Missing frozen Stage 1 cell: '+now.build);
@@ -88,5 +90,5 @@ function run(out=defaultOut){
   pureAegis:groups.filter(g=>g.build==='pure-aegis').map(g=>({level:g.level,entryDelta:g.delta.meanBarrierAtEntry,generatedDelta:g.delta.meanBarrierGenerated}))}));
  return payload;
 }
-module.exports={compare,run,markdown,defaultOut};
+module.exports={compare,run,markdown,defaultOut,archivedBuildId};
 if(require.main===module){try{run(process.argv[2]||defaultOut)}catch(e){console.error('STAGE2_COMPARISON_FAILED='+e.stack);process.exitCode=1}}

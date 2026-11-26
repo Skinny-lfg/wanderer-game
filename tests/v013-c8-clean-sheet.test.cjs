@@ -31,7 +31,7 @@ function bossVictory(seed,options={}){
   if(a.events.run()?.event)assert.equal(a.events.choose(2),true);
   else {
    if(options.forceBossOverflow&&card.nodes[node].kind==='boss'){
-    while(a.state().stash.length<40)a.state().stash.push(a.makeItem(1,'helm',null,'loot','Cloth','Common'));
+    while(a.storage.occupied()<a.storage.capacity())a.state().stash.push(a.makeItem(1,'helm',null,'loot','Cloth','Common'));
     a.rng(0); // deterministic valid loot roll; no guaranteed-drop gameplay change
    }
    const r=a.state().run;assert.equal(r?.status,'fight');
@@ -59,7 +59,7 @@ test('C8 death destroys earned Bag items and restores the entrance loadout after
 test('C8 end-of-run overflow cannot be claimed at full Stash and is settled once when space opens',()=>{
  const {a}=bossVictory(90802),s=a.state();
  const secured=a.makeItem(35,'helm',null,'loot','Cloth','Rare');
- while(s.stash.length<40)s.stash.push(a.makeItem(1,'helm',null,'loot','Cloth','Common'));
+ while(a.storage.occupied()<a.storage.capacity())s.stash.push(a.makeItem(1,'helm',null,'loot','Cloth','Common'));
  s.expeditionOverflow.push(secured);
  assert.equal(a.claimOverflow(),0);
  assert(s.expeditionOverflow.some(x=>x.id===secured.id));
