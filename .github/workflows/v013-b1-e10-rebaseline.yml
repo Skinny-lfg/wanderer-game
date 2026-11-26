@@ -1,0 +1,152 @@
+name: v0.13 B1 - general E10 rebaseline
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['.github/workflows/v013-b1-e10-rebaseline.yml','scripts/v013-b1-e10-rebaseline.cjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v013-b1-e10-rebaseline
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      controlled: ${{ steps.matrix.outputs.controlled }}
+      natural: ${{ steps.matrix.outputs.natural }}
+      scenarios: ${{ steps.matrix.outputs.scenarios }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate actual talent IDs, builds, native encounters and agent smoke
+        run: node scripts/v013-b1-e10-rebaseline.cjs smoke
+      - id: matrix
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs'),s=require('./scripts/v013-b1-e10-rebaseline.cjs');
+          for(const [k,v] of Object.entries({controlled:s.CONTROL,natural:s.NATURAL,scenarios:s.SC.map(x=>x.id)}))fs.appendFileSync(process.env.GITHUB_OUTPUT,k+'='+JSON.stringify(v)+'\n');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b1-manifest
+          path: reports/b1-e10/manifest.json
+          retention-days: 30
+  controlled:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        profile: ${{ fromJSON(needs.preflight.outputs.controlled) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native E10 matched encounters
+        env:
+          PROFILE: ${{ matrix.profile }}
+          SCENARIOS: ${{ needs.preflight.outputs.scenarios }}
+        run: |
+          set -euo pipefail
+          for scenario in $(node -e 'console.log(JSON.parse(process.env.SCENARIOS).join(" "))'); do
+            node --max-old-space-size=4096 scripts/v013-b1-e10-rebaseline.cjs controlled "$PROFILE" "$scenario"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b1-controlled-${{ matrix.profile }}
+          path: reports/b1-e10/controlled/${{ matrix.profile }}
+          retention-days: 30
+          if-no-files-found: warn
+  natural:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        profile: ${{ fromJSON(needs.preflight.outputs.natural) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fifty independent earned E1-E10 accounts
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          set -euo pipefail
+          for batch in $(seq 0 9); do
+            node --max-old-space-size=4096 scripts/v013-b1-e10-rebaseline.cjs natural "$PROFILE" "$batch"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b1-natural-${{ matrix.profile }}
+          path: reports/b1-e10/natural/${{ matrix.profile }}
+          retention-days: 30
+          if-no-files-found: warn
+  aggregate:
+    if: always() && needs.preflight.result == 'success'
+    needs: [preflight, controlled, natural]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: b1-manifest
+          path: reports/b1-e10
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b1-controlled-*
+          path: input/controlled
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b1-natural-*
+          path: input/natural
+      - name: Restore per-profile shard directories
+        run: |
+          mkdir -p reports/b1-e10/{controlled,natural}
+          for d in input/controlled/b1-controlled-*; do
+            [ -d "$d" ] || continue
+            cp -a "$d" "reports/b1-e10/controlled/${d##*/b1-controlled-}"
+          done
+          for d in input/natural/b1-natural-*; do
+            [ -d "$d" ] || continue
+            cp -a "$d" "reports/b1-e10/natural/${d##*/b1-natural-}"
+          done
+      - name: Check completeness and summarize
+        run: node scripts/v013-b1-e10-rebaseline.cjs aggregate
+      - name: Publish readable summary
+        if: always()
+        run: |
+          if [ -f reports/b1-e10/summary.md ]; then cat reports/b1-e10/summary.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b1-e10-summary
+          path: |
+            reports/b1-e10/manifest.json
+            reports/b1-e10/summary.json
+            reports/b1-e10/summary.md
+          retention-days: 30

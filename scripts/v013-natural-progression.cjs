@@ -1091,18 +1091,15 @@ function fightNatural(a,profile,tickLimit,context={}){
  const initialNormals=fullInitialRoster.filter(e=>e&&!e.boss&&!e.miniboss&&e.role!=='minion').length;
  const initialRoleCounts=Object.fromEntries(['minion','tank','skirmisher','caster'].map(role=>
   [role,fullInitialRoster.filter(e=>e?.role===role).length]));
- const aoeNodes=['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','forked_lightning','fire_spread','frost_spread','plague_spread','contagious_touch','corruption_nova'];
  const actualNodes=[...(a.state().automaticTalents?.nodes||[])];
  const actualWeapon=a.state().equip?.weapon?.subtype||null,actualOffhand=a.state().equip?.offhand?.subtype||null;
  const actualElement=a.state().automaticTalents?.element||null;
- const aoePrepared=actualNodes.filter(id=>aoeNodes.includes(id));
- const aoeFromWeapon=actualWeapon==='Two-Handed'||actualWeapon==='Bow'||
-  actualWeapon==='Daggers'&&actualNodes.includes('fan_of_blades')||
-  actualWeapon==='Mace'&&actualNodes.includes('mace_shockwave')||
-  actualWeapon==='Sword'&&actualOffhand==='Shield'&&actualNodes.includes('sword_sweep')||
-  ['Wand','Staff'].includes(actualWeapon)&&actualElement==='lightning'&&
-   (actualNodes.includes('overcharge')||actualNodes.includes('forked_lightning'))&&!actualNodes.includes('lightning_focus');
- const aoePotential=!!(aoeFromWeapon||aoePrepared.some(id=>['fire_spread','plague_spread','contagious_touch','corruption_nova'].includes(id)));
+ // One classifier, based on the actual native kit; no historical focus IDs.
+ const actualCapability=capabilities(a),aoePotential=actualCapability.areaReady;
+ const aoePrepared=actualNodes.filter(id=>['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','forked_lightning','fire_spread','frost_spread','plague_spread','contagious_touch','corruption_nova','arcane_nova','frost_resonance','vital_pulse','grasping_roots','ward_echo','stored_force','grave_bloom','carrion_detonation'].includes(id));
+ const activationBefore=Object.fromEntries(Object.entries(a.build()?.runtime?.passiveTelemetry||{}).map(([id,x])=>[id,Number(x.activations)||0]));
+ const metricBefore=Object.fromEntries(Object.entries(r.metrics||{}).filter(([k,v])=>Number.isFinite(v)));
+ const fightStats=Object.fromEntries(['attack','spellPower','defense','maxhp','mana','manaRegen','attacksPerSec','crit','blockChance','evasionRating','healingPower','barrierPower'].map(k=>[k,r.stats?.[k]??null]));
  const mpStart=r.mp,maxmp=r.maxmp,metricsBefore=Object.fromEntries(['secondaryTargetDamage','secondaryTargetHits','manaSpent','fundedCasts','infusionActivations','infusionHits','infusionDamage','unfundedCasterAttacks']
   .map(key=>[key,Number(r.metrics?.[key])||0]));
  const measured=key=>Math.max(0,(Number(r.metrics?.[key])||0)-metricsBefore[key]);
@@ -1152,7 +1149,10 @@ function fightNatural(a,profile,tickLimit,context={}){
   preparedId,preparedActivations:preparedId?Number(r.outerUses?.[preparedId]||0):0,
   kind:first?.boss?'boss':first?.miniboss?'elite':'combat',initialEnemies:initial,
   initialMinions,initialNormals,initialRoleCounts,
-  aoePotential,aoeTalentIds:aoePrepared,actualWeapon,actualOffhand,actualElement,
+  aoePotential,aoeTalentIds:aoePrepared,actualWeapon,actualOffhand,actualElement,actualTalentNodes:actualNodes,stats:fightStats,
+  passiveActivations:Object.fromEntries(Object.entries(a.build()?.runtime?.passiveTelemetry||{}).map(([id,x])=>[id,Math.max(0,(Number(x.activations)||0)-(activationBefore[id]||0))]).filter(([,n])=>n>0)),
+  abilityMetrics:Object.fromEntries(Object.entries(r.metrics||{}).filter(([k,v])=>Number.isFinite(v)&&/^(arcane_nova|mana_convergence|frost_resonance|glacial_echo|controlled_burn|cinder_focus|static_focus|storm_conductor|decayPrimaryPaid|contagiousTouch|corruptionNova|corruptionOverflow|soulDrain|corruptionCycle|rotguard|vital_pulse|living_force|livingForce|grasping_roots|ward_echo|storedForce|graveBloom|secondaryBleed|secondaryRot|secondarySunder|bossHealing|bossSummons|bossNodeDestroyed|bossMinionDeaths|eliteSummons|solarRebuke|periodicDamage|offhandOrbBarrier|offhandTomeMana|offhandCharmHealing)/.test(k)).map(([k,v])=>[k,Math.max(0,v-(metricBefore[k]||0))])),
+
   decayMetrics:Object.fromEntries(decayKeys.map(k=>[k,Math.max(0,(Number(r.metrics?.[k])||0)-decayBefore[k])])),
   secondaryTargetDamage:Math.round(measured('secondaryTargetDamage')),
   secondaryTargetHits:Math.round(measured('secondaryTargetHits')),
@@ -1429,7 +1429,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
       throw Error('Earned checkpoint test changed equipment, resources, XP, unlocks or invalid talents');
     }
     if(stopAtCamp===level&&attempt===1){acc.stopReason='Reached requested native Camp E'+level;stopped=true;cleared=true;break;}
-    const before={xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
+    const before={consumables:{...a.state().consumables},potionSelection:[...a.state().potionSelection],xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
      spent:a.state().automaticTalents.nodes.length,
      attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
      attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
@@ -1443,7 +1443,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
     const encounter=playDungeon(a,level,activeProfile,opts,decisionModel,capturePolicy.mode);
     if(encounter.xpEnd<before.xp)throw Error('Native earned XP decreased');
     entry={...entry,camp,before,...(earnedProbe?{earnedProbe}:{}),...encounter,
-     after:{xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
+     after:{consumables:{...a.state().consumables},potionSelection:[...a.state().potionSelection],xp:a.state().automaticTalents.xp,earned:a.talents.earned(a.state().automaticTalents),
       spent:a.state().automaticTalents.nodes.length,
       attributeEarned:a.talents.attributeBudget(a.state().automaticTalents),
       attributeSpent:a.talents.spentAttributes(a.state().automaticTalents),
