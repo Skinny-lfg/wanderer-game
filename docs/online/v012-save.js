@@ -1,7 +1,7 @@
 // Versioned, pure save policy and explicitly isolated validation storage. No Firebase/auth/DOM.
 (function(root){
 'use strict';
-const FORMAT='wanderer-expedition',VERSION=13,GENERATION='c2-clean-sheet',PREFIX='wanderer_v013_c2_clean_sheet_v1_';
+const FORMAT='wanderer-expedition',VERSION=13,GENERATION='c2-clean-sheet',PREFIX='wanderer_automatic_rpg_preview_c2_v1_';
 const SLOTS=['helm','amulet','armor','gloves','weapon','offhand','ring1','ring2','boots','belt'];
 const STATS=['atk','def','hp','spd','str','agi','int','end','cha','mana','spell','evasionRating'];
 const EFFECTS=['poison','bleed','crit','sunder','shield','regen','burn','slow','drain','nature','shock','tide','crystal'];

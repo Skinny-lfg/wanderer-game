@@ -19,3 +19,59 @@ jobs:
       - run: node --test tests/v013-stage647d6-blood-fury.test.cjs tests/v013-stage80-enemy-roster.test.cjs tests/v013-current-groups.test.cjs tests/v013-stage640-e1-groups.test.cjs
       - run: npm run build:pages && git diff --exit-code -- docs
       - run: npm test
+  mixed-gate:
+    needs: regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-mixed-e10-baseline.cjs smoke
+  mixed-cohort:
+    needs: mixed-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        build: [hybrid-blood-fury, hybrid-fury-vitality, hybrid-vitality-aegis, hybrid-aegis-magic, hybrid-magic-decay, hybrid-decay-blood, mix-blood-aegis, mix-blood-vitality, mix-blood-magic, mix-decay-aegis, mix-decay-vitality, mix-decay-fury, mix-fury-aegis, mix-fury-magic, mix-vitality-magic, blood-daggers, decay-cycle-wand, fury-bow, vitality-sword, aegis-mace, magic-lightning-wand]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node scripts/v013-mixed-e10-baseline.cjs run "${{ matrix.build }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mixed-e10-${{ matrix.build }}
+          path: reports/mixed-e10-baseline/${{ matrix.build }}.json
+          if-no-files-found: error
+  mixed-summary:
+    needs: mixed-cohort
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mixed-e10-*
+          path: reports/mixed-e10-baseline
+          merge-multiple: true
+      - run: node --max-old-space-size=6144 scripts/v013-mixed-e10-baseline.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mixed-e10-baseline-summary
+          path: reports/mixed-e10-baseline/summary.json
+          if-no-files-found: error
