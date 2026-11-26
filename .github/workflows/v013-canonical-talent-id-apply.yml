@@ -62,7 +62,7 @@ jobs:
            }).join('\n');
            if(next!==old){fs.writeFileSync(p,next);touched.push(p);}
           }
-          for(const p of touched){const mirror='docs/'+p;if(tracked.includes(mirror)){fs.copyFileSync(p,mirror);touched.push;}}
+          for(const p of touched){const mirror='docs/'+p;if(tracked.includes(mirror)){fs.copyFileSync(p,mirror);}}
           const assetPairs=[['arcane_echo.png','elemental_echo.png'],['blight.png','blightburst.png'],['crimson_rush.webp','crimson_onslaught.webp'],['toxic_touch.png','corrupting_touch.png']];
           for(const prefix of ['assets/passives/','docs/assets/passives/'])for(const [old,next] of assetPairs){
            assert(fs.existsSync(prefix+old),prefix+old);assert(!fs.existsSync(prefix+next),prefix+next);fs.renameSync(prefix+old,prefix+next);
@@ -83,7 +83,7 @@ jobs:
           MIGRATION
           node /tmp/canonical-talent-ids.cjs
           git diff --check
-      - name: Run current talent and simulator regressions
+      - name: Run current talent and simulator regressions (corrected legacy fixtures)
         run: |
           npm run test:v013:talent-graph
           node --test tests/talent-requirements.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-specializations.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-crafting.test.cjs

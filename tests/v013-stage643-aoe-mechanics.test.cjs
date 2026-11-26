@@ -26,7 +26,7 @@ function lightning(storm=false,active=4){
  };
  const ctx={ports,root:{},WandererV012Buildcraft:{enemyDefense:()=>0}};
  vm.createContext(ctx);
- vm.runInContext(['v013LightningChainFactors','v013SecondaryHit','v013LightningChainDamage']
+ vm.runInContext(['learned','v013LightningChainFactors','v013SecondaryHit','v013LightningChainDamage']
    .map(name=>extract(source,name)).join('\n'),ctx);
  const enemies=Array.from({length:active},(_,i)=>({name:'Mob '+i,hp:10000,maxhp:10000,barrier:0,def:0,baseDef:0,boss:false}));
  const r={enemy:enemies[0],enemies,stats:{attack:10,spellPower:50,main:{subtype:'Staff'}},combatSeconds:1};
@@ -48,7 +48,7 @@ test('Lightning uses five bounded jumps and persistent visible Static Marks, the
  assert.equal(chain(r,50),5);
  assert.equal(metrics.lightningMarksDetonated,3,'Expired marks must not detonate');
 });
-test('Storm Mastery adds one further hop, and no jumps target reserve enemies',()=>{
+test('Forked Lightning adds one further hop, and no jumps target reserve enemies',()=>{
  const {r,metrics,chain}=lightning(true,4),reserve={name:'Unspawned',hp:10000,maxhp:10000};
  r.groupReserve=[reserve];
  assert.equal(chain(r,50),6);
@@ -62,7 +62,7 @@ test('Lightning scales jumps with available active enemies, rather than multiply
   assert.equal(chain(r,50),expected,'Unexpected jumps with '+active+' live enemies');
  }
 });
-test('Bloodshed transfers active Bleed and three ticks of direct immediate damage, but does not pre-hit reserves',()=>{
+test('Sanguine Echo transfers active Bleed and one immediate tick, never targeting reserves',()=>{
  const source=read('combat/v012-buildcraft.js');
  const context={rank:()=>0,specialized:(b,id)=>id==='blood_transfer',activated:()=>true,heal:()=>{},ready:()=>false};
  vm.createContext(context);
@@ -77,11 +77,13 @@ test('Bloodshed transfers active Bleed and three ticks of direct immediate damag
    secondaryHit(enemy,n){claimed++;enemy.hp-=n;return n;},
    trigger(id){if(id==='blood_transfer_burst')burst++;}};
   context.onKill({runtime:{}},c);
-  assert.equal(target.dots.bleed.length,1);
-  assert.equal(target.dots.bleed[0].damage,10);
-  assert.equal(target.dots.bleed[0].transferred,true);
-  assert.equal(synced,1);
-  assert.equal(target.hp,active?70:100);
+  assert.equal(target.dots.bleed.length,active?1:0);
+  if(active){
+   assert.equal(target.dots.bleed[0].damage,10);
+   assert.equal(target.dots.bleed[0].transferred,true);
+  }
+  assert.equal(synced,active?1:0);
+  assert.equal(target.hp,active?90:100);
   assert.equal(claimed,active?1:0);
   assert.equal(burst,active?1:0);
  }
