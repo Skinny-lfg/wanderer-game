@@ -272,7 +272,7 @@ function setHeal(r,amount,reserveRelease=false){
  const conditionHealingFactor=globalThis.WandererV013ExpeditionConditions?.healingFactor(r)??1;
  const heal=Math.max(0,Number(amount)||0)*(reserveRelease?1:1+Math.max(0,Number(r.stats?.healingPower)||0))*(healingReduced ? 0.60 : 1)*bossHealingFactor*conditionHealingFactor,before=r.hp;
  r.hp=Math.min(r.maxhp,r.hp+heal);
- const actual=r.hp-before,overheal=heal-actual;if(!reserveRelease&&overheal>0){if(prepared('lifeweaver'))r.lifeCharge=true;if(before>=r.maxhp&&learned('deep_reserves')&&!r.reserveSaved){r.reserveSaved=true;r.deepReserve=Math.min(overheal,r.maxhp*.08);}}ports.phase6Metric(r,'healing',actual);
+ const actual=r.hp-before,overheal=heal-actual;ports.phase6Metric(r,'healing',actual);
  if(!reserveRelease&&heal>0&&ports.legendaryReady(r,'charm-of-the-dawnstar'))ports.legendaryRuntime(r).reserve=Math.min(r.maxhp*.04,heal);
  if(overheal>0&&r.stats.bonus.regenOverflow){
   const temp=ports.setRuntime(r),second=Math.floor(ports.setNow(r));
@@ -298,8 +298,9 @@ function setDelayEnemy(r,seconds){
 }
 
 // Primary hits alone call this. Reflection cannot trigger another on-hit callback.
-function reflectSolarRebuke(r,enemy,hpLost){
- const raw=root.WandererV013EliteAbilities?.solarRebukeDamage(enemy,r.combatSeconds,hpLost,r.maxhp)||0;
+function reflectPrimaryDamage(r,enemy,hpLost){
+ const shell=root.WandererV013EnemyAbilities?.shellDamage(enemy,r.combatSeconds,hpLost,r.maxhp)||0;
+ const raw=shell||root.WandererV013EliteAbilities?.solarRebukeDamage(enemy,r.combatSeconds,hpLost,r.maxhp)||0;
  if(!raw)return false;
  const s=r.stats;
  let incoming=raw;
@@ -311,12 +312,12 @@ function reflectSolarRebuke(r,enemy,hpLost){
  const absorbed=Math.min(r.barrier||0,incoming),hit=Math.min(r.hp,incoming-absorbed);
  r.barrier-=absorbed;r.hp-=hit;
  ports.phase6Metric(r,'absorbed',absorbed);ports.phase6Metric(r,'damageTaken',hit);
- ports.phase6Metric(r,'solarRebukeHits',1);ports.phase6Metric(r,'solarRebukeDamage',hit);
- ports.addLog('☀ Solar Rebuke reflects '+hit.toFixed(1)+' damage'+(absorbed?' · Barrier '+absorbed.toFixed(1):''),'critical');
+ ports.phase6Metric(r,shell?'radiantShellHits':'solarRebukeHits',1);ports.phase6Metric(r,shell?'radiantShellDamage':'solarRebukeDamage',hit);
+ ports.addLog((shell?'☀ Radiant Shell':'☀ Solar Rebuke')+' reflects '+hit.toFixed(1)+' damage'+(absorbed?' · Barrier '+absorbed.toFixed(1):''),'critical');
  return resolveBossPulseLethal(r,s);
 }
 function setDirectEnemyDamage(r,amount,label){
- const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)));
+ const enemy=r.enemy;let damage=Math.max(0,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013EnemyAbilities?.directFactor(r,enemy)||1)*(root.WandererV013BossAbilities?.directFactor(r,enemy)||1)));
  if(enemy.barrier>0){const before=enemy.barrier,absorbed=Math.min(enemy.barrier,damage);enemy.barrier-=absorbed;damage-=absorbed;if(root.WandererV013BossAbilities?.barrierChanged(r,enemy,before,enemy.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,enemy.hp),damage));ports.phase6Proc(r,label);enemy.hp-=damage;if(damage>0){ports.addLog(label+' '+damage+' bonus damage','good');ports.floatText(damage,'enemy',false,'',enemy);}
  return damage;
@@ -492,7 +493,7 @@ function v013LightningChainFactors(){
 }
 function v013SecondaryHit(r,enemy,amount){
  if(!enemy||enemy.hp<=0)return 0;
- let remaining=Math.max(1,Math.round(amount*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));
+ let remaining=Math.max(1,Math.round(amount*(root.WandererV013EnemyAbilities?.directFactor(r,enemy)||1)*(root.WandererV013ExpeditionBoons?.factor(r,true)||1)));
  const absorbed=Math.min(enemy.barrier||0,remaining);
  enemy.barrier=Math.max(0,(enemy.barrier||0)-absorbed);
  remaining-=absorbed;
@@ -670,8 +671,7 @@ function weaponAttack(r,offhandStrike=false){
  if(e.baseDef>0&&e.def<e.baseDef)damage=Math.max(1,Math.round(damage*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));
  const perfect=s.bonus.perfectStrike&&temp.focus>=3&&now>=(r.setCooldowns?.perfectStrike||0);
  if(perfect){ports.setReady(r,'perfectStrike',10);temp.focus=0;}
- const spark=cast&&r.mp===0&&!r.lastSpark&&learned('last_spark');if(spark)r.lastSpark=true;
- const critical=spark||perfect||ports.gameRandom()<s.crit/100;
+ const critical=perfect||ports.gameRandom()<s.crit/100;
  if(critical){damage=Math.max(1,Math.round(damage*((perfect?1.75:1.5)+(s.critDamage||0))));ports.addLog((perfect?'✨ PERFECT STRIKE! ':'CRITICAL! ')+damage+' damage','critical');}
  r.bloodCritBase=critical?damage:base;
  const added=ports.setOnAttack(r,base,critical,perfect)+ports.legendaryAttackBonus(r,base,critical,cast);
@@ -690,27 +690,20 @@ function weaponAttack(r,offhandStrike=false){
  if(r.playerDebuffUntil>now)damage=Math.max(1,Math.round(damage*.8));
  if(!offhandStrike){
   const previous=lastStruck.get(r);
-  if(previous!==e){
-   if(!(previous?.hp<=0&&r.aim===3&&learned('follow_through')))r.aim=0;
-  }
+  if(previous!==e)r.aim=0;
   lastStruck.set(r,e);
   const bleed=e.dots?.bleed||[];
-  if(learned('open_wound')&&e.hp===e.maxhp&&!e.opened){e.opened=true;bleed.push({damage:WandererV012Buildcraft.dotPotency(Math.max(1,Math.round(damage*.12)),s),remaining:3});e.dots??={};e.dots.bleed=bleed;ports.synchronizeDots(e);}
   if(learned('relentless')||prepared('red_guillotine')){r.aim=((r.aim||0)+1)%4;if(!r.aim){damage*=1+.1*learned('relentless');if(prepared('red_guillotine')&&bleed.length){const spent=bleed.splice(0,3);damage+=spent.reduce((sum,d)=>sum+d.damage*(d.remainingTicks??d.remaining),0);r.guillotineSpore=spent[0];ports.synchronizeDots(e);triggered(r,'red_guillotine');}}}
-  if(learned('blood_price')&&bleed.length>=3&&ports.setReady(r,'bloodPrice',6)){bleed.pop();ports.synchronizeDots(e);ports.setHeal(r,r.maxhp*.05);}
-  if(r.storedImpact){damage+=r.storedImpact;r.storedImpact=0;}
-  if(r.riposteUntil>now){damage+=s.attack*.75;r.riposteUntil=0;triggered(r,'turn_tide');}
-  if(cast&&r.lifeCharge){r.lifeCharge=false;if(r.hp<r.maxhp*.5)ports.setHeal(r,r.maxhp*.08,true);else damage*=1.3;triggered(r,'lifeweaver');}
   if(cast&&learned('spell_echo')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount){const echo=Math.max(1,Math.round(damage*.1*learned('spell_echo')));damage+=echo;if(echo)ports.floatText(echo,'enemy',false,'ECHO',e);}}
   damage=Math.round(damage);
  }
- damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)));
+ damage=Math.max(1,Math.round(damage*(root.WandererV013ExpeditionBoons?.factor(r)||1)*(root.WandererV013EnemyAbilities?.directFactor(r,e)||1)*(root.WandererV013BossAbilities?.directFactor(r,e)||1)));
  const hpBefore=e.hp,barrierBefore=e.barrier;
  ports.animateStrike(kind,cast);
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  const real=Math.max(0,Math.min(e.hp,damage));
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
- if(reflectSolarRebuke(r,e,real))return;
+ if(reflectPrimaryDamage(r,e,real))return;
  if(!offhandStrike)offhandOnMainHit(r,real);
  if(r.guillotineSpore){const other=r.enemies?.find(m=>m!==e&&m.hp>0);if(e.hp<=0&&other){other.dots??={};other.dots.bleed??=[];other.dots.bleed.push({...r.guillotineSpore,secondaryOrigin:'guillotine',acceleratedElapsed:0});ports.synchronizeDots(other);}delete r.guillotineSpore;}
  ports.legendaryOnHit(r,base,real);
@@ -823,7 +816,8 @@ function updateFight(){
  if(root.WandererV013EnemyAbilities&&r.phase1){
   const events=root.WandererV013EnemyAbilities.tick(r,ports.setNow(r));
   for(const event of events){
-   if(event.type==='prepare')ports.addLog('⚠ '+event.enemy.name+' prepares '+event.ability+'!','critical');
+   if(event.type==='renew')ports.addLog('☀ Renew · '+event.enemy.name+' +'+event.result+' HP','spell');
+   else if(event.type==='prepare')ports.addLog('⚠ '+event.enemy.name+' prepares '+event.ability+'!','critical');
    else if(event.type==='interrupted')ports.addLog('✓ '+event.enemy.name+' interrupted: '+event.ability,'good');
    else if(event.type==='activate'){
     ports.phase6Metric(r,'enemyAbilityCasts',1);
@@ -962,7 +956,7 @@ function updateFight(){
   if(special)raw=Math.round(raw*(1-.04*learned('brace')));
   const attackType=ports.enemyAttackType(e);
   if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
-   if(special&&prepared('turn_tide'))r.riposteUntil=ports.setNow(r)+3;r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
+   r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
   }else if(ports.tryDodge(r,attackType)){
   r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};
    ports.phase6Metric(r,'dodges',1);
@@ -993,8 +987,6 @@ function updateFight(){
   const barrierBeforeHit=r.barrier,blocked=Math.min(r.barrier,raw);r.barrier-=blocked;
   reconcileRotguard(r);
   const barrierBroken=barrierBeforeHit>0&&r.barrier<=0;let hit=Math.max(0,raw-blocked);
-  if(barrierBroken&&learned('stored_impact'))r.storedImpact=Math.round(blocked*.5);
-  if(special&&(blocked||damageBlocked)&&prepared('turn_tide'))r.riposteUntil=ports.setNow(r)+3;
   if(r.bastionUntil>ports.setNow(r))r.bastionAbsorbed=(r.bastionAbsorbed||0)+blocked;
   ports.phase6Metric(r,'armor',armorPrevented);ports.phase6Metric(r,'shield',damageBlocked);ports.phase6Metric(r,'absorbed',blocked);
   r.lastImpact={source:e.name,at:r.combatSeconds,armor:armorPrevented,barrier:blocked,shield:damageBlocked,hit};
@@ -1003,7 +995,6 @@ function updateFight(){
    ports.phase6Metric(r,'damageTaken',Math.min(Math.max(0,r.hp),hit));ports.phase3FlashPlayerDamage?.();const previousHp=r.hp;r.hp-=hit;
    
    if(r.hp>0&&previousHp>=r.maxhp*.5&&r.hp<r.maxhp*.5&&learned('second_pulse')&&!r.pulseStarted){r.pulseStarted=true;r.pulses=3;}
-   if(r.hp>0&&r.deepReserve){const reserve=r.deepReserve;r.deepReserve=0;ports.setHeal(r,reserve,true);}
    ports.addLog('🩸 '+e.name+' hits for '+hit+' HP','bleed');ports.floatText(hit,'hero');
    if(r.hp>0){
     const decay=root.WandererV013EliteAbilities?.applyDeathbound(r,e,hit);
@@ -1127,7 +1118,6 @@ function phase2MagicTick(r){
  ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  if(v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
  let spellDamage=Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70*v013SpellMultiplier(r)));if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.1));
- if(r.lifeCharge&&prepared('lifeweaver')){r.lifeCharge=false;if(r.hp<r.maxhp*.5)ports.setHeal(r,r.maxhp*.08,true);else spellDamage=Math.round(spellDamage*1.3);triggered(r,'lifeweaver');}
  if(learned('spell_echo')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount)spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));}
  const chainBase=spellDamage;
  if(r.enemy.baseDef>0&&r.enemy.def<r.enemy.baseDef)spellDamage=Math.max(1,Math.round(spellDamage*(1+(b.runtime.talentBonuses?.sunderDamage||0))));
@@ -1135,7 +1125,7 @@ function phase2MagicTick(r){
  ports.setDirectEnemyDamage(r,spellCriticalDamage(r,spellDamage),'✨ '+b.element);
  if(r.enemy.hp>0)paidMagicLegendary(r,cost);else legendaryFundedBonus(r,cost);
  if(r.enemy.hp<hpBefore)offhandOrbWard(r);
- if(reflectSolarRebuke(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
+ if(reflectPrimaryDamage(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
  if(v013LightningChain(r))v013LightningChainDamage(r,chainBase);
 }

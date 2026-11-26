@@ -14,7 +14,7 @@ const P=[
  ['decay','virulent_rot','Virulent Rot','Rot ticks deal 18% more damage per rank.'],
  ['decay','wasting_curse','Wasting Curse','Rotted enemies deal 8% less damage per rank.'],
  ['decay','wither','Withering Hex','Rot reduces healing by 35% and direct attack damage by 3% per rank (70% healing cap).'],
- ['decay','blight','Blight','Strike a rotted enemy for a capped corruption burst (7s cooldown).'],
+ ['decay','blight','Blightburst','Strike a rotted enemy for a capped corruption burst (7s cooldown).'],
  ['radiance','strong_heart','Strong Heart','Increase maximum Health by 10% per rank.'],
  ['radiance','renewal','Renewal','Recover 0.55% maximum Health per combat second per rank.'],
  ['radiance','last_stand','Last Stand','Survive one lethal hit per Expedition, recovering 6% HP.'],
@@ -114,7 +114,7 @@ function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},arcane_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{burst:.18+.03*t,bossCap:.015,normalCap:.05,icd:4},overcharge:{burst:.32+.06*t,enemyCap:.035,charges:4}
  })[id]||{};}
 function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
-function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0))*(specialized(b,'blood_focus')?1.25:1);}
+function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0));}
 function elementalPower(b,power){return power*(1+.12*rank(b,'elemental_force'));}
 function hasFamily(b,family){return Array.isArray(b?.families)&&b.families.includes(family);}
 function ready(b,id,now,seconds){if((b.cooldowns[id]??-1e10)>now)return false;(b.cooldownPeriods??={})[id]=seconds;b.cooldowns[id]=now+seconds;return true;}
@@ -342,7 +342,6 @@ function onAttack(b,c){
  if(['battle_tempo','relentless_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'relentless_assault')&&e.furySunder>0&&ready(b,'relentlessAssault',c.now,3))c.damage(base*.20,'🗡 Sundering Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
  if(e.bleedStacks>0&&specialized(b,'crimson_feast')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Third Cut');}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3))c.damage(base*(e.hp<e.maxhp*.5?.60:.40),'🩸 Heart of Carnage');
- if(b.runtime.specialReprisal&&e.hp>0){b.runtime.specialReprisal=false;c.damage(base*.25,'🛡 Reprisal');}
  if(rank(b,'bleeding_edge')&&(b.cooldowns.bleedEdge??-1e10)<=c.now&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&ready(b,'bleedEdge',c.now,.6)&&activated(b,'bleeding_edge')) c.dot('bleed',(c.bloodCritBase??base)*.16);
  // Blood Pursuit retains the purchased node ID and stat paths.
  if(specialized(b,'sanguine_reserve')&&!c.magical&&!c.offhand&&e.hp>0&&b.runtime.pursuitWave===(c.waveKey??e)&&b.runtime.pursuitUntil>c.now&&b.runtime.pursuitCharges>0){b.runtime.pursuitCharges--;c.dot('bleed',(c.bloodCritBase??base)*.08);c.metric?.('bloodPursuitApplications',1);}
@@ -354,7 +353,7 @@ function onAttack(b,c){
  if(e.hp>0&&rank(b,'toxic_touch')&&(b.cooldowns.toxicTouch??-1e10)<=c.now&&c.random()<values('toxic_touch',rank(b,'toxic_touch')).chance&&spendDarkMana(c,4)&&ready(b,'toxicTouch',c.now,1.3)&&activated(b,'toxic_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_toxic_touch'); }
  corruptionOverflow(b,c);
  corruptionCycle(b,c);
- if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blight');}
+ if(e.hp>0&&rank(b,'blight')&&(b.cooldowns.blight??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blight',c.now,7)&&activated(b,'blight')){applyRot(b,c,rotPotency(c),'ability_blight');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blightburst');}
  if(rank(b,'crimson_rush')&&crit&&e.bleedStacks>0&&activated(b,'crimson_rush'))c.damage(base*.15,'🩸 Crimson Onslaught');
  if(rank(b,'brutal_crit')&&crit&&activated(b,'brutal_crit'))c.damage(base*Math.min(.65,.12*Math.sqrt(rank(b,'brutal_crit'))),'⚔ Brutal Critical');
  if(rank(b,'double_strike')&&!c.suppressDoubleStrike&&c.random()<Math.min(.60,.10*Math.sqrt(rank(b,'double_strike')))&&activated(b,'double_strike'))c.damage(base*.30,'🗡 Extra Strike');
@@ -409,19 +408,15 @@ function onCast(b,c){
  if(c.proc||c.extra||c.recursive||c.funded!==true||!hasFamily(b,'arcane')||!(elements.includes(b.element)||b.element==='arcane'))return;
  const wasChilled=c.enemy.slowTime>0,wasBurning=(c.enemy.dots?.burn||[]).some(d=>d.remaining>0);manaConvergence(b,c);
  // These advanced elemental choices supply their own trigger when taken alone.
- if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'living_inferno')||specialized(b,'fire_spread')||adaptive(b,'cinder_focus','fire')||adaptive(b,'controlled_burn','fire'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling')&&!specialized(b,'kindling_flame'))c.dot('burn',Math.max(1,c.power)*.08,{controlledBurn:adaptive(b,'controlled_burn','fire'),primaryOnly:!['combustion','living_inferno','fire_spread'].some(id=>specialized(b,id))});
- if(b.element==='frost'&&(specialized(b,'shatter')||specialized(b,'absolute_winter')||adaptive(b,'frost_resonance','frost')||adaptive(b,'glacial_echo','frost'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter')&&!specialized(b,'deep_chill'))c.chill(c.enemy.boss?1.2:3.5);
- const multiplier=b.element==='fire'&&specialized(b,'living_inferno')&&c.enemy.dots?.burn?.length?1.25:b.element==='frost'&&specialized(b,'absolute_winter')&&c.enemy.slowTime>0?1.2:1;
- const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1)*multiplier;
+ if(b.element==='fire'&&(specialized(b,'combustion')||specialized(b,'fire_spread')||adaptive(b,'cinder_focus','fire')||adaptive(b,'controlled_burn','fire'))&&!c.enemy.dots?.burn?.length&&!rank(b,'kindling'))c.dot('burn',Math.max(1,c.power)*.08,{controlledBurn:adaptive(b,'controlled_burn','fire'),primaryOnly:!['combustion','fire_spread'].some(id=>specialized(b,id))});
+ if(b.element==='frost'&&(specialized(b,'shatter')||adaptive(b,'frost_resonance','frost')||adaptive(b,'glacial_echo','frost'))&&!(c.enemy.slowTime>0)&&!rank(b,'deep_winter'))c.chill(c.enemy.boss?1.2:3.5);
+ const power=elementalPower(b,Math.max(1,c.power))*(c.amp||1);
  const e=c.enemy; b.runtime.magicHits++;
  if(b.element==='arcane'&&specialized(b,'arcane_mastery')&&ready(b,'arcaneMasteryMana',c.now,5))c.mana(2);
  if(b.runtime.prepared==='arcane_bastion'&&b.runtime.arcaneBastionReady&&ready(b,'arcaneBastion',c.now,6)){b.runtime.arcaneBastionReady=false;activated(b,'arcane_bastion');c.damage(power*.30,'⛨ Arcane Bastion');c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),.03,.06));}
- if(b.element==='fire'&&specialized(b,'kindling_flame'))c.dot('burn',power*.08,{controlledBurn:adaptive(b,'controlled_burn','fire')});
- if(adaptive(b,'controlled_burn','fire')&&!rank(b,'kindling')&&!specialized(b,'kindling_flame')&&!(e.dots?.burn||[]).some(d=>d.remaining>0&&!d.spread&&!d.secondaryOrigin))c.dot('burn',power*.08,{controlledBurn:true,primaryOnly:true});
+ if(adaptive(b,'controlled_burn','fire')&&!rank(b,'kindling')&&!(e.dots?.burn||[]).some(d=>d.remaining>0&&!d.spread&&!d.secondaryOrigin))c.dot('burn',power*.08,{controlledBurn:true,primaryOnly:true});
  if(b.element==='fire'&&specialized(b,'combustion')&&e.dots?.burn?.length&&ready(b,'combustion',c.now,4))c.damage(power*.20,'💥 Combustion');
  if(b.element==='frost'&&specialized(b,'shatter')&&e.slowTime>0&&ready(b,'shatter',c.now,4))c.damage(power*.25,'💠 Shatter');
- if(b.element==='frost'&&specialized(b,'deep_chill'))c.chill(e.boss?1.2:Math.min(5,Math.max(3.5,e.slowTime||0)+.5));
- if(b.element==='lightning'&&specialized(b,'static_charge'))c.damage(power*.10,'⚡ Static Charge');
  if(b.element==='lightning'&&specialized(b,'chain_discharge')&&b.runtime.magicHits%4===0)c.damage(power*.35,'🔗 Chain Discharge');
  if(b.element==='fire'&&rank(b,'kindling')&&activated(b,'kindling'))c.dot('burn',power*values('kindling',rank(b,'kindling')).burn,{controlledBurn:adaptive(b,'controlled_burn','fire')});
  else if(b.element==='frost'&&rank(b,'deep_winter')&&activated(b,'deep_winter')){
@@ -475,15 +470,14 @@ function tickRot(b,c){
 function onSecond(b,c){
  b.runtime.passiveTelemetry??={};for(const id of new Set([...b.picks,...(b.runtime.permanentTalents||[])])){if(!rank(b,id))continue;const t=b.runtime.passiveTelemetry[id]??={activations:0,combatSeconds:0};t.combatSeconds++;}
  const e=migrateEnemyDots(c.enemy);if(e.hp>0)tickRot(b,c);
- const recovery=specialized(b,'radiance_recovery')?1.25:specialized(b,'radiance_reserve')?.75:1;
  // Root Radiance and stat-node regeneration are fractional Max HP per second.
  // The 0.35% base cap applies before mutually exclusive Recovery/Reserve multipliers.
  const basicRegenRate=Math.min(.0035,Math.max(0,Number(b.runtime.talentBonuses?.healthRegen)||0));
- if(basicRegenRate>0)heal(b,c,c.player.maxhp*basicRegenRate*recovery);
+ if(basicRegenRate>0)heal(b,c,c.player.maxhp*basicRegenRate);
  if(specialized(b,'living_recovery')&&c.player.hp<c.player.maxhp*.5)heal(b,c,c.player.maxhp*.005);
  if(specialized(b,'heart_of_the_wild')&&c.player.hp<c.player.maxhp*.3&&b.runtime.heartWildWave!==(c.waveKey??c.enemy)){b.runtime.heartWildWave=c.waveKey??c.enemy;heal(b,c,c.player.maxhp*.12);}
- if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal*recovery);
- if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal*recovery);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
+ if(rank(b,'renewal')&&activated(b,'renewal'))heal(b,c,c.player.maxhp*values('renewal',rank(b,'renewal')).heal);
+ if(rank(b,'life_bloom')&&activated(b,'life_bloom')){heal(b,c,c.player.maxhp*values('life_bloom',rank(b,'life_bloom')).heal);c.mana(values('life_bloom',rank(b,'life_bloom')).mana);}
  if(rank(b,'barrier_pulse')&&ready(b,'barrierPulse',c.now,6)&&activated(b,'barrier_pulse')){const v=values('barrier_pulse',rank(b,'barrier_pulse'));c.barrier(barrierAmount(c.player.maxhp,barrierSpellPower(c),v.barrier,v.spellBarrier));}
  // One pulse per interval, at most four living arena enemies, no weapon/status procs.
  defensivePulse(b,c,'vital_pulse',4,c.player.maxhp*.02);
@@ -506,7 +500,6 @@ function onDefend(b,c,blocked,barrierAbsorbed){
    if(c.areaDamage)c.areaDamage(threshold,'🔨 Stored Force');else c.damage(threshold,'🔨 Stored Force');
   }
  }
- if(blocked>0&&specialized(b,'aegis_reprisal')&&ready(b,'specialReprisal',c.now,3))b.runtime.specialReprisal=true;
  const broken=c.barrierBroken??(barrierAbsorbed>0&&c.player.barrier<=0);
  if(barrierAbsorbed>0&&rank(b,'retaliation')&&ready(b,'retaliation',c.now,4))b.runtime.counterBarrier=1;
  if(rank(b,'prismatic_rebound')&&barrierAbsorbed>0&&activated(b,'prismatic_rebound'))
@@ -517,7 +510,6 @@ function onDefend(b,c,blocked,barrierAbsorbed){
 }
 function onKill(b,c){
  if(specialized(b,'blood_harvest')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed))heal(b,c,c.player.maxhp*.03);
- if(specialized(b,'fury_momentum'))b.runtime.momentumUntil=c.now+4;
  if(specialized(b,'sanguine_reserve')&&(c.enemy.bleedStacks>0||c.enemy.v012DeathBleed)){b.runtime.pursuitWave=c.waveKey??c.enemy;b.runtime.pursuitCharges=2;b.runtime.pursuitUntil=c.now+5;activated(b,'sanguine_reserve');c.metric?.('bloodPursuitKills',1);}
  if(specialized(b,'blood_transfer')){
   const target=c.player.enemies?.find(e=>e!==c.enemy&&e.hp>0),dots=(c.enemy.dots?.bleed||[]).filter(d=>d.remaining>0&&d.damage>0).slice().sort((a,b)=>b.damage-a.damage);
@@ -548,7 +540,7 @@ function onKill(b,c){
  const key=c.waveKey??c.enemy;if(c.waveComplete!==false&&rank(b,'second_breath')&&b.runtime.lastWaveHeal!==key){b.runtime.lastWaveHeal=key;activated(b,'second_breath');heal(b,c,c.player.maxhp*values('second_breath',rank(b,'second_breath')).heal);}
 }
 function survive(b,c){if(specialized(b,'unbreakable')&&!b.runtime.unbreakableUsed){b.runtime.unbreakableUsed=true;b.runtime.unbreakableUntil=c.now+5;c.player.hp=1;c.barrier(c.player.maxhp*.20);c.log('🏰 Unbreakable');return true;}if(!rank(b,'last_stand')||b.runtime.lastStand)return false;activated(b,'last_stand');b.runtime.lastStand=true;c.player.hp=Math.max(1,c.player.maxhp*.06);c.log('💚 Last Stand (once per Expedition)');return true;}
-function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(1+(specialized(b,'battle_tempo')?.03*(b.runtime.battleTempo||0):0))*(b?.runtime?.momentumUntil>now?1.15:1)*(b?.runtime?.furyRecoveryUntil>now?1.12:1)*(b?.runtime?.unbreakableUntil>now?.8:1);}
+function speed(b,now){const adrenaline=b?.runtime?.adrenalineUntil>now?1+values('adrenaline',rank(b,'adrenaline')).speed:1;return adrenaline*(1+(specialized(b,'battle_tempo')?.03*(b.runtime.battleTempo||0):0))*(b?.runtime?.furyRecoveryUntil>now?1.12:1)*(b?.runtime?.unbreakableUntil>now?.8:1);}
 function enemyHealMultiplier(b,e){return 1-(e.v012Rot?.length&&rank(b,'wither')?values('wither',rank(b,'wither')).healingReduction:0);}
 function enemyDefense(b,e){const defense=Math.max(0,Number(e?.def)||0),base=Math.max(0,Number(e?.baseDef)||0),reduction=e?.v012Rot?.length?Math.min(.10,b?.runtime?.talentBonuses?.rotDefense||0):0;return reduction?Math.min(defense,Math.max(base*.25,defense*(1-reduction))):defense;}
 function nextCost(b,baseCost=8){return Math.max(Math.min(3,baseCost),baseCost-rank(b,'efficient_cast'));}

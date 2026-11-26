@@ -21,7 +21,7 @@ const NODES=Object.freeze([
  {"id":"relentless","maxRank":5,"icon":"🎯","name":"Relentless Aim","description":"Every fourth attack on the same target deals +10% damage per rank."},
  {"id":"brace","maxRank":5,"icon":"🔰","name":"Brace","description":"Reduce incoming elite and boss strikes by 4% per rank."},
  {"id":"second_pulse","maxRank":5,"icon":"💚","name":"Second Pulse","description":"Crossing below half Health heals 1% per rank each second for 3s, once per room."},
- {"id":"spell_echo","maxRank":5,"icon":"✨","name":"Spell Echo","description":"Every third funded cast or Arcane Infusion hit echoes for 10% damage per rank."},
+ {"id":"spell_echo","maxRank":5,"icon":"✨","name":"Resonant Sequence","description":"Every third funded cast or Arcane Infusion hit echoes for 10% damage per rank."},
  {"id":"incubation","maxRank":5,"icon":"🦠","name":"Incubation","description":"Every third consecutive Rot tick deals 12% more damage per rank."},
  {"id":"red_guillotine","advanced":true,"icon":"🪓","name":"Red Guillotine","description":"Prepared: every fourth strike consumes up to three Bleeds for their remaining damage. A kill spreads one stack."},
  {"id":"last_bastion","advanced":true,"icon":"🏰","name":"Last Bastion","description":"Prepared: once per expedition, survive lethal damage and gain Barrier for 4s. Recover half its absorbed damage."},

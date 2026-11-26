@@ -69,7 +69,12 @@ test('Affinity Tank support stays capped, Radiance healing respects max HP',()=>
  const r=run(tank,caster);A.attach(r.enemies,'radiance');
  advance(r,tank,tank.stage81.nextAt);
  advance(r,tank,tank.stage81.castingUntil+.01);
- assert(caster.hp>54&&caster.hp<=60,'Heartwood Mend is small and limited');
+ assert.equal(caster.hp,54);
+ const now=r.combatSeconds;
+ assert.equal(A.shellDamage(tank,now,100,1000),5.5);
+ for(let i=0;i<3;i++)A.shellDamage(tank,now,100,1000);
+ assert.equal(A.shellDamage(tank,now,100,1000),0);
+ assert.equal(A.shellDamage(tank,now+4,100,1000),0);
  const t=mob('tank'),c=mob('caster');const rr=run(t,c);A.attach(rr.enemies,'aegis');
  for(let cycle=0;cycle<3;cycle++){
   advance(rr,t,t.stage81.nextAt);advance(rr,t,t.stage81.castingUntil+.01);
@@ -116,9 +121,10 @@ test('Minion passives require at least two living Minions of same Affinity and s
   const one=mob('minion','a'),two=mob('minion','b'),tank=mob('tank');
   const r=run(one,two,tank);A.attach(r.enemies,family);
   const factor=A.packFactor(r,one);
-  assert(factor>1&&factor<=1.07);
+  if(family==='radiance'){assert.equal(factor,1);assert.equal(A.directFactor(r,one),.97);}
+  else assert(factor>1&&factor<=1.07);
   assert.equal(A.packFactor(r,tank),1);
-  two.hp=0;assert.equal(A.packFactor(r,one),1);
+  two.hp=0;assert.equal(A.packFactor(r,one),1);assert.equal(A.directFactor(r,one),1);
  }
 });
 test('Stage 8.1 UI includes live Casting/Guarding/Enraged indicators and class tooltips',()=>{
@@ -155,9 +161,13 @@ test('Reserve normal enemies begin cooldown after entering an open arena slot',(
 test('Radiance mending chooses the most wounded ally, including the caster if needed',()=>{
  const tank=mob('tank'),caster=mob('caster'),r=run(tank,caster);
  tank.hp=20;caster.hp=95;A.attach(r.enemies,'radiance');
- advance(r,tank,tank.stage81.nextAt);
- const healed=advance(r,tank,tank.stage81.castingUntil+.01)[0];
- assert.equal(healed.target,tank);assert(tank.hp>20);
+ advance(r,caster,caster.stage81.nextAt);
+ const start=caster.stage81.castingUntil;
+ const cast=advance(r,caster,start).find(e=>e.ability==='Renew');
+ assert.equal(cast.target,tank);assert.equal(tank.hp,20);
+ advance(r,tank,start+1);assert.equal(tank.hp,22);
+ advance(r,tank,start+3);assert.equal(tank.hp,27);
+ advance(r,tank,start+3);assert.equal(tank.hp,27);
 });
 test('Minions protected by Aegis show Guarding despite never casting themselves',()=>{
  const minion=mob('minion');A.attach([minion],'aegis');

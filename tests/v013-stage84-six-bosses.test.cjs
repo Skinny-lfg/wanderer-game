@@ -205,3 +205,16 @@ test('Gullet reabsorbs each surviving fragment once after ten active seconds',()
  assert.equal(r.encounterLeader.hp,740);
  assert(!step(r,11).some(e=>e.type==='reabsorbed'));
 });
+
+test('Gullet respects missing HP, encounter healing cap and encounter end',()=>{
+ for(const [hp,prior,status,expected] of [[980,0,'fight',20],[500,140,'fight',10],[0,0,'fight',0],[500,0,'complete',0]]){
+  const r=run('devourer');
+  castSummon(r,.69);
+  r.encounterLeader.hp=hp;
+  r.bossInfrastructure.healed=prior;
+  r.status=status;
+  step(r,11);
+  assert.equal(r.encounterLeader.hp,hp+expected);
+  assert.equal(r.bossInfrastructure.healed,prior+expected);
+ }
+});

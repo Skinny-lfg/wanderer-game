@@ -14,9 +14,9 @@ const DEFINITIONS=Object.freeze({
   caster:{name:'Spore Hex',type:'weakening_hex',description:'Channels Weakened on the player'}
  }),
  radiance:Object.freeze({
-  tank:{name:'Heartwood Mend',type:'mend',power:.055,description:'Restores a wounded ally'},
+  tank:{name:'Radiant Shell',type:'reflect',power:.055,description:'Reflects 5.5% of direct primary damage for 4 seconds, up to 0.55% of attacker maximum HP per hit and 2.2% per window.'},
   skirmisher:{name:'Searing Strike',type:'strike',power:.13,description:'The next strike deals additional direct damage'},
-  caster:{name:'Bloom Chant',type:'mend',power:.07,description:'Heals a wounded ally after channeling'}
+  caster:{name:'Renew',type:'renew',power:.07,description:'Restores 7% of the most wounded ally’s maximum HP over three seconds.'}
  }),
  aegis:Object.freeze({
   tank:{name:'Shellward',type:'ward',power:.12,description:'Protects a vulnerable ally with Barrier'},
@@ -37,7 +37,7 @@ const DEFINITIONS=Object.freeze({
 const PASSIVES=Object.freeze({
  blood:{name:'Crimson Pack',bonus:.05,description:'Swarm pressure improves melee attacks'},
  decay:{name:'Blight Swarm',bonus:.04,description:'Swarm pressure improves attacks'},
- radiance:{name:'Living Swarm',bonus:.03,description:'Swarm pressure improves attacks'},
+ radiance:{name:'Reconstitution',bonus:.03,description:'Takes 3% less direct damage while another Unfinished is active.'},
  aegis:{name:'Shoal Assault',bonus:.03,description:'Swarm pressure improves attacks'},
  fury:{name:'Feral Swarm',bonus:.07,description:'Swarm pressure improves attacks'},
  arcane:{name:'Sigil Resonance',bonus:.05,description:'Swarm pressure improves attacks'}
@@ -78,11 +78,13 @@ function resolve(run,enemy,now){
    result=target.barrier-previous;target.stage81GuardUntil=now+1.7;label='Guarding';
    break;
   }
-  case 'mend':{
+  case 'reflect':{
+   state.shellUntil=now+4;state.reflected=0;label='Radiant Shell';break;
+  }
+  case 'renew':{
    target=preferredTarget(actors,enemy,'mend');
-   result=Math.min(Math.max(0,target.maxhp-target.hp),Math.max(1,Math.round(target.maxhp*definition.power)));
-   target.hp+=result;label='Renewing';
-   break;
+   target.renew={start:now,total:Math.max(1,Math.round(target.maxhp*definition.power)),ticks:0};
+   label='Renewing';break;
   }
   case 'rally':{
    target=preferredTarget(actors,enemy,'rally');
@@ -120,6 +122,17 @@ function tick(run,absoluteNow){
  if(!run||run.status!=='fight')return [];
  const now=run.combatSeconds||0,events=[];
  for(const enemy of active(run)){
+  const renew=enemy.renew;
+  if(renew){
+   const due=Math.min(3,Math.floor(now-renew.start+1e-7));
+   if(due>renew.ticks){
+    const amount=Math.round(renew.total*due/3)-Math.round(renew.total*renew.ticks/3);
+    const healed=Math.min(amount,Math.max(0,enemy.maxhp-enemy.hp));
+    enemy.hp+=healed;renew.ticks=due;
+    if(healed)events.push({type:'renew',enemy,result:healed});
+    if(due===3)delete enemy.renew;
+   }
+  }
   const state=enemy.stage81;
   if(!state||!DEFINITIONS[state.family]||state.role==='minion'||enemy.boss||enemy.miniboss)continue;
   const spec=TIMINGS[state.role];
@@ -164,14 +177,28 @@ function onHit(enemy,run,damage,absoluteNow,extra){
  }
  return 0;
 }
+function shellDamage(enemy,now,loss,heroMaxHp){
+ const state=enemy?.stage81;
+ if(!(now<state?.shellUntil)||loss<=0)return 0;
+ const power=DEFINITIONS.radiance.tank.power;
+ const amount=Math.max(0,Math.min(loss*power,heroMaxHp*power/10,heroMaxHp*power*.4-state.reflected));
+ state.reflected+=amount;
+ return amount;
+}
+function directFactor(run,enemy){
+ if(enemy?.stage81?.family!=='radiance'||enemy.stage81.role!=='minion')return 1;
+ const accompanied=active(run).some(other=>other!==enemy&&other.stage81?.family==='radiance'&&other.stage81.role==='minion');
+ return accompanied?1-PASSIVES.radiance.bonus:1;
+}
 function packFactor(run,enemy){
  const state=enemy?.stage81;
- if(!state||state.role!=='minion'||!PASSIVES[state.family])return 1;
+ if(!state||state.family==='radiance'||state.role!=='minion'||!PASSIVES[state.family])return 1;
  const count=active(run).filter(e=>e.stage81?.role==='minion'&&e.stage81.family===state.family).length;
  return count>=2?1+PASSIVES[state.family].bonus:1;
 }
 function status(enemy,now){
  const s=enemy?.stage81;if(!s)return null;
+ if(s.shellUntil>now)return {kind:'guarding',label:'Radiant Shell',detail:DEFINITIONS.radiance.tank.description,remaining:s.shellUntil-now};
  if(enemy.stage81GuardUntil>now)return {kind:'guarding',label:'Guarding',detail:'Protected',remaining:enemy.stage81GuardUntil-now};
  if(s.role==='minion')return null;
  if(s.castingUntil>now)return {kind:'casting',label:'Casting',detail:s.name,remaining:Math.max(0,s.castingUntil-now)};
@@ -184,7 +211,7 @@ function describe(enemy){
  return s.role==='minion'?PASSIVES[s.family]?.description||'':
   DEFINITIONS[s.family]?.[s.role]?.description||'';
 }
-const API=Object.freeze({DEFINITIONS,PASSIVES,TIMINGS,attach,onEnter,tick,consumeStrike,onHit,packFactor,status,describe});
+const API=Object.freeze({DEFINITIONS,PASSIVES,TIMINGS,attach,onEnter,tick,consumeStrike,onHit,packFactor,shellDamage,directFactor,status,describe});
 root.WandererV013EnemyAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
 })(globalThis);

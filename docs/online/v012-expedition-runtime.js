@@ -215,7 +215,7 @@ function phase1WaveWon(){
  const traits=globalThis.WandererV013EncounterTraits;
  if(r.encounterTraitId==='death_throes'&&traits){
   const fallen=r.enemies?.length?r.enemies.filter(mob=>mob.hp<=0&&!mob.groupDefeated):[r.enemy].filter(mob=>mob.hp<=0);
-  const pulse=traits.deathPulse(r,fallen);
+  const pulse=traits.deathPulse(r,fallen.filter(enemy=>!enemy.reabsorbed));
   if(pulse.triggers){ports.phase6Metric(r,'traitDeathPulse',pulse.triggers);ports.phase6Metric(r,'damageTaken',pulse.damage);ports.phase6Metric(r,'absorbed',pulse.absorbed);
    ports.addLog('Death Throes · '+pulse.damage+' damage'+(pulse.absorbed?' ('+pulse.absorbed+' absorbed)':'')+'!','critical');
    if(r.hp<=0){ports.phase1Death();return;}
@@ -224,6 +224,7 @@ function phase1WaveWon(){
  if(r.enemies?.length>1){
    const selectedTarget=r.enemy,dead=r.enemies.filter(enemy=>enemy.hp<=0&&!enemy.groupDefeated);if(!dead.length)return;
   for(const enemy of dead){r.enemy=enemy;enemy.groupDefeated=true;
+   if(enemy.reabsorbed)continue;
   const death=globalThis.WandererV013BossInfrastructure?.onMinionDeath(r,enemy);
    const bossDeath=globalThis.WandererV013BossAbilities?.onDeath(r,enemy);
    if(bossDeath?.type==='node_broken'){ports.combatLinkEffect?.(r,'shock',enemy,[bossDeath.enemy]);ports.addLog('⚡ Convergence Anchor destroyed · Arcane Convergence '+(bossDeath.canceled?'interrupted':'next cast canceled')+' · Boss weakened for '+bossDeath.duration+'s','good');ports.phase6Metric(r,'bossNodeDestroyed',1);}

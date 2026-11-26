@@ -120,6 +120,7 @@ function tick(r,absoluteNow,infraEvents=[]){
    if(fragment.hp<=0||fragment.stage84Minion!=='radiance')continue;
    fragment.fragmentReturnAt??=now+FRAGMENT_RETURN_SECONDS;
    if(now<fragment.fragmentReturnAt)continue;
+   fragment.reabsorbed=true;
    fragment.hp=0;
    const healed=I.recover(r,Math.round(e.maxhp*.05));
    events.push({type:'reabsorbed',enemy:e,minion:fragment,healed});
