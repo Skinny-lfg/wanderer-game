@@ -4,6 +4,9 @@ const ROOT := "res://assets/arena_3d/"
 const SPRITES := "res://assets/arena/"
 const UPDATED := "res://assets/arena_3d_v2_characters/"
 var camera: Camera3D
+var duel_landscape: Node3D
+var arena_environment: Environment
+var grave_animation_ready := false
 var fighter_roots: Array[Node3D] = []
 var fighter_sprites: Array[Sprite3D] = []
 var fighter_heights: Array[float] = []
@@ -41,6 +44,7 @@ func _ready() -> void:
 	env.fog_light_color = Color("#08090e")
 	env.fog_density = 0.043
 	world.environment = env
+	arena_environment = env
 	add_child(world)
 	camera = Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -92,6 +96,7 @@ func _ready() -> void:
 	_place("pillar", Vector3(9.2, 0, 5.3), 3.5, -0.3)
 	_place("roots", Vector3(-7.6, 0, 5.7), 0.65, 0.4)
 	_place("debris", Vector3(7.3, 0, 5.0), 0.45, -0.2)
+	_build_duel_landscape()
 	shadow_texture = _make_shadow()
 	fighters = Node3D.new()
 	fighters.name = "CombatSprites"
@@ -130,6 +135,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _set_view(index: int) -> void:
 	selected_view = index
+	duel_landscape.visible = index == 1
+	arena_environment.fog_light_color = Color("#28303b") if index == 1 else Color("#08090e")
+	arena_environment.background_color = Color("#181e29") if index == 1 else Color("#06070b")
+	arena_environment.fog_density = 0.027 if index == 1 else 0.043
 	var positions: Array[Vector3] = []
 	var aim := Vector3.ZERO
 	match index:
@@ -142,10 +151,10 @@ func _set_view(index: int) -> void:
 		1:
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
 			camera.fov = 43.0
-			camera.position = Vector3(0, 2.9, 13.0)
-			aim = Vector3(0, 2.2, -2.0)
+			camera.position = Vector3(0, 3.35, 13.0)
+			aim = Vector3(0, 1.65, -2.0)
 			# Foreground hero and a single readable enemy line across the far lane.
-			positions = [Vector3(-2.75, 0, 6.1), Vector3(-1.9, 0, -2.2), Vector3(1.1, 0, -2.5), Vector3(4.1, 0, -2.2), Vector3(7.1, 0, -2.5)]
+			positions = [Vector3(-3.0, 0, 5.2), Vector3(-1.4, 0, 0.6), Vector3(1.1, 0, 0.2), Vector3(3.7, 0, 0.7), Vector3(6.0, 0, 0.1)]
 	camera.look_at(aim)
 	var hero := fighter_sprites[0]
 	var hero_texture := rear_wanderer if index == 1 and rear_wanderer != null else side_wanderer
@@ -160,11 +169,15 @@ func _set_view(index: int) -> void:
 		sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 		var visual_scale := 1.12 if index == 1 and i == 0 else 1.0
 		sprite.scale = Vector3.ONE * visual_scale
-		sprite.position = Vector3(0, fighter_ground_heights[i] * visual_scale + 0.015, 0)
+		sprite.position = Vector3(0, fighter_ground_heights[i] * visual_scale + 0.005, 0)
+		# Ground decals stay attached to the actor even while its sprite animates.
+		var contact := fighter_roots[i].get_node_or_null("ContactShadow") as Sprite3D
+		if contact != null:
+			contact.scale = Vector3(visual_scale, 0.45 * visual_scale, 1.0)
 	for i in range(mode_buttons.size()):
 		mode_buttons[i].set_pressed_no_signal(i == index)
 	if mode_hint != null:
-		mode_hint.text = ["Side view", "Cinematic duel"][index] + ("  |  LEGACY SPRITES: install V2 pack" if using_fallback else "")
+		mode_hint.text = ["Side view", "Cinematic duel"][index] + ("  |  LEGACY SPRITES: install V2 pack" if using_fallback else "") + ("  |  Gravecaller animation ready" if grave_animation_ready else "  |  Gravecaller frames missing")
 
 func _panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -421,6 +434,7 @@ func _load_grave_animation() -> void:
 		# Keep a common centered canvas and a fixed world-space ground height.
 		fighter_ground_heights[3] = _ground_sprite(grave, fighter_heights[3])
 		grave.scale = Vector3.ONE
+		grave_animation_ready = true
 
 func _trigger_grave_attack() -> void:
 	if grave_idle_frames.size() != 8 or grave_attack_frames.size() != 8:
@@ -506,12 +520,22 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 	fighters.add_child(root)
 	var shadow := Sprite3D.new()
 	shadow.texture = shadow_texture
-	shadow.pixel_size = 2.1 / 64.0
-	shadow.scale.y = 0.72
+	shadow.pixel_size = 2.7 / 64.0
+	shadow.scale.y = 0.60
 	shadow.rotation_degrees.x = -90.0
 	shadow.position = Vector3(0, 0.025, 0)
 	shadow.shaded = false
 	root.add_child(shadow)
+	var contact := Sprite3D.new()
+	contact.name = "ContactShadow"
+	contact.texture = shadow_texture
+	contact.pixel_size = (1.45 if filename == "wanderer.webp" else 2.25) / 64.0
+	contact.rotation_degrees.x = -90.0
+	contact.scale.y = 0.45
+	contact.position = Vector3(0, 0.045, 0)
+	contact.shaded = false
+	contact.modulate = Color(0.1, 0.1, 0.1, 1.0)
+	root.add_child(contact)
 	var sprite := Sprite3D.new()
 	if ResourceLoader.exists(path):
 		var tex := load(path) as Texture2D
@@ -524,7 +548,9 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 	sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	sprite.shaded = false
 	# Keep painted character colors readable independently of the dark environment.
-	sprite.modulate = Color(1.0, 0.98, 0.95, 1.0)
+	sprite.modulate = Color.WHITE
+	# Sprites remain unshaded; Duel fog is reduced to preserve contrast.
+	sprite.modulate = Color(1.15, 1.13, 1.10, 1.0)
 	var ground_height := _ground_sprite(sprite, height)
 	sprite.position = Vector3(0, ground_height + 0.015, 0)
 	root.add_child(sprite)
@@ -532,6 +558,45 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 	fighter_sprites.append(sprite)
 	fighter_heights.append(height)
 	fighter_ground_heights.append(ground_height)
+
+func _build_duel_landscape() -> void:
+	duel_landscape = Node3D.new()
+	duel_landscape.name = "DuelLandscape"
+	add_child(duel_landscape)
+	# Three irregular ridge meshes, using deterministic noise and separate depths.
+	for layer in range(3):
+		var ridge := SurfaceTool.new()
+		ridge.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var noise := FastNoiseLite.new()
+		noise.seed = 713 + layer * 137
+		noise.frequency = 0.12 + layer * 0.025
+		var distance := -20.0 - layer * 16.0
+		var width := 32.0 + layer * 17.0
+		var amplitude := 7.0 + layer * 4.0
+		var count := 64
+		for i in range(count):
+			var x0 := lerpf(-width, width, float(i) / float(count))
+			var x1 := lerpf(-width, width, float(i + 1) / float(count))
+			var y0 := 2.0 + amplitude * (0.65 + noise.get_noise_2d(x0, 5.0))
+			var y1 := 2.0 + amplitude * (0.65 + noise.get_noise_2d(x1, 5.0))
+			var z0 := distance + noise.get_noise_2d(x0, 17.0) * 3.0
+			var z1 := distance + noise.get_noise_2d(x1, 17.0) * 3.0
+			var a := Vector3(x0, -3.0, z0)
+			var b := Vector3(x0, y0, z0)
+			var c := Vector3(x1, y1, z1)
+			var d := Vector3(x1, -3.0, z1)
+			for vertex in [a, b, c, a, c, d]:
+				ridge.add_vertex(vertex)
+		ridge.generate_normals()
+		var instance := MeshInstance3D.new()
+		instance.mesh = ridge.commit()
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mat.albedo_color = [Color("#161d29"), Color("#343d4c"), Color("#424b59")][layer]
+		instance.material_override = mat
+		duel_landscape.add_child(instance)
+	duel_landscape.visible = false
 
 func _ground_sprite(sprite: Sprite3D, height: float) -> float:
 	# Centered sprite geometry avoids signed offset conventions entirely.
