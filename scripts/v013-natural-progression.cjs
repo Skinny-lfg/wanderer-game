@@ -23,7 +23,7 @@ require('../online/v013-expedition-contracts.js');
 const K=globalThis.WandererV013ExpeditionContracts;
 const PROFILES=Object.freeze({
  cautious:{name:'Cautious',risk:0,targets:['strong_heart','guarded_block','renewal'],families:['aegis','radiance'],preparedTargets:['last_bastion'],armor:'Plate',weapons:['Mace','Sword'],style:'mixed',healAt:.72,retreatAt:.5,target:'mechanics',shop:true},
- balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','strong_heart'],families:['blood','aegis'],preparedTargets:[],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
+ balanced:{name:'Balanced',risk:0,targets:['bleeding_edge','deep_cuts','guarded_block'],families:['blood','aegis'],preparedTargets:[],armor:'Plate',weapons:['Sword','Mace'],style:'mixed',healAt:.53,retreatAt:.34,target:'mechanics',shop:true},
  daring:{name:'Daring',risk:1,targets:['quick_hands','double_strike','bleeding_edge'],families:['fury','blood'],preparedTargets:['red_guillotine'],armor:'Leather',weapons:['Daggers','Bow'],style:'mixed',healAt:.35,retreatAt:.16,target:'focus',shop:true},
  'arcane-fire':{name:'Fire Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','kindling','fire_spread'],families:['arcane'],element:'fire',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.57,retreatAt:.36,target:'mechanics',shop:true},
  'arcane-frost':{name:'Frost Caster',risk:0,targets:['element_choice','arcane_focus','mana_spring','deep_winter','frost_spread'],families:['arcane'],element:'frost',armor:'Cloth',weapons:['Wand','Staff'],style:'focused',preparedTargets:[],healAt:.62,retreatAt:.41,target:'mechanics',shop:true},

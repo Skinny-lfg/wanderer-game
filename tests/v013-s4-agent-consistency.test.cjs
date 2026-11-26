@@ -18,7 +18,13 @@ test('explicit agent goals match their own live affinity and element scope',()=>
    const n=map.get(id);assert(n&&!n.pending,name+': '+id);assert(!n.family||p.families.includes(n.family),name+': '+id);
    assert(!n.pair||p.style!=='focused'&&n.pair.every(f=>p.families.includes(f)),name+': '+id);
    const plan={primary:p.families[0],secondary:p.families[1],mix:p.style!=='focused',element:p.element||'arcane'};
-   assert(B.routeTo(T,T.create(),id,plan,p.families)?.length,name+': unreachable '+id);
+   let progress={...T.create(),xp:T.POINT_XP*T.MAX_POINTS};
+   const route=B.routeTo(T,progress,id,plan,p.families);assert(route?.length,name+': unreachable '+id);
+   for(const step of route){
+    const allocated=T.allocate(progress,step);assert(allocated,name+': native rejected '+step+' on route to '+id);progress=allocated;
+    if(step==='element_choice'&&plan.element!=='arcane'){const selected=T.selectElement(progress,plan.element);assert(selected);progress=selected;}
+   }
+   assert(progress.nodes.includes(id));assert(T.valid(progress));
    assert(!n.element||n.element===(p.element||'arcane'),name+': '+id);
   }
  }
