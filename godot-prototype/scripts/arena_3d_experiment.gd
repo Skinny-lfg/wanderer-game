@@ -19,7 +19,12 @@ var fighters: Node3D
 var shadow_texture: ImageTexture
 var fire_lights: Array[OmniLight3D] = []
 var fire_time := 0.0
-var grave_attack := 0.0
+var grave_idle_frames: Array[Texture2D] = []
+var grave_attack_frames: Array[Texture2D] = []
+var grave_anim_time := 0.0
+var grave_playing_attack := false
+const GRAVE_ANIM := UPDATED + "gravecaller_animation/"
+const GRAVE_FRAME_TIME := 0.125
 
 func _ready() -> void:
 	var world := WorldEnvironment.new()
@@ -93,6 +98,7 @@ func _ready() -> void:
 	_fighter("oathbound_exarch.png", "berserker.png", 3.0)
 	_fighter("gravecaller.png", "caster.png", 2.8)
 	_fighter("ashen_executioner.png", "vampire.png", 2.9)
+	_load_grave_animation()
 	_build_hud()
 	_set_view(0)
 	if not missing.is_empty():
@@ -111,7 +117,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			KEY_2: _set_view(1)
 			KEY_SPACE: fighters.visible = not fighters.visible
 			KEY_H: hud.visible = not hud.visible
-			KEY_A: grave_attack = 0.65
+			KEY_A: _trigger_grave_attack()
 
 func _set_view(index: int) -> void:
 	selected_view = index
@@ -372,14 +378,54 @@ func _process(delta: float) -> void:
 	for i in range(fire_lights.size()):
 		fire_lights[i].light_energy = 4.0 + 0.22 * sin(fire_time * 7.0 + i * 2.0) + 0.12 * sin(fire_time * 13.0 + i)
 
-	# Anchored procedural preview; no source animation frames are implied.
+	_update_grave_animation(delta)
+
+func _load_grave_animation() -> void:
+	for i in range(8):
+		var idle_path := GRAVE_ANIM + ("idle_%02d.png" % i)
+		var attack_path := GRAVE_ANIM + ("attack_%02d.png" % i)
+		if not ResourceLoader.exists(idle_path) or not ResourceLoader.exists(attack_path):
+			grave_idle_frames.clear()
+			grave_attack_frames.clear()
+			push_warning("Gravecaller animation frames missing; static sprite retained.")
+			return
+		var idle_tex := load(idle_path) as Texture2D
+		var attack_tex := load(attack_path) as Texture2D
+		if idle_tex == null or attack_tex == null:
+			grave_idle_frames.clear()
+			grave_attack_frames.clear()
+			return
+		grave_idle_frames.append(idle_tex)
+		grave_attack_frames.append(attack_tex)
 	if fighter_sprites.size() > 3:
 		var grave := fighter_sprites[3]
-		grave_attack = maxf(0.0, grave_attack - delta)
-		var pulse := sin((1.0 - grave_attack / 0.65) * PI) if grave_attack > 0.0 else 0.0
-		grave.scale = Vector3(1.0 + 0.025 * pulse, 1.0 + 0.014 * sin(fire_time * 2.1) + 0.045 * pulse, 1.0)
-		grave.position.x = -0.16 * pulse
-		grave.modulate = Color(1.0, 0.98, 0.95).lerp(Color(1.12, 1.18, 1.02), pulse)
+		grave.texture = grave_idle_frames[0]
+		grave.pixel_size = fighter_heights[3] / 640.0
+		grave.centered = false
+		# Fixed common canvas pivot measured from idle frame zero.
+		grave.offset = Vector2(-319.0, -619.0)
+		grave.scale = Vector3.ONE
+
+func _trigger_grave_attack() -> void:
+	if grave_idle_frames.size() != 8 or grave_attack_frames.size() != 8:
+		return
+	if grave_playing_attack:
+		return
+	grave_playing_attack = true
+	grave_anim_time = 0.0
+	if fighter_sprites.size() > 3:
+		fighter_sprites[3].texture = grave_attack_frames[0]
+
+func _update_grave_animation(delta: float) -> void:
+	if fighter_sprites.size() <= 3 or grave_idle_frames.size() != 8 or grave_attack_frames.size() != 8:
+		return
+	grave_anim_time += delta
+	if grave_playing_attack and grave_anim_time >= 8.0 * GRAVE_FRAME_TIME:
+		grave_playing_attack = false
+		grave_anim_time = 0.0
+	var frame := int(grave_anim_time / GRAVE_FRAME_TIME) % 8
+	var frames := grave_attack_frames if grave_playing_attack else grave_idle_frames
+	fighter_sprites[3].texture = frames[frame]
 
 func _add_mist(at: Vector3) -> void:
 	var particles := CPUParticles3D.new()
@@ -466,7 +512,7 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 				if used.has_area():
 					bounds = used
 			sprite.centered = false
-			sprite.offset = Vector2(-float(bounds.position.x) - float(bounds.size.x) * 0.5, float(bounds.end.y - tex.get_height()))
+			sprite.offset = Vector2(-float(bounds.position.x) - float(bounds.size.x) * 0.5, -float(bounds.end.y))
 	else:
 		missing.append(filename)
 	sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
