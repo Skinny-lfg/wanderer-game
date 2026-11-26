@@ -21,8 +21,9 @@ test('Blueprint progress reports locked recipes, costs and material sources',()=
  const s=state(),p=C.progress(s,'epic_parting_blade',3);
  assert.equal(p.recipe.id,'epic_parting_blade');assert.equal(p.cost.tier,3);
  assert.equal(p.unlocked,false);assert.equal(p.ready,false);
- assert.equal(p.requirements.find(x=>x.key==='cores').need,4);
- assert.match(p.requirements.find(x=>x.key==='cores').source,/blood/);
+ assert.equal(p.requirements.find(x=>x.key==='reagent_blood').need,2);
+ assert.equal(p.requirements.find(x=>x.key==='reagent_decay').need,2);
+ assert.match(p.requirements.find(x=>x.key==='reagent_blood').source,/blood/);
  assert.equal(C.progress(s,undefined,3),null);
 });
 test('five-expedition item bands prevent automatic tier churn',()=>{assert.deepEqual([1,2,5,6,10,11,200,201].map(C.tierBand),[1,2,5,6,6,11,196,201]);assert.equal(C.cost('green_sword',6).fragments,C.cost('green_sword',10).fragments);assert.throws(()=>C.tierBand(0),/Invalid crafting tier/);});
@@ -51,7 +52,29 @@ test('Forge has no Essence-paid focus and recipe output does not alter rolled ar
  assert.equal(crafted.crafting.essence,0);
 });
 test('insufficient resources, unknown or locked recipes never call the item factory',()=>{const s=state();let calls=0;const make=(...args)=>{calls++;return factory(...args);};assert.equal(C.prepareCraft(s,'green_sword',1,make),null);s.crafting.essence=1000;assert.equal(C.prepareCraft(s,'blue_sword',1,make),null);assert.equal(C.prepareCraft(s,'missing',1,make),null);s.fragments=0;assert.equal(C.prepareCraft(s,'green_sword',1,make),null);assert.equal(calls,0);});
-test('Epic recipes require affinity reagents and apply exactly their functional trait',()=>{const s=state();s.crafting=unlock(s.crafting,'blood');s.crafting=C.discover(s.crafting,'epic_parting_blade');s.crafting.essence=55;s.crafting.cores.blood=3;assert.equal(C.prepareCraft(s,'epic_parting_blade',1,factory),null);s.crafting.cores.blood=4;const result=C.prepareCraft(s,'epic_parting_blade',1,factory);assert(result);assert.equal(result.item.v013Trait,'blood_transfer');assert.equal(result.item.rarity,'Epic');assert.equal(result.crafting.cores.blood,0);assert.equal(result.crafting.essence,0);assert.equal(s.crafting.cores.blood,4);});
+test('Epic recipes require affinity reagents and apply exactly their functional trait',()=>{const s=state();s.crafting=unlock(s.crafting,'blood');s.crafting=C.discover(s.crafting,'epic_parting_blade');s.crafting.essence=55;s.crafting.cores.blood=4;assert.equal(C.prepareCraft(s,'epic_parting_blade',1,factory),null);s.crafting.cores.blood=2;s.crafting.cores.decay=2;const result=C.prepareCraft(s,'epic_parting_blade',1,factory);assert(result);assert.equal(result.item.v013Trait,'blood_transfer');assert.equal(result.item.rarity,'Epic');assert.equal(result.crafting.cores.blood,0);assert.equal(result.crafting.essence,0);assert.equal(result.crafting.cores.decay,0);assert.equal(s.crafting.cores.blood,2);assert.equal(s.crafting.cores.decay,2);});
 test('refining respects family, cost and one conversion per drought',()=>{let p=C.create();p.essence=3;for(let i=0;i<3;i++)p=unlock(p,'blood');assert.equal(C.refine(p,'fury'),null);const next=C.refine(p,'blood');assert.equal(next.essence,0);assert.equal(next.cores.blood,1);assert.equal(C.refine(next,'blood'),null);assert.equal(p.cores.blood,0);assert(!C.valid({...p,dryRooms:{blood:4}}));});
 test('invalid stored materials and impossible unlock provenance are rejected',()=>{const p=C.create();assert(C.valid(p));for(const mutate of [p=>p.essence=-1,p=>p.essence=.5,p=>p.cores.unknown=1,p=>p.cores.blood=Infinity,p=>p.realmFamilies=['blood','blood'],p=>p.bossFamilies=['blood'],p=>p.learnedRecipes=['missing']]){const broken=JSON.parse(JSON.stringify(p));mutate(broken);assert(!C.valid(broken));}assert.throws(()=>C.progress({fragments:1,crafting:{}}),/Invalid crafting progress/);});
 test('an invalid item factory cannot deduct materials',()=>{const s=state();s.crafting.essence=4;const before=JSON.stringify(s);assert.equal(C.prepareCraft(s,'green_sword',1,()=>({id:'wrong',slot:'armor',rarity:'Epic'})),null);assert.equal(JSON.stringify(s),before);});
+
+test('R2 all 99 Blueprints retain their IDs and exact costs at every tier; two distinct families for Rare/Epic',()=>{
+ assert.equal(C.RECIPES.length,99);
+ for(const r of C.RECIPES)for(const tier of [1,6,60,201]){
+  const price=C.cost(r.id,tier),entries=Object.entries(price.reagents);
+  assert.equal(entries.length,r.rarity==='Uncommon'?0:2,r.id);
+  if(r.rarity!=='Uncommon'){assert.notEqual(r.family,r.secondary);assert.equal(price.reagents[r.family],r.rarity==='Rare'?1:2);assert.equal(price.reagents[r.secondary],price.reagents[r.family]);}
+  const s=state();s.fragments=price.fragments;s.crafting.essence=price.essence;if(r.rarity!=='Uncommon')s.crafting=C.discover(s.crafting,r.id);
+  for(const [f,n] of entries)s.crafting.cores[f]=n;
+  const snapshot=JSON.stringify(s);
+  for(const [f,n] of entries){const short={...s,crafting:{...s.crafting,cores:{...s.crafting.cores,[f]:n-1}}};let calls=0;assert.equal(C.prepareCraft(short,r.id,tier,()=>{calls++;return factory()}),null);assert.equal(calls,0);}
+  const result=C.prepareCraft(s,r.id,tier,factory);assert(result,r.id);assert.equal(result.fragments,0);assert.equal(result.crafting.essence,0);
+  assert(C.FAMILIES.every(f=>result.crafting.cores[f]===0));assert.equal(JSON.stringify(s),snapshot);
+ }
+});
+test('native Forge independently refines the missing secondary, never unrelated or sufficient reagent',()=>{
+ const create=require('./v012-economy-harness.cjs'),a=create(73,undefined,{}, {skipPersistence:true}),s=a.state(),id='blue_sword';
+ s.crafting=C.discover(C.create(),id);s.crafting.essence=41;s.crafting.cores.blood=1;s.crafting.dryRooms={blood:3,decay:3,arcane:3};s.fragments=1000;
+ assert.equal(a.forge.craft(id,1),null);assert.equal(a.forge.refine(id,'arcane'),false);assert.equal(a.forge.refine(id,'blood'),false);
+ assert.equal(a.forge.refine(id,'decay'),true);assert.equal(s.crafting.essence,35);assert.equal(s.crafting.cores.decay,1);assert.equal(a.forge.refine(id,'decay'),false);
+ const crafted=a.forge.craft(id,1);assert(crafted);assert.equal(s.crafting.cores.blood,0);assert.equal(s.crafting.cores.decay,0);assert.equal(s.crafting.essence,0);
+});

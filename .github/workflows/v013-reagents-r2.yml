@@ -1,0 +1,38 @@
+name: v0.13 R2 - two reagent Forge
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['economy/v013-crafting.js','docs/economy/v013-crafting.js','tests/v013-crafting.test.cjs','tests/v013-forge-ui-browser.test.cjs','.github/workflows/v013-reagents-r2.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  directed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/v013-crafting.test.cjs tests/v013-craft-preview.test.cjs tests/v013-offhand-stage3-recipes.test.cjs tests/v013-expedition-dagger-forge.test.cjs tests/v012-economy.test.cjs tests/v013-gear-loot-daggers.test.cjs tests/v013-stage7-contracts.test.cjs tests/v013-anchor-shards.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native Forge on Chromium
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN" CHROMIUM_PATH="$CHROME_BIN"; else npx playwright install chromium; fi
+          node --test tests/v013-forge-ui-browser.test.cjs
+          npm run test:v013:browser

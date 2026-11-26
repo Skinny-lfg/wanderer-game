@@ -12,7 +12,7 @@ const close=(value,expected,label)=>assert(Math.abs(value-expected)<1e-7,label+'
 function afford(a,id,tier=35){
  const recipe=C.RECIPES.find(x=>x.id===id);assert(recipe,id);
  const cost=C.cost(id,tier),c=C.discover(C.create(),id);assert(c,'new Blueprint discovery');
- c.essence=cost.essence;c.cores[recipe.family]=cost.cores;
+ c.essence=cost.essence;for(const [family,amount] of Object.entries(cost.reagents))c.cores[family]=amount;
  const state=a.state();state.fragments=cost.fragments;state.crafting=c;
  return {cost,recipe,state};
 }
@@ -31,7 +31,7 @@ function craft(a,id,tier=35){
  assert.equal(item.crafted,true);
  assert.equal(transaction.fragments,state.fragments-cost.fragments);
  assert.equal(transaction.crafting.essence,state.crafting.essence-cost.essence);
- assert.equal(transaction.crafting.cores[recipe.family],state.crafting.cores[recipe.family]-cost.cores);
+ for(const [family,amount] of Object.entries(cost.reagents))assert.equal(transaction.crafting.cores[family],state.crafting.cores[family]-amount);
  for(const field of ['subtype','slot','rarity','v013Trait','recipeId','tier'])
   assert.equal(preview[field],item[field],id+' preview agrees on '+field);
  state.fragments=transaction.fragments;state.crafting=transaction.crafting;
@@ -72,8 +72,8 @@ test('New Epic Blueprints require explicit discovery and normal costs; resources
   const p=C.create(),price=C.cost(id,35);
   const baseline=C.cost('epic_aether_orb',35);
   assert.equal(price.fragments,baseline.fragments);assert.equal(price.essence,55);
-  assert.equal(price.cores,4);assert.equal(price.coreFamily,family);
-  p.essence=price.essence;p.cores[family]=price.cores;
+  assert.equal(Object.keys(price.reagents).length,2);assert.equal(price.reagents[family],2);assert.equal(Object.values(price.reagents).reduce((a,b)=>a+b,0),4);
+  p.essence=price.essence;for(const [f,n] of Object.entries(price.reagents))p.cores[f]=n;
   const s={fragments:price.fragments,crafting:p};
   assert.equal(C.progress(s,id,35).ready,false,'materials alone cannot unlock Blueprints');
   let calls=0;
@@ -82,7 +82,7 @@ test('New Epic Blueprints require explicit discovery and normal costs; resources
   const discovered=C.discover(p,id);assert(discovered&&C.unlocked(discovered,id));
   assert.equal(C.discover(discovered,id),null,'duplicate Blueprint discovery does not grant another');
   assert.equal(C.progress({...s,crafting:discovered},id,35).ready,true);
-  const notEnough={...s,crafting:{...discovered,cores:{...discovered.cores,[family]:3}}};
+  const notEnough={...s,crafting:{...discovered,cores:{...discovered.cores,[family]:1}}};
   assert.equal(C.progress(notEnough,id,35).ready,false,'one missing reagent blocks Forge');
  }
 });

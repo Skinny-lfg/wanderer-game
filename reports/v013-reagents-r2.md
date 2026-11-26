@@ -1,0 +1,77 @@
+# R2 — two reagent Forge
+99 recipes unchanged (29 Uncommon, 56 Rare, 14 Epic). Uncommon: zero; Rare: 1+1; Epic: 2+2. Fragments, Essence, item IDs, blueprint acquisition, RNG and trait pools unchanged. Rare secondary assignments chosen by item identity and broader family usage; Epic pairs match the R2 proposal. Missing reagent refinement extends to each required family for Rare/Epic under the existing 3 dry rooms/6 Essence rule. Reagent art and names remain placeholders; no stat focus, alchemy or combat balance changes. Existing saves preserve same wallet keys and blueprint IDs.
+
+Recipe | Principal | Secondary
+---|---|---
+blue_sword | blood | decay
+blue_sword_fury | fury | blood
+blue_mace | aegis | radiance
+blue_mace_radiance | radiance | aegis
+blue_bow | fury | decay
+blue_bow_decay | decay | fury
+blue_daggers | fury | blood
+blue_daggers_blood | blood | decay
+blue_greatsword | blood | fury
+blue_greatsword_fury | fury | blood
+blue_staff | arcane | radiance
+blue_staff_radiance | radiance | arcane
+blue_wand | arcane | decay
+blue_wand_aegis | aegis | arcane
+blue_helm_plate | aegis | radiance
+blue_helm_leather | fury | decay
+blue_helm_cloth | arcane | radiance
+blue_armor_plate | aegis | blood
+blue_armor_leather | fury | aegis
+blue_armor_cloth | arcane | aegis
+blue_gloves_plate | aegis | fury
+blue_gloves_leather | fury | blood
+blue_gloves_cloth | arcane | decay
+blue_boots_plate | aegis | decay
+blue_boots_leather | fury | decay
+blue_boots_cloth | arcane | decay
+blue_belt_plate | aegis | blood
+blue_belt_leather | fury | radiance
+blue_belt_cloth | arcane | radiance
+blue_shield | aegis | blood
+blue_orb | arcane | aegis
+blue_tome | arcane | radiance
+blue_charm | radiance | decay
+blue_amulet | radiance | arcane
+blue_ring | fury | blood
+blue_ring2 | fury | decay
+blue_sword_insight | arcane | blood
+blue_mace_guard | radiance | blood
+blue_bow_might | blood | decay
+blue_daggers_might | blood | decay
+blue_daggers_insight | decay | arcane
+blue_ring1_blood | blood | decay
+blue_ring2_blood | blood | aegis
+blue_amulet_blood | blood | radiance
+blue_ring1_fury | fury | decay
+blue_ring2_fury | fury | aegis
+blue_amulet_fury | fury | radiance
+blue_ring1_arcane | arcane | decay
+blue_ring2_arcane | arcane | aegis
+blue_amulet_arcane | arcane | radiance
+blue_ring1_radiance | radiance | decay
+blue_ring2_radiance | radiance | fury
+blue_amulet_radiance | radiance | arcane
+blue_ring1_aegis | aegis | decay
+blue_ring2_aegis | aegis | fury
+blue_amulet_aegis | aegis | arcane
+epic_oathkeeper | aegis | blood
+epic_rearguard | aegis | radiance
+epic_parting_blade | blood | decay
+epic_gravecleaver | blood | fury
+epic_last_quarry | fury | decay
+epic_silent_verdict | fury | blood
+epic_ember_branch | arcane | fury
+epic_measured_staff | arcane | radiance
+epic_finesse | radiance | arcane
+epic_venomglass | decay | arcane
+epic_warded_mantle | aegis | arcane
+epic_aether_orb | arcane | aegis
+epic_echoing_tome | arcane | radiance
+epic_heartbloom_charm | radiance | decay
+
+Counts by family: Rare {"blood":18,"decay":20,"radiance":18,"aegis":18,"fury":19,"arcane":19}; Epic {"blood":4,"decay":4,"radiance":5,"aegis":4,"fury":4,"arcane":7}. These counts are recipe incidence, not expected consumption or economic balance.
