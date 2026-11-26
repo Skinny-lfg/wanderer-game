@@ -1,0 +1,20 @@
+name: v0.13 R7B - potion economy
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['online/v012-consumables.js','tests/v013-r7b-potion-economy.test.cjs','.github/workflows/v013-r7b-potion-economy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  directed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/v013-r7b-potion-economy.test.cjs tests/v013-r6-potion-crafting.test.cjs tests/v013-r5-potions.test.cjs tests/v012-complete-potions.test.cjs tests/v013-stage74-potions.test.cjs tests/v012-unified-gear-potions.test.cjs tests/v012-economy.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs tests/v013-stage7-contracts.test.cjs tests/v013-crafting.test.cjs tests/v013-reagent-influence.test.cjs

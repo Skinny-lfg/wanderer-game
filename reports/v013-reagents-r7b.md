@@ -1,0 +1,7 @@
+# R7B — Economic Calibration & Potion Accessibility
+Approved after R7A (6f150bf), 2026-11-26. Applied only the agreed economic changes. Purifying Tincture's existing two-combat duration and 50% effect are unchanged; refinement remains restricted to Forge. Both potential design changes are deferred, not approved for implementation.
+
+- Common: 2 Essence, no Reagents. Uncommon: 3 Essence plus one thematic Reagent (Might Blood; Arcane Elixir Arcane; Ironhide Aegis; Trail and Scout Fury; Purifying and Renewal Radiance). Rare: 5 Essence and existing pair. Epic Fortune/Wisdom: 8 Essence and existing pair. Prospector: 8 Essence only, existing +25% relative random Reagent probability unchanged. No Gold or Fragments in recipes.
+- Shop probability per offer: Common 48%, Uncommon 30%, Rare 16%, Epic 6%; 2% for each specific Epic. Four offers independently sampled, with replacement. Chance of at least one Epic in four offers: 21.925104%; specific Epic 7.763184%. No price or restock changes; existing stock stays until normal purchase/restock.
+- All runtime effects, durations, drops, Forge costs, inventory limits, save schema, and Anchor Realms unchanged. Both browser entrypoints use updated cache keys; source mirrored.
+- Directed tests cover calibrated rarity boundaries, price and restock preservation, exact recipes and native transactions, including Prospector with zero Reagents. Existing R5/R6 assertions updated to the approved values. No simulations. CI pending at commit creation; visual QA and actual player balance remain unverified.

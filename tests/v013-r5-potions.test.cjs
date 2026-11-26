@@ -6,7 +6,7 @@ require('../combat/v012-buildcraft.js');
 const P=globalThis.WandererV012Consumables,C=globalThis.WandererV012CombatCore,B=globalThis.WandererV012Buildcraft,create=require('./v012-economy-harness.cjs');
 const clone=v=>JSON.parse(JSON.stringify(v));
 const close=(a,b)=>assert(Math.abs(a-b)<1e-9,`${a} != ${b}`);
-test('R5 catalog expands to 21, retains rarity bucket mass and caps three unique progression doses',()=>{
+test('Catalog retains 21 potions, normalized offers and three unique progression doses',()=>{
  assert.equal(P.CATALOG.length,21);
  for(const id of ['wisdom','rejuvenation','withering','precision','phantom','prospector','executioner','renewal'])assert(P.CATALOG.some(p=>p.id===id));
  assert.equal(P.CATALOG.filter(p=>p.rarity==='Rare').length,9);
