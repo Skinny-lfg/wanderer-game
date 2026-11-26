@@ -1,0 +1,219 @@
+{
+  "stage": "G2.4B.5C",
+  "approval": "provisional visual approval",
+  "source": "latest approved 1774x887 raster concept, cropped, masked and resampled; not native individual 256 px artwork",
+  "shared_frame": "icons/actions/frame_thin.png",
+  "assets": [
+    {
+      "path": "icons/attributes/agility.png",
+      "sha256": "c887734592d38589158c031b65c401d704e506efb901718562820c1b360f8ec5",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 52012
+    },
+    {
+      "path": "icons/attributes/attack.png",
+      "sha256": "f2c564e7ac86c77375b9c8745b0afff7dcfaaf632cc638b6802bec3f0f327c37",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 39140
+    },
+    {
+      "path": "icons/attributes/attack_speed.png",
+      "sha256": "63499df571181c4399f21b0c43444b232e8f0357bebc46564de37d72517d24f2",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 49882
+    },
+    {
+      "path": "icons/attributes/barrier_power.png",
+      "sha256": "c966d0e04b2145a53b87b981f8f932365d680c8a4033cbd5b2600493f7ad3724",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 63597
+    },
+    {
+      "path": "icons/attributes/charisma.png",
+      "sha256": "c0266367faebcd6f619b8bf7358c1e41429319de842a3ceae182231c10a644e1",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 45151
+    },
+    {
+      "path": "icons/attributes/critical_chance.png",
+      "sha256": "eef84f7802bfa998754b73ee48cba2f00e08dbeadbfdbc3d1d416503be081772",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 67467
+    },
+    {
+      "path": "icons/attributes/critical_damage.png",
+      "sha256": "e375048ff26412824a8eb68a682b8733edd4b62bd599b970620b5c924fa5e377",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 52647
+    },
+    {
+      "path": "icons/attributes/defense.png",
+      "sha256": "368d5ac3d1e3148fc6da549150517a468c1e5b377c724f449552f351b15d3052",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 60627
+    },
+    {
+      "path": "icons/attributes/dot_power.png",
+      "sha256": "f566da1f021ac10133a0f63573a97939031fc76790ede5c199ea786a77fe1011",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 51792
+    },
+    {
+      "path": "icons/attributes/endurance.png",
+      "sha256": "85c88b42757175a8f0ff53877c026cc9ff2074c63fe96fd412110fee3fd1be01",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 59174
+    },
+    {
+      "path": "icons/attributes/evasion.png",
+      "sha256": "1c77ba2fdfd0233cc618a21fd8404bc6845cd2d7fed111f1e895ad16a5972377",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 50240
+    },
+    {
+      "path": "icons/attributes/gear_power.png",
+      "sha256": "ab66e91ada76da8457b8545a953ade96f89aa2861fd99b95520b4076c65d5260",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 41438
+    },
+    {
+      "path": "icons/attributes/guard.png",
+      "sha256": "f2e4c01f398330ea1ef8a58589209f325a80477fb391548ae53ac4d1958c9ff9",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 56414
+    },
+    {
+      "path": "icons/attributes/healing_power.png",
+      "sha256": "5fa07aa83ca3b3c6c0651b0a117f6b8c2500ea95ce0e3ad7e507dce1821219a2",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 46973
+    },
+    {
+      "path": "icons/attributes/health.png",
+      "sha256": "9b8ed9813984a579c4f61d90214264c8d171b79d925c1db6e032373c4b40989e",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 52319
+    },
+    {
+      "path": "icons/attributes/intellect.png",
+      "sha256": "71e45c088806096f029cc4a0ae9142459c3cf21b107a4e261450ea8f71d4e4f1",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 52537
+    },
+    {
+      "path": "icons/attributes/mana.png",
+      "sha256": "f4dd7867f9c0d0e8e8257b5984adb46d663849933b332ca4cd41fafbe73e4a3a",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 38142
+    },
+    {
+      "path": "icons/attributes/mana_cost_reduction.png",
+      "sha256": "142d0bf18ebdcc2a5532e09d979a59fe27dd3f8d6d525d1ae0a6aba825c32688",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 47416
+    },
+    {
+      "path": "icons/attributes/mana_regen.png",
+      "sha256": "e45877d731246b55bc0d25c8d03528fb05d524b3d286378601b11c96084e5bfa",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 45415
+    },
+    {
+      "path": "icons/attributes/spell_power.png",
+      "sha256": "58e23959305f78d1909a399cc645373e9ceb10b6bebd76cd558b4ba6ffbe6319",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 47305
+    },
+    {
+      "path": "icons/attributes/strength.png",
+      "sha256": "6144fda9d9f126480caf8b12d81dc73568a158bd88a2b787693af4e3f4a325d5",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 63386
+    }
+  ],
+  "runtime_integration": "pending"
+}
