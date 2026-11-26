@@ -1,0 +1,3 @@
+# Regression update — Blood Transfer
+
+Run 45789728400: targeted 25/25 and Pages regeneration passed; full test:v013 failed 1 of 385 because a legacy specialization test required the superseded purchased transfer behaviour (reserve recipients, nonrecursive). Replace with assertions for active-only, all stacks, half potency, immediate one combined tick, chained transfer and no reserve damage. Preserve separate trait-only nonrecursive queued transfer and test it explicitly. Update graph-combat test and verify 0.6s primary Bleed cooldown. 4 focused tests passed in isolated JS before commit. No gameplay or simulation matrix changes. Full CI and 25,200 baseline fights still pending.
