@@ -136,9 +136,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _set_view(index: int) -> void:
 	selected_view = index
 	duel_landscape.visible = index == 1
-	arena_environment.fog_light_color = Color("#28303b") if index == 1 else Color("#08090e")
-	arena_environment.background_color = Color("#181e29") if index == 1 else Color("#06070b")
-	arena_environment.fog_density = 0.027 if index == 1 else 0.043
+	arena_environment.fog_light_color = Color("#080a10") if index == 1 else Color("#08090e")
+	arena_environment.background_color = Color("#10141c") if index == 1 else Color("#06070b")
+	arena_environment.fog_density = 0.008 if index == 1 else 0.018
 	var positions: Array[Vector3] = []
 	var aim := Vector3.ZERO
 	match index:
@@ -173,7 +173,11 @@ func _set_view(index: int) -> void:
 		# Ground decals stay attached to the actor even while its sprite animates.
 		var contact := fighter_roots[i].get_node_or_null("ContactShadow") as Sprite3D
 		if contact != null:
-			contact.scale = Vector3(visual_scale, 0.45 * visual_scale, 1.0)
+			contact.scale = Vector3(visual_scale, 0.65 * visual_scale, 1.0)
+			# Extend the contact decal toward the camera so the visible edge overlaps the feet.
+			var toward_camera := camera.position - fighter_roots[i].position
+			toward_camera.y = 0.0
+			contact.position = toward_camera.normalized() * 0.12 + Vector3(0, 0.045, 0)
 	for i in range(mode_buttons.size()):
 		mode_buttons[i].set_pressed_no_signal(i == index)
 	if mode_hint != null:
@@ -573,7 +577,7 @@ func _build_duel_landscape() -> void:
 		var distance := -20.0 - layer * 16.0
 		var width := 32.0 + layer * 17.0
 		var amplitude := 7.0 + layer * 4.0
-		var count := 64
+		var count := 128
 		for i in range(count):
 			var x0 := lerpf(-width, width, float(i) / float(count))
 			var x1 := lerpf(-width, width, float(i + 1) / float(count))
@@ -593,7 +597,7 @@ func _build_duel_landscape() -> void:
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		mat.albedo_color = [Color("#161d29"), Color("#343d4c"), Color("#424b59")][layer]
+		mat.albedo_color = [Color("#10141c"), Color("#1a202b"), Color("#252c38")][layer]
 		instance.material_override = mat
 		duel_landscape.add_child(instance)
 	duel_landscape.visible = false
@@ -612,8 +616,20 @@ func _ground_sprite(sprite: Sprite3D, height: float) -> float:
 	if image != null and not image.is_empty():
 		if image.is_compressed():
 			image.decompress()
-		var bounds := image.get_used_rect()
-		if bounds.has_area():
-			bottom = float(bounds.end.y)
+		var solid_bottom := _find_solid_bottom(image)
+		if solid_bottom >= 0:
+			bottom = float(solid_bottom + 1)
 	return maxf(0.0, (bottom - canvas_height * 0.5) * sprite.pixel_size)
+
+func _find_solid_bottom(image: Image) -> int:
+	# Ignore faint alpha fringes and isolated pixels when locating the visible base.
+	var minimum_pixels := maxi(2, int(ceil(float(image.get_width()) * 0.012)))
+	for y in range(image.get_height() - 1, -1, -1):
+		var opaque_count := 0
+		for x in range(image.get_width()):
+			if image.get_pixel(x, y).a >= 0.5:
+				opaque_count += 1
+				if opaque_count >= minimum_pixels:
+					return y
+	return -1
 
