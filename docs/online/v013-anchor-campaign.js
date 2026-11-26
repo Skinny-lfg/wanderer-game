@@ -59,13 +59,15 @@ function settleAttempt(s,token,outcome){
 function finalUnlocked(s){requireValid(s);return conqueredCount(s)===ids.length;}
 function summary(s){requireValid(s);return {conquered:conqueredCount(s),total:ids.length,finalUnlocked:finalUnlocked(s),realms:CATALOG.map(x=>({id:x.id,status:status(s,x.id),owned:s.realms[x.id].shards.length,missing:missingShards(s,x.id).map(y=>y.id),difficultyStep:difficultyStep(s,x.id)}))};}
 
-// A2 experimental policy. Separate physical collection, independent of wallet and Rune slots.
+// A2/A3 physical shard inventory, independent of wallet and equippable Rune slots.
 const DROP_RATES=Object.freeze({normal:.01,elite:.15,boss:.35}),PITY=5;
-function collection(){return {campaign:create(),pity:Object.fromEntries(ids.map(id=>[id,0])),expedition:null};}
+function collection(){return {campaign:create(),pity:Object.fromEntries(ids.map(id=>[id,0])),expedition:null,mounted:[]};}
 function validCollection(c){
- if(!exact(c,['campaign','pity','expedition'])||!valid(c.campaign)||!exact(c.pity,ids)||ids.some(id=>!number(c.pity[id])||c.pity[id]>=PITY||c.campaign.realms[id].portal!=='locked'&&c.pity[id]!==0))return false;
+ if(!(exact(c,['campaign','pity','expedition'])||exact(c,['campaign','pity','expedition','mounted']))||!valid(c.campaign)||!exact(c.pity,ids)||ids.some(id=>!number(c.pity[id])||c.pity[id]>=PITY||c.campaign.realms[id].portal!=='locked'&&c.pity[id]!==0))return false;
+ const mounted=c.mounted??[];if(!Array.isArray(mounted)||new Set(mounted).size!==mounted.length||mounted.some(id=>!CATALOG.some(r=>c.campaign.realms[r.id].shards.includes(id)))||CATALOG.some(r=>r.shards.every(s=>mounted.includes(s.id))))return false;
  const e=c.expedition;if(e===null)return true;
- if(c.campaign.active||!exact(e,['seed','family','seen','pending','bossWon'])||!number(e.seed)||e.seed>0xffffffff||!get(e.family)||!Array.isArray(e.seen)||!e.seen.length||new Set(e.seen).size!==e.seen.length||e.seen.some(n=>!number(n)||n>24)||typeof e.bossWon!=='boolean')return false;
+ if(c.campaign.active||!(exact(e,['seed','family','seen','pending','bossWon'])||exact(e,['seed','family','seen','pending','bossWon','discarded']))||!number(e.seed)||e.seed>0xffffffff||!get(e.family)||!Array.isArray(e.seen)||!e.seen.length||new Set(e.seen).size!==e.seen.length||e.seen.some(n=>!number(n)||n>24)||typeof e.bossWon!=='boolean')return false;
+ if(e.discarded!==undefined&&typeof e.discarded!=='boolean'||e.discarded&&e.pending!==null)return false;
  return e.pending===null||missingShards(c.campaign,e.family).some(x=>x.id===e.pending);
 }
 function requireCollection(c){if(!validCollection(c))throw Error('Invalid Runestone Shard collection');}
@@ -80,7 +82,7 @@ function observeVictory(c,{seed,family,node,kind}){
  const e=previous?{...previous,seen:[...previous.seen,node]}:{seed,family,seen:[node],pending:null,bossWon:false};
  if(kind==='boss')e.bossWon=true;
  const missing=missingShards(c.campaign,family);
- if(!e.pending&&missing.length&&(kind==='boss'&&c.pity[family]===PITY-1||random(seed,family+':'+node+':'+kind+':drop')<DROP_RATES[kind])){
+ if(!e.pending&&!e.discarded&&missing.length&&(kind==='boss'&&c.pity[family]===PITY-1||random(seed,family+':'+node+':'+kind+':drop')<DROP_RATES[kind])){
   e.pending=missing[Math.floor(random(seed,family+':'+node+':part')*missing.length)].id;
  }
  return {...c,expedition:e};
@@ -94,9 +96,21 @@ function settleCollection(c,outcome){
  else if(outcome==='victory'&&e.bossWon&&missingShards(campaign,e.family).length)pity={...pity,[e.family]:Math.min(PITY-1,pity[e.family]+1)};
  return {...c,campaign,pity,expedition:null};
 }
-function assembleCollection(c,id){requireCollection(c);if(c.expedition)return null;const campaign=openPortal(c.campaign,id);return campaign?{...c,campaign,pity:{...c.pity,[id]:0}}:null;}
+function mountShard(c,shardId){
+ requireCollection(c);if(c.expedition||c.campaign.active)return null;
+ const shard=shardById(shardId),mounted=c.mounted??[];if(!shard||mounted.includes(shardId)||!c.campaign.realms[shard.family].shards.includes(shardId))return null;
+ const next=[...mounted,shardId].sort(),realm=get(shard.family);
+ if(realm.shards.every(s=>next.includes(s.id))){const campaign=openPortal(c.campaign,realm.id);if(!campaign)return null;return {...c,campaign,pity:{...c.pity,[realm.id]:0},mounted:next.filter(id=>!realm.shards.some(s=>s.id===id))};}
+ return {...c,mounted:next};
+}
+function unmountShard(c,shardId){requireCollection(c);if(c.expedition||c.campaign.active||!(c.mounted??[]).includes(shardId))return null;return {...c,mounted:c.mounted.filter(id=>id!==shardId)};}
+function discardShard(c,id){
+ requireCollection(c);if(c.expedition?.pending===id)return {...c,expedition:{...c.expedition,pending:null,discarded:true}};
+ const shard=shardById(id);if(c.expedition||c.campaign.active||!shard||(c.mounted??[]).includes(id)||!c.campaign.realms[shard.family].shards.includes(id))return null;
+ const r=c.campaign.realms[shard.family];return {...c,campaign:replaceRealm(c.campaign,shard.family,{...r,shards:r.shards.filter(x=>x!==id)})};
+}
 function shardById(id){for(const r of CATALOG){const shard=r.shards.find(x=>x.id===id);if(shard)return shard;}return null;}
-function bag(c){requireCollection(c);return {pending:c.expedition?.pending?shardById(c.expedition.pending):null,secured:CATALOG.flatMap(r=>c.campaign.realms[r.id].shards.map(shardById))};}
+function bag(c){requireCollection(c);return {pending:c.expedition?.pending?shardById(c.expedition.pending):null,secured:CATALOG.flatMap(r=>c.campaign.realms[r.id].shards.filter(id=>!(c.mounted??[]).includes(id)).map(shardById)),mounted:(c.mounted??[]).map(shardById)};}
 
-root.WandererV013AnchorCampaign=Object.freeze({DROP_RATES,PITY,collection,validCollection,observeVictory,settleCollection,assembleCollection,bag,shardById,VERSION,CATALOG,get,create,valid,status,missingShards,grantSecuredShard,openPortal,difficultyStep,startAttempt,settleAttempt,finalUnlocked,summary});
+root.WandererV013AnchorCampaign=Object.freeze({DROP_RATES,PITY,collection,validCollection,observeVictory,settleCollection,mountShard,unmountShard,discardShard,bag,shardById,VERSION,CATALOG,get,create,valid,status,missingShards,grantSecuredShard,openPortal,difficultyStep,startAttempt,settleAttempt,finalUnlocked,summary});
 })(globalThis);

@@ -49,7 +49,7 @@ function comparisonEquip(item,target=item.slot){
 function stashCapacity(){return Math.max(ports.STASH_BASE_CAPACITY,Math.min(ports.STASH_MAX_CAPACITY,Math.round(Number(ports.state.stashCapacity)||ports.STASH_BASE_CAPACITY)))}
 
 function potionStackCount(){return Object.entries(ports.state.consumables||{}).reduce((total,[kind,quantity])=>total+Math.ceil(Math.max(0,quantity-(ports.state.potionSelection||[]).filter(id=>id===kind).length)/99),0)}
-function stashItemCount(){return ports.state.stash.length+potionStackCount()}
+function stashItemCount(){return ports.state.stash.length+potionStackCount()+(ports.state.anchorCollection?root.WandererV013AnchorCampaign.bag(ports.state.anchorCollection).secured.length:0)}
 
 function stashUpgradeCost(){return 60+40*Math.floor((ports.stashCapacity()-ports.STASH_BASE_CAPACITY)/ports.STASH_UPGRADE_STEP)}
 
@@ -247,7 +247,7 @@ function salvageOne(id){
  },'Salvage');
 }
 
-function phase3BagItems(){const owned=new Map([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...(ports.state.valuables||[])].map(item=>[item.id,item]));return [...ports.phase3LootIds].map(id=>owned.get(id)).filter(Boolean);}
+function phase3BagItems(){const b=ports.state.anchorCollection?root.WandererV013AnchorCampaign.bag(ports.state.anchorCollection):null;const owned=new Map([...ports.state.stash,...(ports.state.expeditionOverflow||[]),...(ports.state.valuables||[]),...(b?.secured||[]),...(b?.pending?[b.pending]:[])].map(item=>[item.id,item]));const order=[...ports.phase3LootIds];if(b?.pending&&!order.includes(b.pending.id))order.push(b.pending.id);return order.map(id=>owned.get(id)).filter(Boolean);}
 
 function phase3BagOverflow(){return Math.max(0,ports.phase3BagItems().length-ports.PHASE3_BAG_CAPACITY);}
 
@@ -256,11 +256,13 @@ function phase3NeedsBagResolution(){return ports.PHASE1_PREVIEW&&['finished','fa
 function phase3DiscardLoot(id,replacementId){
  if(ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||!ports.phase3CanPrepare()&&!(ports.phase3NeedsBagResolution()&&!ports.state.run&&!ports.phase1Draft))return false;
  const items=ports.phase3BagItems(),item=items.find(o=>o.id===id);if(!item)return false;
+ const shardNext=item.kind==='runestone_shard'?root.WandererV013AnchorCampaign.discardShard(ports.state.anchorCollection,id):null;if(item.kind==='runestone_shard'&&!shardNext)return false;
  if(replacementId){
   if(!items.slice(ports.PHASE3_BAG_CAPACITY).some(o=>o.id===replacementId)||!items.slice(0,ports.PHASE3_BAG_CAPACITY).includes(item))return false;
-  const order=[...ports.phase3LootIds].filter(key=>key!==replacementId).map(key=>key===id?replacementId:key);
+  const order=items.map(o=>o.id).filter(key=>key!==replacementId).map(key=>key===id?replacementId:key);
   ports.phase3LootIds.clear();for(const key of order)ports.phase3LootIds.add(key);
  }
+ if(shardNext)ports.state.anchorCollection=shardNext;
  ports.state.stash=ports.state.stash.filter(o=>o.id!==id);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(o=>o.id!==id);ports.state.valuables=(ports.state.valuables||[]).filter(o=>o.id!==id);ports.phase3LootIds.delete(id);
  ports.save();ports.render();return true;
 }

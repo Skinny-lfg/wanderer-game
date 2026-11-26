@@ -22,7 +22,7 @@ test('no duplicate secured shards, open portal stops drops, independent families
  let c=A.collection();
  for(let n=0;n<3;n++){c.pity.blood=4;c=A.settleCollection(observe(c,123+n,'boss'),'victory');}
  assert.equal(A.bag(c).secured.length,3);assert.equal(new Set(A.bag(c).secured.map(x=>x.id)).size,3);
- c=A.assembleCollection(c,'blood');assert.equal(A.status(c.campaign,'blood'),'open');assert.equal(A.bag(observe(c,7,'boss')).pending,null);
+ for(const s of A.get('blood').shards)c=A.mountShard(c,s.id);assert.equal(A.status(c.campaign,'blood'),'open');assert.equal(A.bag(observe(c,7,'boss')).pending,null);
  assert.equal(c.pity.decay,0);assert(A.validCollection(c));
 });
 test('native harness encounter reward and save/checkpoint preservation',()=>{
@@ -51,4 +51,21 @@ test('native local save keeps an at-risk shard across reload, then extraction se
  assert(a.checkpoint.extract(),'native extraction must settle the physical shard');
  assert.equal(a.state().anchorCollection.expedition,null);assert(A.bag(a.state().anchorCollection).secured.some(s=>s.id===id));
  a=create(871,undefined,{},options);assert.equal(a.state().anchorCollection.expedition,null);assert.equal(A.bag(a.state().anchorCollection).secured.filter(s=>s.id===id).length,1);
+});
+
+test('individual Shrine slots move physical pieces out of inventory and third opens atomically',()=>{
+ let c=A.collection();for(const shard of A.get('blood').shards)c={...c,campaign:A.grantSecuredShard(c.campaign,shard.id)};
+ assert.equal(A.bag(c).secured.length,3);assert.equal(A.mountShard(c,'decay_shard_1'),null);
+ c=A.mountShard(c,'blood_shard_2');assert.equal(A.bag(c).secured.length,2);assert.equal(A.bag(c).mounted.length,1);assert.equal(A.mountShard(c,'blood_shard_2'),null);
+ c=A.unmountShard(c,'blood_shard_2');assert.equal(A.bag(c).secured.length,3);assert.equal(A.bag(c).mounted.length,0);
+ c=A.mountShard(c,'blood_shard_3');c=A.mountShard(c,'blood_shard_1');assert.equal(A.status(c.campaign,'blood'),'ready_to_unlock');assert(A.validCollection(JSON.parse(JSON.stringify(c))));
+ c=A.mountShard(c,'blood_shard_2');assert.equal(A.status(c.campaign,'blood'),'open');assert.equal(A.bag(c).secured.length,0);assert.equal(A.bag(c).mounted.length,0);assert.equal(A.unmountShard(c,'blood_shard_1'),null);assert(A.validCollection(c));
+});
+test('discarded at-risk shard cannot reroll later in the same Expedition',()=>{
+ const x=observe(A.collection(),sample('normal',true)),id=x.expedition.pending;
+ const y=A.discardShard(x,id);assert(A.validCollection(y));assert.equal(y.expedition.pending,null);assert.equal(y.expedition.discarded,true);
+ assert.equal(observe(y,x.expedition.seed,'boss',2).expedition.pending,null);assert.equal(A.bag(A.settleCollection(y,'victory')).secured.length,0);
+});
+test('legacy A2 saved collection retains all secured shards as ordinary inventory pieces',()=>{
+ let c=A.collection();delete c.mounted;c={...c,campaign:A.grantSecuredShard(c.campaign,'radiance_shard_1')};assert(A.validCollection(c));assert.equal(A.bag(c).secured[0].name,'Everlight Shard I');assert.equal(A.bag(A.mountShard(c,'radiance_shard_1')).secured.length,0);
 });

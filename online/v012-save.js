@@ -73,6 +73,7 @@ function profileCheck(p){
  }
  for(const item of [...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow])itemCheck(item);
  for(const valuable of p.valuables||[]){requireValue(!ids.has(valuable.id),'duplicate valuable ID');ids.add(valuable.id);}
+ if(p.anchorCollection){const b=root.WandererV013AnchorCampaign.bag(p.anchorCollection);for(const item of [...b.secured,...b.mounted,...(b.pending?[b.pending]:[])]){requireValue(!ids.has(item.id),'duplicate Shard ID');ids.add(item.id);}}
  for(const [slot,item]of Object.entries(p.equip))if(item)requireValue(item.slot===slot,'equipped slot mismatch');
  requireValue(Array.isArray(p.runes)&&p.runes.length<=300&&Array.isArray(p.runeSlots)&&p.runeSlots.length===3,'Runes');
  const runeIds=new Set();
@@ -145,7 +146,8 @@ function sessionCheck(s,p,e){
  requireValue(s.stamp===null||integer(s.stamp,1,Number.MAX_SAFE_INTEGER),'checkpoint timestamp');
  requireValue(plain(s.home)&&Array.isArray(s.lootIds)&&s.lootIds.length<=120&&new Set(s.lootIds).size===s.lootIds.length,'loot provenance');
  profileCheck({...p,stash:[],equip:s.home,expeditionOverflow:[],merchant:null});
- const items=[...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow,...(p.valuables||[])],ids=new Set(items.map(i=>i.id));
+ const shardBag=p.anchorCollection?root.WandererV013AnchorCampaign.bag(p.anchorCollection):null;
+ const items=[...p.stash,...Object.values(p.equip).filter(Boolean),...p.expeditionOverflow,...(p.valuables||[]),...(shardBag?.secured||[]),...(shardBag?.pending?[shardBag.pending]:[])],ids=new Set(items.map(i=>i.id));
  // The player may move original gear into the risk bag, or replace original gear with earned gear.
  requireValue(s.lootIds.every(id=>typeof id==='string'&&ids.has(id)),'loot ownership');
  requireValue(plain(s.supplies)&&integer(s.supplies.health,0,2)&&integer(s.supplies.mana,0,2),'potion checkpoint');

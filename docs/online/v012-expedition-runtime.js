@@ -58,6 +58,7 @@ function phase6EventChoice(choice,itemId,passiveId,family,targetId){
  const g=ports.phase1Controller.state,p=g.selected,ev=ports.phase6Run.event;if(g.stage!=='combat'||!p?.event||ev.id!==p.event||ports.phase6Run.events.includes(g.planeIndex))return false;
  const v=ports.phase3Vitals(),E=g.expedition,beforeGold=ports.state.gold,beforeFragments=ports.state.fragments,loot=[],costGold=25+3*E;
  const item=ports.phase3BagItems().find(i=>i.id===itemId),effects=ports.phase6Run.effects;
+ if(item?.kind==='runestone_shard')return false;
  const pay=(field,n)=>{if(ports.state[field]<n)return false;ports.state[field]-=n;return true;};
  const heal=(hp=0,mp=0)=>{ports.phase1Vitals={maxhp:v.maxhp,hp:Math.min(v.maxhp,v.hp+Math.ceil(v.maxhp*hp)),mp:Math.min(v.maxmp,v.mp+Math.ceil(v.maxmp*mp)),maxmp:v.maxmp};};
  const sacrifice=()=>{ports.state.stash=ports.state.stash.filter(i=>i.id!==itemId);ports.state.expeditionOverflow=ports.state.expeditionOverflow.filter(i=>i.id!==itemId);ports.state.valuables=(ports.state.valuables||[]).filter(i=>i.id!==itemId);ports.phase3LootIds.delete(itemId);};
@@ -319,7 +320,7 @@ function phase1WaveWon(){
   const A=root.WandererV013AnchorCampaign,prior=ports.state.anchorCollection||A.collection();
   const next=A.observeVictory(prior,{seed:shardSeed,family:shardRealm.family,node:completedNode,kind:boss?'boss':elite?'elite':'normal'});
   ports.state.anchorCollection=next;
-  if(next.expedition?.pending&&!prior.expedition?.pending)ports.addLog('◆ '+A.shardById(next.expedition.pending).name+' found in Expedition Bag. Extract or win to secure.','good');
+  if(next.expedition?.pending&&!prior.expedition?.pending){const shard=A.shardById(next.expedition.pending);ports.phase3LootIds.add(shard.id);ports.phase3NotifyLoot?.(shard);ports.addLog('◆ '+shard.name+' found in Expedition Bag. Extract or win to secure.','good');}
  }
  // A Monster Hunt counts only enemies from genuinely completed ordinary
  // fights. Record the actual native enemy count, not map scouting or offers.
@@ -425,7 +426,7 @@ function phase5MakeSummary(outcome){
  const earnedIds=new Set(ports.phase5Results.earned.map(i=>i.id));
  const lostGear=lost?[
   ...ports.phase5Results.earned.filter(i=>bagIds.has(i.id)),
-  ...ports.phase3BagItems().filter(i=>i.kind!=='valuable'&&bagIds.has(i.id)&&!earnedIds.has(i.id)).map(ports.phase5Item)
+  ...ports.phase3BagItems().filter(i=>i.kind!=='valuable'&&i.kind!=='runestone_shard'&&bagIds.has(i.id)&&!earnedIds.has(i.id)).map(ports.phase5Item)
  ]:[];
  const expeditionTreasures=(ports.state.valuables||[]).filter(i=>bagIds.has(i.id)).map(i=>({...i}));
  const start=ports.phase5Results.craftingStart||WandererV013Crafting.create(),craft=ports.state.crafting||WandererV013Crafting.create();
@@ -446,7 +447,7 @@ function phase5ExitResult(){
  if(!ports.phase5Results.review)return false;
  const returningToCamp=ports.phase5Results.review==='summary';
  ports.phase5Results.review=ports.phase5Results.review==='realm'&&ports.phase5Results.summary?'summary':null;
- if(returningToCamp){ports.phase3LootIds=new Set();ports.phase5Results.eventExitPending=false;} // Retire Bag markers without removing any secured loot.
+ if(returningToCamp){if(!ports.phase3BagOverflow())ports.phase3LootIds=new Set();ports.phase5Results.eventExitPending=false;} // Retire Bag markers without removing any secured loot.
  ports.state.run=null;ports.view='phase1';if(!ports.phase5Persist())return false;ports.render();return true;
 }
 function phase5ReviewSummary(){ports.phase5Results.review='summary';ports.view='phase1';ports.phase5Persist();ports.render();}

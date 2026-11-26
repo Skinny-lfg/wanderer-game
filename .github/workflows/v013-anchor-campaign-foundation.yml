@@ -1,4 +1,4 @@
-name: v0.13 Anchor Realms - A2 shards and persistence
+name: v0.13 Anchor Realms - A3 shared Bag and Shrine slots
 on:
   push:
     branches: [release/v013-consolidated]

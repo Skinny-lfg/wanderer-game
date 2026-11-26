@@ -83,7 +83,7 @@ function phase4Restore(session){
  ports.phase6Run=session.integration||null;
  ports.phase1Build=session.build;if(ports.phase1Build){WandererV012Buildcraft.syncPermanent(ports.phase1Build,ports.state.automaticTalents,true);if(ports.phase6Run?.effects.echo)ports.phase1Build.runtime.echo=ports.phase6Run.effects.echo;}ports.phase1Vitals=session.vitals;ports.phase1Clock=session.clock;
  ports.phase3Supplies={health:0,mana:0};
- ports.phase3LootIds=new Set(session.lootIds);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
+ ports.phase3LootIds=new Set(session.lootIds);const pendingShard=ports.state.anchorCollection?.expedition?.pending;if(pendingShard)ports.phase3LootIds.add(pendingShard);ports.phase4Home=session.home;ports.phase4Seed=session.seed;ports.phase4Prefix=session.prefix;ports.phase4Stamp=session.stamp;ports.uid=session.idCounter;ports.phase1Continuity=session.continuity;
  if(session.results)ports.phase5Results=ports.phase4Clone(session.results);
  ports.state.run=session.clearedRun||null;if(ports.state.run?.valuables)if(ports.state.run?.enemy)WandererV012Buildcraft.migrateEnemyDots(ports.state.run.enemy);ports.phase4WaveKeys=[];ports.phase4Resume=session.entry&&!session.clearedRun;
  ports.phase4Entry=session.entry?{profile:ports.phase4Clone({...ports.state,run:null}),session:ports.phase4Clone(session),ledger:[...(ports.phase5Snapshot?.expedition.awardKeys||[])]}:null;
