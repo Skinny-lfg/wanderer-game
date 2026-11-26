@@ -1,0 +1,126 @@
+{
+  "stage": "R2",
+  "shared_frame": "icons/actions/frame_thin.png",
+  "assets": [
+    {
+      "path": "icons/reagents/bloodstone.png",
+      "name": "Bloodstone",
+      "family": "blood",
+      "realm": "Bloodhallow",
+      "sha256": "32c32726f7e824d3644d5ad2b1395f4d40000406fcf068ae9e6f4aa9100b9970",
+      "bytes": 53823,
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        35,
+        19,
+        220,
+        237
+      ],
+      "source_sha256": "28cbdc85e2f5455533f68bfe7e7478c618fcca15b16e739fb9b407351e5306c1"
+    },
+    {
+      "path": "icons/reagents/blight_husk.png",
+      "name": "Blight Husk",
+      "family": "decay",
+      "realm": "Noxfen",
+      "sha256": "7c25171b48ee0235abed791c6a89c17fffde7db92669c4e29920c03c64ce03bb",
+      "bytes": 69836,
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        21,
+        19,
+        234,
+        237
+      ],
+      "source_sha256": "14519b190bb758de32894a320e395bca98667fb6f71e2ca244322c77e16ee9e5"
+    },
+    {
+      "path": "icons/reagents/dawnshard.png",
+      "name": "Dawnshard",
+      "family": "radiance",
+      "realm": "The Last Dawn",
+      "sha256": "68e10bdaf36e1e5518f04c423d7b51b24594f1a978f0c812f8911a18a0adef3b",
+      "bytes": 45326,
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        46,
+        19,
+        210,
+        237
+      ],
+      "source_sha256": "4b2247ac80d207020ffc03d1dfa6d8dadf958f230a7c8fa9c69809c7ea284b58"
+    },
+    {
+      "path": "icons/reagents/abyssal_pearl.png",
+      "name": "Abyssal Pearl",
+      "family": "aegis",
+      "realm": "Tideward",
+      "sha256": "6a3ab43ccff098f7fb5698c96f854222a377ebe158dce8dc7a3dc9676b2485d7",
+      "bytes": 82476,
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        19,
+        19,
+        237,
+        237
+      ],
+      "source_sha256": "96bd4c51942d22e69a2fa16e054ce2e90df1a8deafe26f99ddfe95c2c4627834"
+    },
+    {
+      "path": "icons/reagents/ironheart.png",
+      "name": "Ironheart",
+      "family": "fury",
+      "realm": "Rustlands",
+      "sha256": "681df5523eb2dd344950dbe0a360e2c0a37c71153d0ebf06ed5664015a9cb554",
+      "bytes": 74156,
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        19,
+        22,
+        237,
+        233
+      ],
+      "source_sha256": "f6c02f36b09e8e34a70c0c717c0ee961ddef3a69f96ad824ec01ac4c840b722d"
+    },
+    {
+      "path": "icons/reagents/aether_crystal.png",
+      "name": "Aether Crystal",
+      "family": "arcane",
+      "realm": "Sigilfall",
+      "sha256": "2886effcb70ec47dbbc3c1309ecbe92b43e16666617ca5cfcfa05949a3f090a7",
+      "bytes": 62698,
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        19,
+        19,
+        236,
+        237
+      ],
+      "source_sha256": "d62117aecb447369fa61c8cc6b492b962abeb7eff8f2a604793f52e3760689f9"
+    }
+  ]
+}
