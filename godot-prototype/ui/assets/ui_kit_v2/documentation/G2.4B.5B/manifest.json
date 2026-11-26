@@ -1,0 +1,108 @@
+{
+  "stage": "G2.4B.5B",
+  "assets": [
+    {
+      "path": "icons/navigation_city/apothecary.png",
+      "sha256": "47e8614dbbf482913379fd1303cd5c130afa817c264fb83889c6e04a52045be8",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 64995
+    },
+    {
+      "path": "icons/navigation_city/blacksmith.png",
+      "sha256": "0749c2c2aa7ca7f18ed7bfbb54a5a0435bb1aa67aa76ce352914d7538bd092ea",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 45831
+    },
+    {
+      "path": "icons/navigation_city/camp.png",
+      "sha256": "c934fafba54408cc2f9b29a3873cc6a7d821cec3cd88db1ef8b243abf57c621c",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 53642
+    },
+    {
+      "path": "icons/navigation_city/city_center.png",
+      "sha256": "30d72eaf4622f4b0328f2294ad404961e87333795afcc7ad0114c3d963898e8a",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 67000
+    },
+    {
+      "path": "icons/navigation_city/codex.png",
+      "sha256": "a0603d0c06e6f103ff5477127b0a75b6f15d864a3a67f3431e93930ccb954786",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 60252
+    },
+    {
+      "path": "icons/navigation_city/expedition.png",
+      "sha256": "a3d4abcea469c2710d3f595d00614e56b32deb2e24cf1ae9d3a48b15764d2fce",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 72744
+    },
+    {
+      "path": "icons/navigation_city/inventory.png",
+      "sha256": "7c2d35e64fde5230b38c43201ffea77862933cd8e135fd87a328dde35baa0256",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 73522
+    },
+    {
+      "path": "icons/navigation_city/merchant.png",
+      "sha256": "fbf9436de74c7435f6d38ddde72cd597bb4f4de1459cdb965f00205aa532f0b0",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 39848
+    },
+    {
+      "path": "icons/navigation_city/shrine.png",
+      "sha256": "048a95c77f66992a85259ece2711eb019f834d3535a76fd8ebd548755118c2e0",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 53947
+    },
+    {
+      "path": "icons/navigation_city/talents.png",
+      "sha256": "90e4386be5f794b8c245a2a31fc9f49e007e865aba885d419e363d7c43208fe4",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 77426
+    }
+  ],
+  "shared_frame": "icons/actions/frame_thin.png",
+  "source": "Owner-approved navigation/city concept sheet; matching original PNG, cropped and foreground-masked, resampled.",
+  "status": "Asset production; runtime integration pending"
+}
