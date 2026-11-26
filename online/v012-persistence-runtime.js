@@ -30,7 +30,7 @@ function phase4CommitRealm({awardXp=false}={}){
   ports.state.crafting=root.WandererV013Crafting.award(ports.state.crafting||root.WandererV013Crafting.create(),{family,boss:!!enemy?.boss,elite:!!enemy?.miniboss,event:!run,reagent:ports.gameRandom()<Math.min(1,(enemy?.miniboss ? .65 : .22)*(ports.phase6Run?.effects.prospector?1.25:1))});
   if(enemy?.boss&&g.dungeon&&g.expedition===5){const crafting=ports.state.crafting;crafting.mythicFamilies=[...new Set([...(crafting.mythicFamilies||[]),family])];}
   if(!enemy?.boss&&ports.state.crafting.cores[family]>prior.cores[family])ports.addLog('Found '+family+' reagent.','good');
-  if(run?.phase6Bounty)ports.state.crafting.essence+=2;
+  if(run?.phase6Bounty)ports.state.crafting.essence=Math.min(1000000000,ports.state.crafting.essence+2);
   ports.addLog('Secured '+(ports.state.crafting.essence-prior.essence)+' Essence'+(enemy?.boss?' and a '+family+' reagent':'')+'.','good');
   }
  }
@@ -54,8 +54,8 @@ function settleContract(outcome){
  if(!card)return;
  // Stage 4.5 Marked Elite settlement is independent from Stage 7's optional contract.
  // Never duplicate the existing reagent/Essence award when Bounty Writ is selected.
- if(card.objective!==undefined&&!d.contractPaid&&d.cleared.includes(card.objective)){
-  d.contractPaid=true;ports.state.crafting.cores[card.family]++;ports.state.crafting.essence+=2+card.risk*2;
+ if(['extracted','victory'].includes(outcome)&&card.objective!==undefined&&!d.contractPaid&&d.cleared.includes(card.objective)){
+  d.contractPaid=true;const c=ports.state.crafting;c.cores[card.family]=Math.min(1000000000,c.cores[card.family]+1);c.essence=Math.min(1000000000,c.essence+2+card.risk*2);
  }
  const paid=root.WandererV013ExpeditionContracts?.settle(g,ports.state,ports.phase5Results,outcome);
  if(paid)ports.bannerMessage(paid.name+' completed · '+root.WandererV013ExpeditionContracts.label(paid)+'.');

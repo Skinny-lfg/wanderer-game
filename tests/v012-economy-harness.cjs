@@ -54,7 +54,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
  }
  globalThis.audit={talents:WandererAutomaticTalents,measured,debug:()=>({phase5Ready,saveBlocked,message:phase5Message,validation:PHASE5_VALIDATION,preview:PHASE1_PREVIEW,active:phase3ExpeditionActive(),run:!!state.run,stage:phase1Controller?.state.stage}),
   potions:{catalog:WandererV012Consumables.CATALOG,supplies:()=>phase3Supplies,select:phase6SelectPotion,use:phase6UsePotion,inventory:phase6PotionInventory,start:phase6StartPotions,finish:phase6ReturnPotions,tick:phase6TickDurations,shop:(E=1,rng=gameRandom)=>WandererV012Consumables.shop(E,rng,makeId),buy:phase6BuyPotion,craft:phase6CraftPotion,progress:id=>WandererV012Consumables.craftProgress(state,id,stashHasRoom()),craftMarkup:id=>{phase6PotionRecipe=id;return phase6PotionCraftMarkup();},failPersistence:()=>{phase5Persist=()=>false;},reroll:phase6RerollPotions},
-  events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run},
+  events:{open:phase6OpenEvent,choose:phase6EventChoice,run:()=>phase6Run,settle:outcome=>settleContract(outcome)},
   back:phase6BackToCamp,markAllSeen:markAllAsSeen,
   // Mirrors the live Camp Talent Tree API transactions; neither XP nor points
   // are injected. Valid only when the user could open the Talent Tree.

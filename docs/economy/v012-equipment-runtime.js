@@ -280,7 +280,11 @@ function phase6PotionInventory(){ports.state.consumables??={};ports.state.potion
 function phase6SelectPotion(kind,remove=false){
  if(ports.phase3ExpeditionActive()||ports.state.run||ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked))return false;
  const stock=ports.phase6PotionInventory(),selection=[...ports.state.potionSelection];if(remove){const index=selection.indexOf(kind);if(index<0)return false;selection.splice(index,1);}else selection.push(kind);
- try{WandererV012Consumables.selection(stock,selection);}catch{return false;}ports.state.potionSelection=selection;ports.save();ports.render();return true;
+ try{WandererV012Consumables.selection(stock,selection);}catch{return false;}
+ const before=ports.state.potionSelection;
+ if(remove){const quantity=stock[kind]||0,stashed=quantity-before.filter(id=>id===kind).length;if(stashed%99===0&&!ports.stashHasRoom()){ports.bannerMessage('Stash full. Free a slot before removing this potion.');return false;}}
+ ports.state.potionSelection=selection;
+ if(!ports.phase5Persist()){ports.state.potionSelection=before;return false;}ports.render();return true;
 }
 
 function phase6StartPotions(){
@@ -349,12 +353,12 @@ function phase6BuyPotion(id){
  const stashed=quantity-equipped.filter(kind=>kind===p.kind).length;
  if(ports.state.gold<p.price||quantity>=99999||
     !autoSlot&&stashed%99===0&&!ports.stashHasRoom())return false;
- ports.state.gold-=p.price;stock[p.kind]=quantity+1;
- if(autoSlot)equipped.push(p.kind);
+ const s=ports.state,before={gold:s.gold,consumables:s.consumables,potionSelection:s.potionSelection,apothecary:s.apothecary};
  const replacementKind=WandererV012Consumables.offer(ports.gameRandom);
- const replacement=WandererV012Consumables.CATALOG.find(entry=>entry.id===replacementKind);
- a.stock[index]={id:ports.makeId(),kind:replacementKind,price:Math.ceil(replacement.base*(1+ports.economyTier()*.12))};
- ports.save();ports.render();return true;
+ const replacement=WandererV012Consumables.CATALOG.find(entry=>entry.id===replacementKind),nextStock=[...a.stock];
+ nextStock[index]={id:ports.makeId(),kind:replacementKind,price:Math.ceil(replacement.base*(1+ports.economyTier()*.12))};
+ s.gold-=p.price;s.consumables={...stock,[p.kind]:quantity+1};s.potionSelection=autoSlot?[...equipped,p.kind]:[...equipped];s.apothecary={...a,stock:nextStock};
+ if(!ports.phase5Persist()){Object.assign(s,before);return false;}ports.render();return true;
 }
 function phase6CraftPotion(kind){
  if(!ports.economyCanAct())return false;
@@ -364,7 +368,12 @@ function phase6CraftPotion(kind){
  if(!ports.phase5Persist()){Object.assign(s,before);return false;}
  ports.render();ports.bannerMessage('Crafted '+WandererV012Consumables.CATALOG.find(p=>p.id===kind).name+'.');return true;
 }
-function phase6RerollPotions(){if(!ports.economyCanAct()||!ports.state.apothecary||ports.state.gold<ports.state.apothecary.refreshCost)return false;ports.state.gold-=ports.state.apothecary.refreshCost;ports.state.apothecary=WandererV012Consumables.shop(ports.economyTier(),ports.gameRandom,ports.makeId);ports.save();ports.render();return true;}
+function phase6RerollPotions(){
+ if(!ports.economyCanAct()||!ports.state.apothecary||ports.state.gold<ports.state.apothecary.refreshCost)return false;
+ const s=ports.state,before={gold:s.gold,apothecary:s.apothecary};
+ s.gold-=s.apothecary.refreshCost;s.apothecary=WandererV012Consumables.shop(ports.economyTier(),ports.gameRandom,ports.makeId);
+ if(!ports.phase5Persist()){Object.assign(s,before);return false;}ports.render();return true;
+}
 
 function unequipRune(index){
  if(ports.runeCheckpointLocked()||ports.PHASE1_PREVIEW&&ports.phase1Draft||ports.PHASE5_VALIDATION&&(!ports.phase5Ready||ports.saveBlocked)||ports.state.run||!Number.isInteger(index)||index<0||index>2)return false;
