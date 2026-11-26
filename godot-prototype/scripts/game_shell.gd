@@ -23,6 +23,7 @@ var buttons: Dictionary = {}
 var navigation: Panel
 var actions: HBoxContainer
 var camp_actions: HBoxContainer
+const V2 = preload("res://ui/theme/ui_kit_v2.gd")
 const GameKit = preload("res://ui/theme/game_ui_kit.gd")
 var kit: RefCounted
 var combat_hud: Control
@@ -95,7 +96,9 @@ func _build_navigation() -> void:
 		button.add_theme_stylebox_override("focus", focus_style)
 		button.pressed.connect(show_page.bind(str(IDS[i])))
 		row.add_child(button)
-		button.icon = kit.navigation.textures.get("icon_" + str(IDS[i]))
+		button.icon = V2.icon("icons/navigation_city/" + V2.NAV[IDS[i]], 28) if kit.use_v2 else kit.navigation.textures.get("icon_" + str(IDS[i]))
+		if kit.use_v2:
+			V2.apply_button(button, "", true)
 		button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
 		button.add_theme_constant_override("h_separation", 9)
@@ -151,6 +154,11 @@ func _action(text: String, destination: String, host: HBoxContainer, primary: bo
 	else:
 		button.add_theme_stylebox_override("normal", _style(Color(0.06, 0.07, 0.08, 0.65), Color(0.57, 0.48, 0.34, 0.25), 1))
 		button.add_theme_stylebox_override("hover", _style(Color(0.15, 0.12, 0.08, 0.65), Color("c29b61"), 1))
+	if kit.use_v2:
+		V2.apply_button(button, "primary" if primary else "secondary")
+		if V2.NAV.has(destination):
+			button.icon = V2.icon("icons/navigation_city/" + V2.NAV[destination], 22)
+			button.add_theme_constant_override("h_separation", 6)
 	return button
 
 func _build_context_actions() -> void:

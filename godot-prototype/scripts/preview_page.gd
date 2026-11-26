@@ -21,6 +21,7 @@ const ITEMS = [
 ]
 const AFFINITIES = ["Blood", "Decay", "Vitality", "Aegis", "Fury", "Magic"]
 const AFFINITY_COLORS = ["ae5158", "929455", "70ad7a", "8aa9c5", "d39154", "9b81c3"]
+const V2 = preload("res://ui/theme/ui_kit_v2.gd")
 const GameKit = preload("res://ui/theme/game_ui_kit.gd")
 const SimpleFrame = preload("res://ui/theme/simple_frame.gd")
 var kit: RefCounted
@@ -217,6 +218,12 @@ func _inventory_button(host: Node, value: String, at: Vector2, extent: Vector2, 
 	button.add_theme_font_size_override("font_size", 13)
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 		button.add_theme_stylebox_override(state, _quiet_control_style(state in ["hover", "pressed", "hover_pressed"] or (state == "normal" and selected), state == "disabled"))
+	if kit.use_v2:
+		V2.apply_button(button, "danger" if value == "Salvage selected" else "secondary")
+		var action: String = str({"Character details":"info", "Filter & sort":"adjustments", "Expand +10 · 60 Gold":"add", "Done":"confirm"}.get(value, ""))
+		if not action.is_empty():
+			button.icon = V2.icon("icons/actions/" + action, 18)
+			button.add_theme_constant_override("h_separation", 3)
 	host.add_child(button)
 	button.position = at
 	button.size = extent
@@ -229,6 +236,9 @@ func _inventory_option(host: Node, values: Array, at: Vector2, extent: Vector2) 
 	option.clip_text = true
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		option.add_theme_stylebox_override(state, _quiet_control_style(state in ["hover", "pressed"], state == "disabled"))
+	if kit.use_v2:
+		for state in ["normal", "hover", "pressed", "disabled"]:
+			option.add_theme_stylebox_override(state, V2.button_style("buttons/secondary_" + state))
 	for value in values:
 		option.add_item(str(value))
 	host.add_child(option)
@@ -248,8 +258,13 @@ func _inventory_label(host: Node, value: String, at: Vector2, extent: Vector2, p
 	return label
 
 func _inventory_stat(host: Node, label: String, amount: String, y: float, tint: Color = IVORY) -> void:
-	_inventory_label(host, label, Vector2(0, y), Vector2(155, 20), 13, MUTED)
-	var number = _inventory_label(host, amount, Vector2(147, y), Vector2(72, 20), 14, tint)
+	var icon_offset: float = 0.0
+	if kit.use_v2 and V2.STATS.has(label):
+		V2.place_icon(host, "icons/attributes/" + V2.STATS[label], Vector2(0, y), 19)
+		icon_offset = 22.0
+	var number_x: float = host.size.x - 62.0 if kit.use_v2 else 147.0
+	_inventory_label(host, label, Vector2(icon_offset, y), Vector2(number_x - icon_offset, 20), 12 if kit.use_v2 else 13, MUTED)
+	var number = _inventory_label(host, amount, Vector2(number_x, y), Vector2(62 if kit.use_v2 else 72, 20), 14, tint)
 	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 func _inventory_art(index: int) -> Texture2D:
@@ -274,6 +289,8 @@ func _inventory_tab(host: Node, value: String, at: Vector2, extent: Vector2) -> 
 		button.add_theme_stylebox_override(state, style)
 	button.add_theme_color_override("font_color", MUTED)
 	button.add_theme_color_override("font_pressed_color", GOLD)
+	if kit.use_v2:
+		V2.apply_button(button, "", true)
 	host.add_child(button)
 	button.position = at
 	button.size = extent
@@ -328,7 +345,13 @@ func _inventory_background() -> void:
 	_art(bottom, Vector2.ZERO, Vector2(1280, 648), true)
 
 func _inventory_resource(value: String, name_text: String, at: Vector2, tint: Color) -> void:
-	# Small geometric markers, not new artwork; all four resource labels remain.
+	if kit.use_v2:
+		var id: String = "reagent" if name_text == "Reagents" else name_text.to_lower()
+		V2.place_icon(self, "icons/resources/" + id, at + Vector2(-4, 3), 28)
+		_text(value, at + Vector2(26, 0), Vector2(86, 26), 16, IVORY, true)
+		_text(name_text, at + Vector2(26, 25), Vector2(86, 17), 10, MUTED)
+		return
+	# Legacy geometric markers.
 	var marker = ColorRect.new()
 	marker.color = tint
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -382,6 +405,14 @@ func _inventory() -> void:
 	power_title.add_theme_font_override("font", serif)
 	power_title.add_theme_font_size_override("font_size", 12)
 	power_title.add_theme_color_override("font_color", MUTED)
+	if kit.use_v2:
+		var power_icon = TextureRect.new()
+		power_icon.texture = V2.icon("icons/attributes/gear_power", 24)
+		power_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		power_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		power_icon.custom_minimum_size = Vector2(24, 24)
+		power_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		power_row.add_child(power_icon)
 	power_row.add_child(power_title)
 	var power_value = Label.new()
 	power_value.text = "3,860"
@@ -402,10 +433,16 @@ func _inventory() -> void:
 		var x: float = float(i) * 152.0
 		var title = _inventory_label(basic_group, basic[i][0], Vector2(x, 0), Vector2(152, 15), 11, MUTED)
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if kit.use_v2:
+			V2.place_icon(basic_group, "icons/attributes/" + V2.STATS[basic[i][0]], Vector2(x + 24, 0), 16)
 		var amount = _inventory_label(basic_group, basic[i][1], Vector2(x, 16), Vector2(152, 24), 19, IVORY)
 		amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var secondary = _inventory_label(basic_group, str(basic[i + 3][0]) + "  " + str(basic[i + 3][1]), Vector2(x, 42), Vector2(152, 16), 11, MUTED)
 		secondary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if kit.use_v2:
+			V2.place_icon(basic_group, "icons/attributes/" + V2.STATS[basic[i + 3][0]], Vector2(x + 4, 41), 15)
+			secondary.position.x += 17
+			secondary.size.x -= 17
 	_text("Potions", Vector2(115, 611), Vector2(67, 23), 12, MUTED)
 	for i in range(3):
 		var art: Texture2D = POTION_ART[i] if i < 2 else null
@@ -449,10 +486,14 @@ func _inventory() -> void:
 		basic_group.visible = not on
 		advanced_group.visible = on
 		stats_toggle.text = "Close details" if on else "Character details"
+		if kit.use_v2:
+			stats_toggle.icon = V2.icon("icons/actions/" + ("cancel" if on else "info"), 18)
 	)
 	# Stash, valuables and Anchor Runes are separate collections.
 	collection_surface = _panel(Vector2(685, 156), Vector2(525, 477), Color(0.035, 0.038, 0.045, 0.36), Color(0.40, 0.36, 0.29, 0.13))
 	collection_surface.name = "CollectionSurface"
+	if kit.use_v2:
+		collection_surface.add_theme_stylebox_override("panel", V2.panel_style())
 	for i in range(3):
 		var tab = _inventory_tab(self, ["Stash", "Valuables", "Anchor Runes"][i], Vector2(691 + i * 172, 109), Vector2(164, 34))
 		tab.toggle_mode = true
@@ -479,6 +520,9 @@ func _inventory() -> void:
 		stash_items.append({"art": _inventory_art(idx), "name": _inventory_item_name(idx), "slot": ["Helm", "Armor", "Gloves", "Boots", "Off-Hand", "Weapon", "Rings", "Amulet", "Belt"][idx], "rarity": (i * 3 + floori(float(i) / 8.0)) % 6, "quantity": 1, "tier": 1 + i % 5, "date": i, "fragments": 4 + i * 2, "power": 12 + i * 3})
 	for i in range(3):
 		stash_items.append({"art": POTION_ART[i], "name": POTION_NAMES[i], "slot": "Potions", "rarity": 1, "quantity": [12, 7, 3][i], "tier": 1, "date": 21 + i, "fragments": 0, "power": 0})
+	if kit.use_v2:
+		for i in range(V2.REAGENTS.size()):
+			stash_items.append({"art": V2.texture("icons/reagents/" + V2.REAGENTS[i]), "name": V2.REAGENT_NAMES[i], "slot": "Reagents", "rarity": 1, "quantity": [4, 3, 2, 4, 3, 2][i], "tier": 1, "date": 24 + i, "fragments": 0, "power": 0})
 	for i in range(40):
 		var slot = kit.slot(stash_grid, Vector2((i % 8) * 63, floori(float(i) / 8.0) * 64), 55)
 		slot.minimal_inventory = true
@@ -520,6 +564,8 @@ func _build_stash_filter_panel() -> void:
 	stash_filter_panel.size = Vector2(287, 244)
 	_inventory_label(stash_filter_panel, "Item category", Vector2(16, 10), Vector2(250, 19), 12, MUTED)
 	stash_filter = _inventory_option(stash_filter_panel, ["All slots", "Potions", "Rings", "Helm", "Amulet", "Armor", "Gloves", "Weapon", "Off-Hand", "Boots", "Belt"], Vector2(16, 31), Vector2(255, 29))
+	if kit.use_v2:
+		stash_filter.add_item("Reagents")
 	_inventory_label(stash_filter_panel, "Sort by", Vector2(16, 69), Vector2(250, 19), 12, MUTED)
 	stash_sort = _inventory_option(stash_filter_panel, ["Expedition tier", "Date looted", "Fragment value", "Item power", "Estimated stat gain"], Vector2(16, 90), Vector2(255, 29))
 	_inventory_label(stash_filter_panel, "Order", Vector2(16, 128), Vector2(250, 19), 12, MUTED)
@@ -574,9 +620,9 @@ func _inventory_filter_changed(_index: int) -> void:
 			slot.tooltip_text = item["name"]
 			slot.preview_tooltip_factory = _inventory_tooltip.bind(item["art"], item["rarity"], false, item["name"], item["slot"])
 		slot.queue_redraw()
-	stash_count.text = "24 / 40 slots" if filter == "All slots" else "%d matching · 24 / 40" % visible_items.size()
+	stash_count.text = "%d / 40 slots" % stash_items.size() if filter == "All slots" else "%d matching · %d / 40" % [visible_items.size(), stash_items.size()]
 	stash_filter_toggle.text = "Filter & sort" if filter == "All slots" and stash_sort.selected == 0 and stash_order.selected == 0 else "Filter & sort  •"
-	stash_count.tooltip_text = "24 / 40 slots occupied"
+	stash_count.tooltip_text = "%d / 40 slots occupied" % stash_items.size()
 
 func _inventory_slot_clicked(index: int) -> void:
 	var slot = stash_slots[index]
@@ -723,6 +769,8 @@ func _city() -> void:
 		var x: float = 70.0 + i * 390.0
 		_art(art[i], Vector2(x, 139), Vector2(360, 370))
 		_text(titles[i], Vector2(x, 525), Vector2(360, 44), 30, IVORY, true, true)
+		if kit.use_v2:
+			V2.place_icon(self, "icons/navigation_city/" + str(titles[i]).to_lower(), Vector2(x + 164, 495), 32)
 		_text(subtitles[i], Vector2(x, 574), Vector2(360, 25), 14, MUTED, false, true)
 	_scene_footer("Services · presentation preview")
 

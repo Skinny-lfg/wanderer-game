@@ -1,6 +1,8 @@
 extends Control
 ## Horizontal modular resource bar. Three full-height regions preserve the
 ## pointed caps at each chosen bar height. The fill is tiled and clipped.
+const V2 = preload("res://ui/theme/ui_kit_v2.gd")
+var use_v2: bool = false
 const FRAME = preload("res://ui/assets/resources/g22f/resource_frame.png")
 const FILLS = {
 	"Health": preload("res://ui/assets/resources/g22f/fill_health.png"),
@@ -160,32 +162,36 @@ func _draw() -> void:
 	if w < 2.0 or h < 2.0:
 		return
 	var cap = minf(h * 0.625, w * 0.25)
-	draw_texture_rect_region(FRAME, Rect2(0, 0, cap, h), Rect2(0, 0, 40, 64))
-	draw_texture_rect_region(FRAME, Rect2(cap, 0, w - cap * 2.0, h), Rect2(40, 0, 432, 64))
-	draw_texture_rect_region(FRAME, Rect2(w - cap, 0, cap, h), Rect2(472, 0, 40, 64))
-	# Only the lost segment is white, never the remaining colored health.
-	if (resource_kind == "Health" or resource_kind == "Barrier") and trail_ratio > shown_ratio + 0.00001:
-		var inset = h * 0.17
-		var start_white = lerpf(inset, w - inset, shown_ratio)
-		var white = _clip_x(fill_shape(size, trail_ratio), start_white, false)
-		if white.size() >= 3:
-			draw_colored_polygon(white, Color("#f3eee8"))
-	var points = fill_shape(size, shown_ratio)
-	var fill: Texture2D = FILLS.get(resource_kind, FILLS["Health"])
-	if points.size() >= 3:
-		var inset = h * 0.17
-		var tile_width = maxf(8.0, (h - inset * 2.0) * fill.get_width() / float(fill.get_height()))
-		var start = inset
-		var end = lerpf(inset, w - inset, shown_ratio)
-		while start < end:
-			var finish = minf(start + tile_width, end)
-			var clipped = _clip_x(_clip_x(points, start, false), finish, true)
-			if clipped.size() >= 3 and finish - start > 0.001:
-				var uv = PackedVector2Array()
-				for point in clipped:
-					uv.append(Vector2(clampf((point.x - start) / tile_width, 0.0, 1.0), clampf((point.y - inset) / (h - inset * 2.0), 0.0, 1.0)))
-				draw_polygon(clipped, PackedColorArray([Color.WHITE]), uv, fill)
-			start = finish
+	if use_v2:
+		_draw_v2_bar()
+	else:
+		var cap = minf(h * 0.625, w * 0.25)
+		draw_texture_rect_region(FRAME, Rect2(0, 0, cap, h), Rect2(0, 0, 40, 64))
+		draw_texture_rect_region(FRAME, Rect2(cap, 0, w - cap * 2.0, h), Rect2(40, 0, 432, 64))
+		draw_texture_rect_region(FRAME, Rect2(w - cap, 0, cap, h), Rect2(472, 0, 40, 64))
+		# Only the lost segment is white, never the remaining colored health.
+		if (resource_kind == "Health" or resource_kind == "Barrier") and trail_ratio > shown_ratio + 0.00001:
+			var inset = h * 0.17
+			var start_white = lerpf(inset, w - inset, shown_ratio)
+			var white = _clip_x(fill_shape(size, trail_ratio), start_white, false)
+			if white.size() >= 3:
+				draw_colored_polygon(white, Color("#f3eee8"))
+		var points = fill_shape(size, shown_ratio)
+		var fill: Texture2D = FILLS.get(resource_kind, FILLS["Health"])
+		if points.size() >= 3:
+			var inset = h * 0.17
+			var tile_width = maxf(8.0, (h - inset * 2.0) * fill.get_width() / float(fill.get_height()))
+			var start = inset
+			var end = lerpf(inset, w - inset, shown_ratio)
+			while start < end:
+				var finish = minf(start + tile_width, end)
+				var clipped = _clip_x(_clip_x(points, start, false), finish, true)
+				if clipped.size() >= 3 and finish - start > 0.001:
+					var uv = PackedVector2Array()
+					for point in clipped:
+						uv.append(Vector2(clampf((point.x - start) / tile_width, 0.0, 1.0), clampf((point.y - inset) / (h - inset * 2.0), 0.0, 1.0)))
+					draw_polygon(clipped, PackedColorArray([Color.WHITE]), uv, fill)
+				start = finish
 	if show_value and h >= 16.0:
 		var font: Font = value_font if value_font != null else get_theme_default_font()
 		var label = value_text()
@@ -197,3 +203,39 @@ func _draw() -> void:
 		var at = Vector2(x, (h - font.get_height(font_size)) * 0.5 + font.get_ascent(font_size))
 		draw_string_outline(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, value_outline, Color("#151217"))
 		draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("#fff3df"))
+
+# Three full-height slices preserve the caps; draw only the visible interval
+# of the full-size fill rather than stretching the fill as values change.
+func _v2_x(source_x: float) -> float:
+	var cap: float = minf(size.y * 0.5, size.x * 0.5)
+	if source_x <= 16.0:
+		return source_x / 16.0 * cap
+	if source_x >= 304.0:
+		return size.x - (320.0 - source_x) / 16.0 * cap
+	return lerpf(cap, size.x - cap, (source_x - 16.0) / 288.0)
+
+func _v2_strip(key: String, clip_right: float) -> void:
+	var texture: Texture2D = V2.texture("resource_bars/" + key)
+	var cuts = [0.0, 16.0, 304.0, 320.0]
+	for i in range(3):
+		var x: float = _v2_x(cuts[i])
+		var right: float = _v2_x(cuts[i + 1])
+		var end_x: float = minf(right, clip_right)
+		if end_x <= x or right <= x:
+			continue
+		var src_width: float = (cuts[i + 1] - cuts[i]) * (end_x - x) / (right - x)
+		draw_texture_rect_region(texture, Rect2(x, 0, end_x - x, size.y), Rect2(cuts[i], 0, src_width, 32))
+
+func _draw_v2_bar() -> void:
+	_v2_strip("bar_track", size.x)
+	var fill_key: String = "fill_" + str({"Health":"health", "Mana":"mana", "Barrier":"barrier", "EXP":"experience"}.get(resource_kind, "health"))
+	var used: Rect2i = V2.bounds("resource_bars/" + fill_key)
+	var left: float = _v2_x(float(used.position.x))
+	var right: float = _v2_x(float(used.end.x))
+	if (resource_kind == "Health" or resource_kind == "Barrier") and trail_ratio > shown_ratio + 0.00001:
+		var a: float = lerpf(left, right, shown_ratio)
+		var b: float = lerpf(left, right, trail_ratio)
+		draw_rect(Rect2(a, size.y * 0.20, b - a, size.y * 0.60), Color("f3eee8"))
+	if shown_ratio > 0.0:
+		_v2_strip(fill_key, size.x if shown_ratio >= 1.0 else lerpf(left, right, shown_ratio))
+	_v2_strip("bar_frame", size.x)

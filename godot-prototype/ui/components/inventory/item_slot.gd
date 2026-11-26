@@ -2,6 +2,8 @@ extends Button
 const Tokens = preload("res://ui/theme/tokens.gd")
 const PaintedSlots = preload("res://ui/theme/painted_slot_pack.gd")
 const Normalize = preload("res://ui/theme/asset_normalization.gd")
+const V2 = preload("res://ui/theme/ui_kit_v2.gd")
+var v2_preview: bool = false
 var _cached_art: Texture2D
 var _cached_bounds: Rect2i
 # Opt-in for the gallery; other consumers keep the original visual treatment.
@@ -29,6 +31,9 @@ func _ready() -> void:
 	focus_exited.connect(queue_redraw)
 
 func _draw() -> void:
+	if v2_preview:
+		_draw_v2()
+		return
 	if minimal_inventory:
 		_draw_minimal_inventory()
 		return
@@ -152,3 +157,36 @@ func _make_custom_tooltip(_for_text: String) -> Object:
 	if preview_tooltip_factory.is_valid():
 		return preview_tooltip_factory.call()
 	return null
+
+func _draw_v2() -> void:
+	var side: float = minf(size.x, size.y)
+	if side <= 2.0:
+		return
+	var origin: Vector2 = (size - Vector2.ONE * side) * 0.5
+	var rect = Rect2(origin, Vector2.ONE * side)
+	var family: String = "equip" if equipped and not minimal_inventory else "bag"
+	var rarity_key: String = V2.RARITIES[rarity] if item_art != null else "neutral"
+	draw_texture_rect(V2.texture("slots/" + family + "_surface"), rect, false, Color(1, 1, 1, 0.60 if item_art == null else 1.0))
+	if item_art != null and not locked:
+		var source: Rect2i = painted_art_bounds()
+		if source.has_area():
+			var safe = Rect2(origin + Vector2.ONE * side * 0.10, Vector2.ONE * side * 0.80)
+			draw_texture_rect_region(item_art, Normalize.fit_rect(Vector2(source.size), safe), Rect2(source))
+	draw_texture_rect(V2.texture("slots/" + family + "_frame_" + rarity_key), rect, false, Color(1, 1, 1, 0.35 if item_art == null else 1.0))
+	if not locked:
+		if button_pressed:
+			draw_texture_rect(V2.texture("slots/slot_state_selected"), rect, false)
+		elif is_hovered() or has_focus():
+			draw_texture_rect(V2.texture("slots/slot_state_hover"), rect, false)
+	if locked:
+		draw_rect(rect, Color(0, 0, 0, 0.55))
+		var lock_side: float = side * 0.45
+		draw_texture_rect(V2.texture("icons/actions/lock"), Rect2(origin + Vector2.ONE * (side - lock_side) * 0.5, Vector2.ONE * lock_side), false)
+	if quantity > 1 and item_art != null and not locked:
+		var font: Font = get_theme_default_font()
+		var font_size: int = maxi(10, roundi(side * 0.21))
+		var value: String = str(quantity)
+		var width: float = font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var at: Vector2 = origin + Vector2(side - width - 5.0, side - 6.0)
+		draw_string_outline(font, at, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 3, Color("101115"))
+		draw_string(font, at, value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Tokens.IVORY)

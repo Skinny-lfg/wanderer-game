@@ -1,5 +1,9 @@
 extends RefCounted
 ## Shared presentation assets for the experimental shell. No domain state.
+const V2 = preload("res://ui/theme/ui_kit_v2.gd")
+# One presentation switch for the game shell; gallery retains G2.2.
+const USE_V2 = true
+var use_v2: bool = USE_V2
 const Buttons = preload("res://ui/theme/painted_button_pack.gd")
 const Navigation = preload("res://ui/theme/painted_navigation_pack.gd")
 const Frames = preload("res://ui/theme/painted_frame_pack.gd")
@@ -32,7 +36,7 @@ func _init() -> void:
 	theme = BASE_THEME.duplicate() as Theme
 	theme.default_font = ui_font
 	theme.set_font("font", "Heading", heading_font)
-	simple_style = Simple.png_style("neutral")
+	simple_style = V2.panel_style() if use_v2 else Simple.png_style("neutral")
 
 func ready_for_preview() -> bool:
 	return buttons.is_ready() and navigation.is_ready() and frames.is_ready() and slots.is_ready()
@@ -58,6 +62,7 @@ func slot(host: Node, at: Vector2, side: float, art: Texture2D = null, rarity: i
 	node.rarity = rarity
 	node.equipped = equipped
 	node.painted_textures = slots.textures
+	node.v2_preview = use_v2
 	if art != null:
 		node.preview_tooltip_factory = make_tooltip.bind(art, rarity, equipped, item_name, category)
 	host.add_child(node)
@@ -76,16 +81,19 @@ func make_tooltip(art: Texture2D, rarity: int, equipped: bool, item_name: String
 	node.organized = true
 	node.simple_surface = true
 	node.detailed = rarity == 5
-	node.painted_style = frames.tooltip_style(rarity)
+	node.painted_style = V2.tooltip_style(rarity) if use_v2 else frames.tooltip_style(rarity)
 	node.description = "Preview equipment — illustrative data."
 	node.stat_lines = PackedStringArray(["Example equipment attribute"])
-	if category == "Dagger":
+	if category == "Reagents":
+		node.description = "Realm crafting material · visual preview."
+		node.stat_lines = PackedStringArray()
+	elif category == "Dagger":
 		node.primary_value = "24–32"
 		node.primary_label = "Attack Damage"
 	else:
 		node.attributes.assign([{"label": "Example attribute", "value": "+8"}])
 	if rarity == 5 and frames.is_ready():
-		node.ornament = frames.textures["crest"]
+		node.ornament = V2.texture("ornaments/crest_optional") if use_v2 else frames.textures["crest"]
 		node.unique_title = "Unique effect"
 		node.unique_effect = "Illustrative effect — not connected to gameplay."
 	return node
@@ -94,6 +102,7 @@ func resource(host: Node, kind: String, at: Vector2, extent: Vector2, current: f
 	var bar = Bar.new()
 	bar.name = kind + "Bar"
 	bar.resource_kind = kind
+	bar.use_v2 = use_v2
 	bar.show_value = values
 	bar.set_value_style(ui_font, HORIZONTAL_ALIGNMENT_RIGHT, 0.66, 2, true)
 	bar.custom_minimum_size = extent

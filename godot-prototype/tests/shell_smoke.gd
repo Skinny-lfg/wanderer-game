@@ -23,8 +23,8 @@ func _run() -> void:
 		if shell.active_page != id or shell.content.get_child_count() != 1 or not shell.navigation.visible:
 			_fail("Screen transition failed: " + id)
 			return
-		if not shell.buttons[id].get_theme_stylebox("normal") is StyleBoxFlat or shell.buttons[id].icon == null:
-			_fail("Minimal navigation must retain original icons")
+		if not shell.buttons[id].get_theme_stylebox("normal") is StyleBoxTexture or shell.buttons[id].icon == null:
+			_fail("V2 navigation must retain icons and painted styles")
 			return
 		if id == "talents":
 			if shell.current_screen.get_node_or_null("TalentCore") == null:
@@ -77,7 +77,7 @@ func _run() -> void:
 			if inventory.advanced_group.visible or not inventory.basic_group.visible:
 				_fail("Character details overlay failed to close")
 				return
-			if inventory.equipped_slots.size() != 10 or inventory.potion_slots.size() != 3 or inventory.stash_slots.size() != 40 or inventory.stash_items.size() != 24:
+			if inventory.equipped_slots.size() != 10 or inventory.potion_slots.size() != 3 or inventory.stash_slots.size() != 40 or inventory.stash_items.size() != 30:
 				_fail("Inventory fixture does not match v0.13 capacities")
 				return
 			for cell in inventory.stash_slots:
@@ -111,6 +111,14 @@ func _run() -> void:
 			if inventory.stash_slots[0].item_art == null or inventory.stash_slots[3].item_art != null:
 				_fail("Potion filter preview failed")
 				return
+			if not inventory.stash_slots[0].v2_preview or not inventory.equipped_slots[0].v2_preview:
+				_fail("V2 slot adapter inactive")
+				return
+			inventory.stash_filter.select(inventory.stash_filter.item_count - 1)
+			inventory._inventory_filter_changed(0)
+			if inventory.stash_filter.get_item_text(inventory.stash_filter.selected) != "Reagents" or inventory.stash_slots[5].item_art == null or inventory.stash_slots[6].item_art != null:
+				_fail("Six reagent fixtures or filter missing")
+				return
 			inventory._inventory_collection(1)
 			if inventory.stash_filter_panel.visible or inventory.stash_filter_toggle.button_pressed or inventory.stash_grid.visible or not inventory.collection_host.visible or not inventory.stash_count.text.begins_with("2 valuables") or inventory.collection_surface.size.y >= stash_surface_size.y:
 				_fail("Valuables collection preview failed")
@@ -143,7 +151,7 @@ func _run() -> void:
 		return
 	var xp: Control = shell.current_screen.resource_hud.get_node("EXPBar")
 	var hp: Control = shell.current_screen.resource_hud.get_node("HealthBar")
-	if absf(xp.size.x - hp.size.x * 0.98) > 1.0:
+	if not hp.use_v2 or not xp.use_v2 or absf(xp.size.x - hp.size.x * 0.98) > 1.0:
 		_fail("Combat EXP ratio")
 		return
 	shell.actions.get_child(0).pressed.emit()
