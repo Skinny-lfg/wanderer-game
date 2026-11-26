@@ -298,8 +298,8 @@ function setDelayEnemy(r,seconds){
 }
 
 // Primary hits alone call this. Reflection cannot trigger another on-hit callback.
-function reflectThornbloom(r,enemy,hpLost){
- const raw=root.WandererV013EliteAbilities?.thornbloomDamage(enemy,r.combatSeconds,hpLost,r.maxhp)||0;
+function reflectSolarRebuke(r,enemy,hpLost){
+ const raw=root.WandererV013EliteAbilities?.solarRebukeDamage(enemy,r.combatSeconds,hpLost,r.maxhp)||0;
  if(!raw)return false;
  const s=r.stats;
  let incoming=raw;
@@ -311,8 +311,8 @@ function reflectThornbloom(r,enemy,hpLost){
  const absorbed=Math.min(r.barrier||0,incoming),hit=Math.min(r.hp,incoming-absorbed);
  r.barrier-=absorbed;r.hp-=hit;
  ports.phase6Metric(r,'absorbed',absorbed);ports.phase6Metric(r,'damageTaken',hit);
- ports.phase6Metric(r,'thornbloomHits',1);ports.phase6Metric(r,'thornbloomDamage',hit);
- ports.addLog('🌵 Thornbloom reflects '+hit.toFixed(1)+' damage'+(absorbed?' · Barrier '+absorbed.toFixed(1):''),'critical');
+ ports.phase6Metric(r,'solarRebukeHits',1);ports.phase6Metric(r,'solarRebukeDamage',hit);
+ ports.addLog('☀ Solar Rebuke reflects '+hit.toFixed(1)+' damage'+(absorbed?' · Barrier '+absorbed.toFixed(1):''),'critical');
  return resolveBossPulseLethal(r,s);
 }
 function setDirectEnemyDamage(r,amount,label){
@@ -710,7 +710,7 @@ function weaponAttack(r,offhandStrike=false){
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  const real=Math.max(0,Math.min(e.hp,damage));
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
- if(reflectThornbloom(r,e,real))return;
+ if(reflectSolarRebuke(r,e,real))return;
  if(!offhandStrike)offhandOnMainHit(r,real);
  if(r.guillotineSpore){const other=r.enemies?.find(m=>m!==e&&m.hp>0);if(e.hp<=0&&other){other.dots??={};other.dots.bleed??=[];other.dots.bleed.push({...r.guillotineSpore,secondaryOrigin:'guillotine',acceleratedElapsed:0});ports.synchronizeDots(other);}delete r.guillotineSpore;}
  ports.legendaryOnHit(r,base,real);
@@ -1134,7 +1134,7 @@ function phase2MagicTick(r){
  ports.setDirectEnemyDamage(r,spellCriticalDamage(r,spellDamage),'✨ '+b.element);
  if(r.enemy.hp>0)paidMagicLegendary(r,cost);else legendaryFundedBonus(r,cost);
  if(r.enemy.hp<hpBefore)offhandOrbWard(r);
- if(reflectThornbloom(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
+ if(reflectSolarRebuke(r,r.enemy,Math.min(hpBefore,hpBefore-r.enemy.hp)))return;
  WandererV012Buildcraft.onCast(b,ctx);groupElementalEffects(r,b);
  if(v013LightningChain(r))v013LightningChainDamage(r,chainBase);
 }

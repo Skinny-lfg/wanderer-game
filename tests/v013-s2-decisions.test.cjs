@@ -125,8 +125,8 @@ test('S2: native reagent refinement consumes 6 Essence and 3 dry-room marks',()=
  assert.equal(a.forge.refine('epic_ember_branch'),false);
 });
 
-test('S2: Thornbloom target diversion only occurs during true reflect windows',()=>{
- const thorn={id:'thorn',hp:50,miniboss:true,stage82:{type:'briarspine_horror',bloomUntil:20}};
+test('S2: Solar Rebuke target diversion only occurs during true reflect windows',()=>{
+ const thorn={id:'thorn',hp:50,miniboss:true,stage82:{type:'the_gilded',rebukeUntil:20}};
  const minion={id:'other',hp:20,role:'caster'};
  const run={status:'fight',combatSeconds:15,enemy:thorn,encounterLeader:thorn,enemies:[thorn,minion]};
  assert.equal(N.selectThornAwareTarget(run,N.PROFILES.cautious),minion);

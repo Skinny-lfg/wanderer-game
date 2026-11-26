@@ -29,7 +29,7 @@ add('hybrid-vitality-aegis',['vitality','aegis'],'mace',['sanctuary','guardians_
 add('hybrid-aegis-magic',['aegis','magic'],'orb',['runic_shield','prismatic_rebound','arcane_bastion'],'sustain','arcane','arcane_bastion');
 add('hybrid-magic-decay',['magic','decay'],'wand',['hex_bolt','elemental_blight','grave_bloom'],'aoe','arcane','grave_bloom');
 add('hybrid-decay-blood',['decay','blood'],'twohand',['plague_spread','carrion_detonation','septic_wound'],'aoe',null,'septic_wound');
-const IDS=Object.keys(P),ELITES=['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner'];
+const IDS=Object.keys(P),ELITES=['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','the_gilded','ashen_executioner'];
 const SC=[...[1,2,3,4,8,12].map(size=>({id:'normal-'+size,kind:'normal',size})),...ELITES.map(elite=>({id:'elite-'+elite,kind:'elite',elite})),...FAMILIES.map(family=>({id:'boss-'+family,kind:'boss',family}))];
 function profile(id){
  const p=P[id];assert(p,id);const [weapon,offhandType,armorType]=W[p.w],options={xp:POINTS*T.POINT_XP,...(p.element&&p.element!=='arcane'?{element:p.element}:{})};

@@ -41,7 +41,7 @@ const THEMES=[
  ['void','Umbral Hollow','drain','assets/dungeons/backgrounds/void.webp','Hollow Shade'],
  ['ward','Warded Marches','shield','assets/dungeons/backgrounds/ward.webp','Sigil Squire'],
  ['grove','Verdant Wilds','nature','assets/dungeons/backgrounds/grove.webp','Thornback Stag'],
- ['shrine','Everroot Vale','regen','assets/dungeons/backgrounds/shrine.webp','Rootbound Hermit'],
+ ['shrine','Everroot Vale','regen','assets/dungeons/backgrounds/shrine.webp','Cantor'],
  ['storm','Stormglass Beyond','shock','assets/dungeons/backgrounds/storm.webp','Shardspark Moth'],
  ['drowned','Drowned Bastion','tide','assets/dungeons/backgrounds/drowned.webp','Barnacle Legionnaire'],
 ].map(([id,name,effect,image,enemy])=>({id,name,effect,image,enemy}));
@@ -58,7 +58,7 @@ const MOB_POOLS={
  void:[['Hollow Shade','hollow_shade_attack_aligned_768x896.gif','caster'],['Grave Lantern','grave_lantern_claw_attack_leftarm_768x768.gif','skirmisher']],
  ward:[['Sigil Squire','wanderer_sigil_squire_attack_768_clean.gif','tank'],['Bulwark Scarab','wanderer_bulwark_scarab_attack_768_clean.gif','tank']],
  grove:[['Thornback Stag','thornback_stag_charge_attack_preferred_768x896.gif','tank'],['Canopy Stalker','canopy_stalker_pounce_attack_768x896.gif','skirmisher']],
- shrine:[['Rootbound Hermit','rootbound_hermit_staff_spell_original_768x896.gif','caster'],['Bloom Wisp','bloom_wisp_attack_preview_768x960.gif','caster']],
+ shrine:[['Cantor','rootbound_hermit_staff_spell_original_768x896.gif','caster'],['Bloom Wisp','bloom_wisp_attack_preview_768x960.gif','caster']],
  storm:[['Shardspark Moth','wanderer_shardspark_moth_attack_768_bottomclean.gif','caster'],['Tempest Prism','wanderer_tempest_prism_attack_768.gif','caster']],
  drowned:[['Barnacle Legionnaire','wanderer_barnacle_legionnaire_attack_768_clean.gif','tank'],['Tidebound Shellbeast','wanderer_tidebound_shellbeast_attack_768.gif','tank']],
 };
@@ -208,8 +208,8 @@ function save(){phase5Persist();}
 function heroFullImage(){return globalThis.WandererCharacterArt?.imageForEquipment(state.equip)||'assets/characters/full/wanderer.webp';}
 // Optimized transparent elite WebP portraits with fallback art if loading fails.
 // Idle PNGs are frame 1 of the new attack GIFs, never legacy elite portraits.
-const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',briarspine_horror:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',oathbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
-const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',briarspine_horror:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',oathbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
+const ELITE_ART={tank:'assets/elites/animated/tank_idle.png',caster:'assets/elites/animated/caster_idle.png',vampire:'assets/elites/animated/vampire_idle.png',berserker:'assets/elites/animated/berserker_idle.png',gravecaller:'assets/elites/animated/caster_idle.png',the_gilded:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.png',oathbound_exarch:'assets/elites/animated/tank_idle.png',ashen_executioner:'assets/elites/animated/berserker_idle.png'};
+const ELITE_ATTACK_ART={tank:'assets/elites/animated/tank_attack.gif',caster:'assets/elites/animated/caster_attack.gif',vampire:'assets/elites/animated/vampire_attack.gif',berserker:'assets/elites/animated/berserker_attack.gif',gravecaller:'assets/elites/animated/caster_attack.gif',the_gilded:'assets/mobs/animated/rootbound_hermit_staff_spell_original_768x896.gif',oathbound_exarch:'assets/elites/animated/tank_attack.gif',ashen_executioner:'assets/elites/animated/berserker_attack.gif'};
 const ELITE_ATTACK_IMPACT_MS={tank:810,caster:890,vampire:670,berserker:490};
 const ELITE_ATTACK_DURATION_MS={tank:1850,caster:1750,vampire:1800,berserker:1400};
 const eliteArtReady={};
@@ -686,13 +686,13 @@ function estimateEnemy(level,n=1){return WandererV012CombatCore.estimateEnemy(le
 
 /* Eight native Elite identities: fixed E1 bases and unique mechanics. */
 const ELITE_ARCHETYPES={
- tank:{id:'tank',icon:'🛡️',name:'Gravebound Bulwark',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:2.49,atk:1.07,def:1.19,interval:1.85},
+ tank:{id:'tank',icon:'🛡️',name:'The Pallbearer',role:'Tank',risk:'High health, low damage. HP hits reduce your healing by 40% for 5s (refreshes on each hit).',hp:2.49,atk:1.07,def:1.19,interval:1.85},
  berserker:{id:'berserker',icon:'⚔️',name:'Bloodscar Ravager',role:'Berserker',risk:'Low health, high attack damage and quick strikes. Each hit is capped at 35% of your max HP.',hp:1.21,atk:1.67,def:0.9,interval:1.46},
- vampire:{id:'vampire',icon:'🩸',name:'Sanguine Wraith',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.55,atk:1.38,def:1.04,interval:1.56},
+ vampire:{id:'vampire',icon:'🩸',name:'The Thirst',role:'Vampire',risk:'Recovers HP when its attacks damage your health. Barrier and burst are useful.',hp:1.55,atk:1.38,def:1.04,interval:1.56},
  caster:{id:'caster',icon:'🔮',name:'Voidborne Hexer',role:'Caster',risk:'Successful hits weaken your direct damage by 20% for 3 combat seconds (7s between casts).',hp:1.53,atk:1.35,def:0.92,interval:1.64},
  gravecaller:{id:'gravecaller',icon:'☠',name:'Gravecaller',role:'Summoner',risk:'Channels a 1s interruptible ritual at 85% and 40% HP, summoning up to 2 bound souls each time (4 total, 2 alive). Bound soul hits apply stacking Deathbound Decay (up to 4 stacks, 4s), damaging you each second until the summons die.',hp:1.91,atk:1.12,def:0.92,interval:1.75},
- oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'Oathbound Exarch',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.98,atk:1.12,def:1.18,interval:1.95},
- briarspine_horror:{id:'briarspine_horror',icon:'🌵',name:'Briarspine Horror',role:'Thorns',risk:'Vitality · Thornbloom reflects direct hits during its four-second guard.',hp:1.84,atk:1.23,def:1.04,interval:1.72},
+ oathbound_exarch:{id:'oathbound_exarch',icon:'⛨',name:'The Shepherd',role:'Support',risk:'Aegis oath: every 10s channels Barrier for an ally, or itself when alone, worth 15% max Health, up to 3 casts. Stun interrupts.',hp:1.98,atk:1.12,def:1.18,interval:1.95},
+ the_gilded:{id:'the_gilded',icon:'☀',name:'The Gilded',role:'Reflection',risk:'Radiance · Solar Rebuke reflects direct hits during its four-second guard.',hp:1.84,atk:1.23,def:1.04,interval:1.72},
  ashen_executioner:{id:'ashen_executioner',icon:'⚒',name:'Ashen Executioner',role:'Heavy Striker',risk:'Every 10s prepares 1.5s heavy strike, capped at 18% max HP before Block/Barrier. Stun and delay interrupt.',hp:1.75,atk:1.58,def:0.93,interval:1.95}
 };
 const BOSS_ARCHETYPES=['guardian','leech','berserker','matriarch','devourer','conductor'].map(style=>{

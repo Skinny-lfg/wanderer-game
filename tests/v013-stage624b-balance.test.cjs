@@ -19,7 +19,7 @@ test('Stage 6.24B changes native initial archetype bases (not E6-only multiplier
   assert(!html.includes(old),'old base remains: '+old);
   assert(!docs.includes(old),'old preview base remains: '+old);
  }
- for(const type of ['gravecaller','vampire','briarspine_horror']){
+ for(const type of ['gravecaller','vampire','the_gilded']){
   assert.deepEqual(P.enemyScaling(1,'elite',type),{hp:1,atk:1,def:1});
   assert.deepEqual(P.enemyScaling(5,'elite',type),{hp:1,atk:1,def:1});
   assert(P.enemyScaling(6,'elite',type).hp>1,'Stage 6.24C unified curve starts smoothly after E5');
@@ -37,12 +37,12 @@ test('Gravecaller bound souls and Deathbound remain native, with adjusted base p
  assert.equal(A.DEFINITIONS.gravecaller.maxLiving,2);
  assert.equal(A.DEFINITIONS.gravecaller.maxSummons,4);
 });
-test('Briarspine first telegraph occurs at 9 seconds, cooldown/reflection caps unchanged',()=>{
- const spec=A.DEFINITIONS.briarspine_horror;
+test('The Gilded first telegraph occurs at 9 seconds, cooldown/reflection caps unchanged',()=>{
+ const spec=A.DEFINITIONS.the_gilded;
  assert.equal(spec.first,9);assert.equal(spec.cooldown,12);
  assert.equal(spec.cast,1);assert.match(spec.description,/first at 9s/);
 });
-test('Sanguine Wraith changes only native HP-hit lifesteal within full combat pipeline',()=>{
+test('The Thirst changes only native HP-hit lifesteal within full combat pipeline',()=>{
  const src=read('combat/v012-combat-runtime.js');
  assert(src.includes('Math.round(hit*.33)),Math.max(1,Math.round(e.maxhp*.055))'));
  assert(!src.includes('Math.round(hit*.38)),Math.max(1,Math.round(e.maxhp*.06))'));

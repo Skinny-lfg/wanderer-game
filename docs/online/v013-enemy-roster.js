@@ -20,7 +20,7 @@ const CATALOG=Object.freeze({
  forge:   {minion:['Blood Thrall',1],tank:['Crimson Bastion',0],skirmisher:['Crimson Courtier',0],caster:['Hemalurgist',0]},
  bloodscar:{minion:['Bloodling',0],tank:['Bonewaste Burrower',1],skirmisher:['Sanguine Leech',0],caster:['Gore Seer',0]},
  grove:   {minion:['Root Sprout',1],tank:['Thornback Stag',0],skirmisher:['Canopy Stalker',1],caster:['Grove Hexer',1]},
- shrine:  {minion:['Bloom Seedling',1],tank:['Heartwood Sentinel',0],skirmisher:['Briar Lurker',1],caster:['Rootbound Hermit',0]},
+ shrine:  {minion:['The Unfinished',1],tank:['Reliquary',0],skirmisher:['Sunscour',1],caster:['Cantor',0]},
  ward:    {minion:['Ward Fragment',1],tank:['Sigil Squire',0],skirmisher:['Glyphstrider',0],caster:['Oath Scribe',0]},
  drowned: {minion:['Brine Whelp',1],tank:['Barnacle Legionnaire',0],skirmisher:['Undertow Marauder',0],caster:['Brinecaller',1]},
  crypt:   {minion:['Carrion Whelp',1],tank:['Gravebound Husk',1],skirmisher:['Carrion Harrier',0],caster:['Mourning Cantor',1]},

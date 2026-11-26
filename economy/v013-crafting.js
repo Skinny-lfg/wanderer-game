@@ -32,11 +32,11 @@ for(const [family,label] of [
 ])for(const [slot,type]of [['ring1','Ring'],['ring2','Ring'],['amulet','Amulet']])
  add('blue_'+slot+'_'+family,label+' '+type,slot,type,'Rare',family);
 for(const row of [
- ['oathkeeper','Oathkeeper','weapon','Mace','aegis','focused'],['wardens_promise',"Warden's Promise",'offhand','Shield','aegis','focused'],
- ['sanguine_edge','Sanguine Edge','weapon','Sword','blood','blood_transfer'],['gravecleaver','Gravecleaver','weapon','Two-Handed','blood','blood_transfer'],
- ['hunters_oath',"Hunter's Oath",'weapon','Bow','fury','focused'],['silent_verdict','Silent Verdict','weapon','Daggers','fury','focused'],
+ ['oathkeeper','Oathkeeper','weapon','Mace','aegis','focused'],['rearguard',"Rearguard",'offhand','Shield','aegis','focused'],
+ ['parting_blade','Parting Blade','weapon','Sword','blood','blood_transfer'],['gravecleaver','Gravecleaver','weapon','Two-Handed','blood','blood_transfer'],
+ ['last_quarry',"Last Quarry",'weapon','Bow','fury','focused'],['silent_verdict','Silent Verdict','weapon','Daggers','fury','focused'],
  ['ember_branch','Ember Branch','weapon','Staff','magic','conflagration'],['measured_staff','Measured Staff','weapon','Staff','magic','efficient'],
- ['lifewoven_wand','Lifewoven Wand','weapon','Wand','vitality','efficient'],['venomglass','Venomglass','weapon','Wand','decay','efficient'],
+ ['finesse','Finesse','weapon','Wand','vitality','efficient'],['venomglass','Venomglass','weapon','Wand','decay','efficient'],
  ['warded_mantle','Warded Mantle','armor','Cloth','aegis','ward'],['aether_orb','Aether Orb','offhand','Orb','magic','ward'],
  ['echoing_tome','Echoing Tome','offhand','Tome','magic','echoing_recall'],
  ['heartbloom_charm','Heartbloom Charm','offhand','Charm','vitality','heartbloom']

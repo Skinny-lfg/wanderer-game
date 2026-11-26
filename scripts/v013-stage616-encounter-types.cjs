@@ -10,13 +10,13 @@ const ALL_GROUPS=Object.freeze([1,2,3,4,6,8,12,20]);
 const KINDS=Object.freeze([...ALL_GROUPS.map(n=>'normal-'+n),'elite','boss']);
 // Display labels only; stable native IDs remain unchanged for combat and raw JSON.
 const ELITE_DISPLAY_NAMES=Object.freeze({
- tank:'Gravebound Bulwark',
+ tank:'The Pallbearer',
  berserker:'Bloodscar Ravager',
- vampire:'Sanguine Wraith',
+ vampire:'The Thirst',
  caster:'Voidborne Hexer',
  gravecaller:'Gravecaller',
- oathbound_exarch:'Oathbound Exarch',
- briarspine_horror:'Briarspine Horror',
+ oathbound_exarch:'The Shepherd',
+ the_gilded:'The Gilded',
  ashen_executioner:'Ashen Executioner'
 });
 const eliteDisplayName=id=>ELITE_DISPLAY_NAMES[id]||id;

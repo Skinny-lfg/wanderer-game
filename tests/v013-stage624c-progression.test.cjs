@@ -46,11 +46,11 @@ test('Elite curve continuous through E6, E35, E70, E200 and E201; E5 exact nativ
    }
   }
  }
- const br=P.ELITE_GROWTH.briarspine_horror;
- assert.equal(br.shape,1.18,'Briarspine growth is individually eased, not a blanket level coefficient');
- assert(P.enemyScaling(70,'elite','briarspine_horror').hp>1.85);
- assert(P.enemyScaling(70,'elite','briarspine_horror').hp<2.05);
- assert(P.enemyScaling(6,'elite','briarspine_horror').hp<1.05);
+ const br=P.ELITE_GROWTH.the_gilded;
+ assert.equal(br.shape,1.18,'The Gilded growth is individually eased, not a blanket level coefficient');
+ assert(P.enemyScaling(70,'elite','the_gilded').hp>1.85);
+ assert(P.enemyScaling(70,'elite','the_gilded').hp<2.05);
+ assert(P.enemyScaling(6,'elite','the_gilded').hp<1.05);
  assert.equal(P.eliteProgress(5),0);assert.equal(P.eliteProgress(200),1);
  assert(P.eliteProgress(201)>P.eliteProgress(200));
  assert(P.eliteProgress(100000)<215/195,'bounded but never clamped after E200');
@@ -105,7 +105,7 @@ test('A/B audit cannot invent legal gear or endgame XP; native E5 matches before
  assert.equal(Audit.plan(200).length,12);
  const row=Audit.plan(5)[0];
  assert.equal(row.level,5);
- const x=Audit.compare(row,'elite','briarspine_horror');
+ const x=Audit.compare(row,'elite','the_gilded');
  assert.equal(x.old.won,x.new.won);
  assert.equal(x.old.roster[0].maxHp,x.new.roster[0].maxHp);
  assert.equal(x.old.roster[0].atk,x.new.roster[0].atk);

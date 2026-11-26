@@ -46,7 +46,7 @@ const server=http.createServer((req,res)=>{
       damageFontSize:parseFloat(floatStyle.fontSize),damageShadow:floatStyle.textShadow,damageZIndex:Number(floatStyle.zIndex),passive};
    });
    assert(!result.casterTransform.includes('-1'),'Voidborne Hexer should face the opposite direction: '+result.casterTransform);
-   assert(result.vampireWidth<result.casterWidth,'Sanguine Wraith must be smaller than the Caster');
+   assert(result.vampireWidth<result.casterWidth,'The Thirst must be smaller than the Caster');
    assert.equal(result.backgroundOpacity,'0.72');
    assert(result.backgroundFilter.includes('brightness(0.6)'));
    assert(result.hpFontSize>=13&&result.hpFontSize<=15,'HP text stays readable');

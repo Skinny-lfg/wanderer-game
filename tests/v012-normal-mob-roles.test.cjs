@@ -31,7 +31,7 @@ const declared={
  'Hollow Shade':'caster','Grave Lantern':'skirmisher',
  'Sigil Squire':'tank','Bulwark Scarab':'tank',
  'Thornback Stag':'tank','Canopy Stalker':'skirmisher',
- 'Rootbound Hermit':'caster','Bloom Wisp':'caster',
+ 'Cantor':'caster','Bloom Wisp':'caster',
  'Shardspark Moth':'caster','Tempest Prism':'caster',
  'Barnacle Legionnaire':'tank','Tidebound Shellbeast':'tank'
 };

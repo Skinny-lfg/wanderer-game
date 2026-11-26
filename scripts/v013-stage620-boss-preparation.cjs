@@ -9,7 +9,7 @@ const T=globalThis.WandererAutomaticTalents;
 const STRATEGIES=Object.freeze(['baseline','marked_elite','reliquary','both']);
 const POLICIES=Object.freeze(['focus','mechanics']);
 const BOSSES=Object.freeze({blood:'Rift Harbinger',decay:'Carrion Matriarch',
- vitality:'Heartroot Devourer',aegis:'The Abyssal Guardian',
+ vitality:'Gullet',aegis:'The Abyssal Guardian',
  fury:'Ember Sovereign',magic:'Stormglass Conductor'});
 const BOSSES_ID=Object.freeze({blood:'rift',decay:'carrion',vitality:'heartroot',
  aegis:'guardian',fury:'ember',magic:'stormglass'});

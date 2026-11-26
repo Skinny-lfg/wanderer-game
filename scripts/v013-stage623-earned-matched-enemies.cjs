@@ -8,10 +8,10 @@ const S=require('./simulate-progression.cjs');
 const ROOT=path.resolve(__dirname,'..');
 const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
- 'oathbound_exarch','briarspine_horror','ashen_executioner']);
-const ELITE_NAMES=Object.freeze({tank:'Gravebound Bulwark',berserker:'Bloodscar Ravager',
- vampire:'Sanguine Wraith',caster:'Voidborne Hexer',gravecaller:'Gravecaller',
- oathbound_exarch:'Oathbound Exarch',briarspine_horror:'Briarspine Horror',
+ 'oathbound_exarch','the_gilded','ashen_executioner']);
+const ELITE_NAMES=Object.freeze({tank:'The Pallbearer',berserker:'Bloodscar Ravager',
+ vampire:'The Thirst',caster:'Voidborne Hexer',gravecaller:'Gravecaller',
+ oathbound_exarch:'The Shepherd',the_gilded:'The Gilded',
  ashen_executioner:'Ashen Executioner'});
 const hash=v=>crypto.createHash('sha256').update(typeof v==='string'?v:JSON.stringify(v)).digest('hex');
 const pct=(n,d)=>d?Number((n*100/d).toFixed(1)):null;

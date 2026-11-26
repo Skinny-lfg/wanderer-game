@@ -272,12 +272,12 @@ function report(data){
    '','Stats do herói em Camp: '+JSON.stringify(x.player));
  }
  a.push('','## Fórmulas atuais e fronteiras','',
-  '| E | Referência | HP base normal | ATK base normal | HP extra Gravecaller | HP extra Briarspine | HP Boss Rift | Gear tier |',
+  '| E | Referência | HP base normal | ATK base normal | HP extra Gravecaller | HP extra The Gilded | HP Boss Rift | Gear tier |',
   '|---:|---:|---:|---:|---:|---:|---:|---|');
  for(const t of data.model.rows){
   a.push('| E'+t.level+' | '+t.reference.toFixed(3)+' | '+t.normalBase.hp+' | '+
    t.normalBase.atk+' | ×'+t.eliteExtras.gravecaller.hp.toFixed(3)+
-   ' | ×'+t.eliteExtras.briarspine_horror.hp.toFixed(3)+
+   ' | ×'+t.eliteExtras.the_gilded.hp.toFixed(3)+
    ' | ×'+t.bossExtras.rift.hp.toFixed(3)+' | '+t.gearTier+' |');
  }
  a.push('','## Decisão de arquitetura',

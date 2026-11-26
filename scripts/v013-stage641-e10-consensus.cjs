@@ -26,7 +26,7 @@ const CALIBRATED_PROFILES=Object.freeze(Object.fromEntries(Object.keys(PROFILES)
 })));
 const SEEDS=Object.freeze([9861,9863]);
 const SIZES=Object.freeze([1,2,3,4,5,8,12]);
-const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner']);
+const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','the_gilded','ashen_executioner']);
 const BOSSES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
 const source=()=>S.sourceFingerprint().sha256;
 const rate=arr=>{

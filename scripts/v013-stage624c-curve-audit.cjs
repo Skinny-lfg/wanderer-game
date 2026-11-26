@@ -19,7 +19,7 @@ const LEGACY_ELITE_GAINS=Object.freeze({
  caster:{hp:.52,atk:.22,def:.08,lateHp:.18,lateAtk:.10,lateDef:.03},
  gravecaller:{hp:.35,atk:.15,def:.05,lateHp:.34,lateAtk:.22,lateDef:.04},
  oathbound_exarch:{hp:.62,atk:.27,def:.12,lateHp:.35,lateAtk:.18,lateDef:.06},
- briarspine_horror:{hp:.73,atk:.30,def:.10,lateHp:.50,lateAtk:.20,lateDef:.06},
+ the_gilded:{hp:.73,atk:.30,def:.10,lateHp:.50,lateAtk:.20,lateDef:.06},
  ashen_executioner:{hp:.55,atk:.23,def:.08,lateHp:.25,lateAtk:.14,lateDef:.03}
 });
 // Executed only inside the disposable native VM via source function text.

@@ -4,7 +4,7 @@ body.phase3IntegratedPreview #scene>.phase3ArenaBackdrop{opacity:.72!important;f
 /* Voidborne Hexer: reverse the previously mirrored portrait orientation only.
    Applies to idle/attack imagery, without mirroring independent spell effects. */
 body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="caster"]{transform:scaleX(1)!important;transform-origin:center bottom!important}
-/* Sanguine Wraith: increase the approved portrait dimensions by 5%. */
+/* The Thirst: increase the approved portrait dimensions by 5%. */
 body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(174.3px,94.5%)!important;height:160.65px!important;max-height:160.65px!important;object-fit:contain!important}
 @media(max-width:650px){body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(137.55px,94.5%)!important;height:99.75px!important;max-height:99.75px!important}}
 @media(max-width:370px){body.phase3IntegratedPreview #scene .eliteCombatant #enemyPortrait[data-elite-type="vampire"]{width:min(127.05px,94.5%)!important;height:99.75px!important;max-height:99.75px!important}}

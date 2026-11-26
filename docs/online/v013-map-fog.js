@@ -4,7 +4,7 @@ let previous=null,pausedAt=null,pausedTotal=0;
 function pause(){if(pausedAt===null)pausedAt=Date.now();}
 function resume(){if(pausedAt!==null){pausedTotal+=Math.max(0,Date.now()-pausedAt);pausedAt=null;}}
 function animationTime(){return (pausedAt??Date.now())-pausedTotal;}
-const colors={blood:'#ff6666',decay:'#a7d564',vitality:'#f5fff2',aegis:'#8fc9ff',fury:'#ff852f',magic:'#9d9dff'};
+const colors={blood:'#ff6666',decay:'#a7d564',vitality:'#ffdf92',aegis:'#8fc9ff',fury:'#ff852f',magic:'#9d9dff'};
 const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
 function normalized(points,indices){return [...new Set(indices)].filter(i=>Number.isInteger(i)&&i>=0&&i<points.length&&validPoint(points[i])).sort((a,b)=>a-b);}
 function layer(id,points,indices,family,old,elapsed=0,nextIndices=indices,now=Date.now()){

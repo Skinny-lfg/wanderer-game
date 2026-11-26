@@ -7,7 +7,7 @@ function mob(name,role='skirmisher',hp=100){return {name,role,hp,maxhp:100,barri
 function run(...enemies){return {enemy:enemies[0],enemies,status:'fight',combatSeconds:0,maxhp:1000,hp:1000};}
 function move(r,t){r.combatSeconds=t;return A.tick(r,t);}
 test('Four Stage 8.2 roles are defined and normal/boss enemies are excluded',()=>{
- assert.deepEqual(Object.keys(A.DEFINITIONS),['gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner']);
+ assert.deepEqual(Object.keys(A.DEFINITIONS),['gravecaller','oathbound_exarch','the_gilded','ashen_executioner']);
  for(const id of Object.keys(A.DEFINITIONS))assert(A.info(elite(id)).description);
  assert.equal(A.attach(mob('normal')),null);
  assert.equal(A.attach({...elite('gravecaller'),miniboss:false,boss:true}),null);
@@ -183,7 +183,7 @@ test('Stage 8.2 is loaded in the arena with all eight Elites registered',()=>{
   const html=fs.readFileSync(p,'utf8');
   assert(html.includes('online/v013-elite-abilities.js'));
   assert(html.includes('WandererV013EliteAbilities?.status(enemy,now)'));
-  for(const id of ['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','briarspine_horror','ashen_executioner']){
+  for(const id of ['tank','berserker','vampire','caster','gravecaller','oathbound_exarch','the_gilded','ashen_executioner']){
    assert(html.includes(id+":{id:'"+id+"'"),p+' missing '+id);
    assert.match(html,new RegExp(id+":'assets/(elites|mobs)/animated/"));
   }
@@ -205,50 +205,53 @@ test('Stage 8.2 is loaded in the arena with all eight Elites registered',()=>{
  const encounter=fs.readFileSync('online/v012-expedition-runtime.js','utf8');
  assert(encounter.includes('if(!statOnly&&last&&g.selected.elite&&!g.selected.boss)globalThis.WandererV013EliteAbilities?.attach'));
 });
-test('Thornbloom starts at 9s, telegraphs for 1s and protects for 4s with per-hit and cycle caps',()=>{
- const e=elite('briarspine_horror'),r=run(e);A.attach(e);
+test('Solar Rebuke starts at 9s, telegraphs for 1s and protects for 4s with per-hit and cycle caps',()=>{
+ const e=elite('the_gilded'),r=run(e);A.attach(e);
  assert.deepEqual(move(r,8.99),[]);assert.equal(move(r,9)[0].type,'prepare');
- assert.equal(A.status(e,9.5).label,'Casting');assert.equal(A.thornbloomDamage(e,9.9,1000,1000),0);
+ assert.equal(A.status(e,9.5).label,'Casting');assert.equal(A.solarRebukeDamage(e,9.9,1000,1000),0);
  assert.equal(move(r,10)[0].type,'activate');
- assert.equal(A.thornbloomDamage(e,10,20,1000),3);
- assert.deepEqual(Array.from({length:5},()=>A.thornbloomDamage(e,11,900,1000)),[15,15,15,12,0]);
- assert.equal(A.status(e,14),null);assert.equal(A.thornbloomDamage(e,14,900,1000),0);
- assert.equal(move(r,21)[0].type,'prepare');move(r,22);assert.equal(A.thornbloomDamage(e,22,900,1000),15);
+ assert.equal(A.solarRebukeDamage(e,10,20,1000),3);
+ assert.deepEqual(Array.from({length:5},()=>A.solarRebukeDamage(e,11,900,1000)),[15,15,15,12,0]);
+ assert.equal(A.status(e,14),null);assert.equal(A.solarRebukeDamage(e,14,900,1000),0);
+ assert.equal(move(r,21)[0].type,'prepare');move(r,22);assert.equal(A.solarRebukeDamage(e,22,900,1000),15);
 });
 
 function horrorFixture(build){
  const sim=require('../scripts/simulate-progression.cjs');
  const {a,c,card}=sim.prepare(1,sim.BUILDS.find(b=>b.id===build),501,{...sim.DEFAULTS,points:12});
  const room=card.edges.filter(([from])=>from===0).map(([,to])=>to).find(n=>card.nodes[n].kind==='combat');
- assert(c.visitRoom(room));assert(a.enter());a.state().run.eliteType='briarspine_horror';
+ assert(c.visitRoom(room));assert(a.enter());a.state().run.eliteType='the_gilded';
  const r=a.encounter({elite:true,count:1});return {a,c,r,sim};
 }
 test('native Horror encounters resolve with speed, paired daggers, DoT, magic and tank loadouts',()=>{
  for(const build of ['fury-bow','blood-fury','blood-decay','magic-decay','aegis-vitality']){
   const {a,c,r,sim}=horrorFixture(build);
-  assert.equal(r.enemy.eliteType,'briarspine_horror');
+  assert.equal(r.enemy.eliteType,'the_gilded');
   const row=sim.fight(a,c,2000);
   assert(!row.timedOut,build);assert(row.won||row.died,build);
  }
 });
 test('reflection uses actual primary HP loss, mitigates through block and Barrier, and settles a lethal trade once',()=>{
  const {a,c,r}=horrorFixture('aegis-vitality'),e=r.enemy;
- r.combatSeconds=13;e.stage82.bloomUntil=17;e.stage82.reflected=0;
+ r.combatSeconds=13;e.stage82.rebukeUntil=17;e.stage82.reflected=0;
  r.stats.blockChance=100;r.stats.blockReduction=.5;r.barrier=100;a.rng(.5);
  e.hp=e.maxhp=1000;e.barrier=9999;
- a.gear.weaponAttack(r);assert.equal(r.metrics.thornbloomHits||0,0);
+ a.gear.weaponAttack(r);assert.equal(r.metrics.solarRebukeHits||0,0);
  e.barrier=0;const before=r.hp;
- a.gear.weaponAttack(r);assert.equal(r.metrics.thornbloomHits,1);
+ a.gear.weaponAttack(r);assert.equal(r.metrics.solarRebukeHits,1);
  assert.equal(r.hp,before);assert(r.barrier<100);
  assert(100-r.barrier<=e.stage82.reflected*.5+1e-9);
  r.barrier=0;r.stats.blockChance=0;r.hp=.001;e.hp=1;
  a.gear.weaponAttack(r);assert.equal(c.state.stage,'failed');assert(e.hp<=0);
  assert.equal(a.results().summary.outcome,'defeat');
 });
-test('periodic damage during Thornbloom does not trigger reflection',()=>{
+test('periodic damage during Solar Rebuke does not trigger reflection',()=>{
  const {a,r}=horrorFixture('blood-decay'),e=r.enemy;
- e.stage82.bloomUntil=17;e.stage82.reflected=0;r.combatSeconds=13;
+ e.stage82.rebukeUntil=17;e.stage82.reflected=0;r.combatSeconds=13;
  r.stats.attacksPerSec=0;r.tPlayer=0;r.tDot=1;
  e.dots.bleed=[{damage:4,remaining:2}];e.bleed=4;e.bleedStacks=1;
- const hp=e.hp;a.tick();assert(e.hp<hp);assert.equal(r.metrics.thornbloomHits||0,0);
+ const hp=e.hp;
+ // A fresh Bleed starts its own clock on the first native tick.
+ for(let i=0;i<30&&e.hp===hp;i++)a.tick();
+ assert(e.hp<hp);assert(r.combatSeconds<e.stage82.rebukeUntil);assert.equal(r.metrics.solarRebukeHits||0,0);
 });

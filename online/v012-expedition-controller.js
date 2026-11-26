@@ -3,7 +3,7 @@
 (function(root){
 'use strict';
 const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
-const FAMILY_NAMES=Object.freeze({blood:'Blood',decay:'Decay',vitality:'Vitality',aegis:'Aegis',fury:'Fury',magic:'Magic'});
+const FAMILY_NAMES=Object.freeze({blood:'Blood',decay:'Decay',vitality:'Radiance',aegis:'Aegis',fury:'Fury',magic:'Arcane'});
 const THEME_FAMILIES=Object.freeze({
  temple:'decay',forge:'blood',crypt:'fury',bastion:'fury',frost:'magic',ash:'magic',
  void:'decay',ward:'aegis',grove:'vitality',shrine:'vitality',storm:'magic',

@@ -527,4 +527,4 @@ body.phase3IntegratedPreview #scene .combatLinkFx.is-self::after{
  body.phase3IntegratedPreview #scene .combatLinkFx{display:none}
 }
 .role-oathbound_exarch .arenaSprite img{filter:drop-shadow(0 0 5px #8cbcff)}
-.role-briarspine_horror .enemyAbilityStatus.is-guarding{color:#d7fbaa;background:#213922}
+.role-the_gilded .enemyAbilityStatus.is-guarding{color:#fff1d4;background:#493619}

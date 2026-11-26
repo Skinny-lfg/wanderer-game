@@ -1032,14 +1032,14 @@ function rerollPoorBoonAtShrine(a,offer,profile,history){
  if(best&&boonScore(best,profile,context)>=12)return false;
  return usePotionKind(a,'fate','reroll_weak_boon_offer',history);
 }
-// The player can switch to another real enemy while Briarspine Horror's
-// Thornbloom reflection is active. This is a target decision, not an invulnerability
+// The player can switch to another real enemy while The Gilded's
+// Solar Rebuke reflection is active. This is a target decision, not an invulnerability
 // window, attack-speed change or artificial loss of DPS.
 function selectThornAwareTarget(run,profile){
  const normal=S.selectTarget(run,profile.target),stage=normal?.stage82;
- if(stage?.type!=='briarspine_horror'||!(stage.bloomUntil>(run.combatSeconds||0)))return normal;
+ if(stage?.type!=='the_gilded'||!(stage.rebukeUntil>(run.combatSeconds||0)))return normal;
  return (run.enemies||[]).find(enemy=>enemy?.hp>0&&enemy!==normal&&
-  enemy.stage82?.type!=='briarspine_horror')||normal;
+  enemy.stage82?.type!=='the_gilded')||normal;
 }
 function fightNatural(a,profile,tickLimit,context={}){
  const r=a.state().run;
@@ -1083,12 +1083,12 @@ function fightNatural(a,profile,tickLimit,context={}){
    // another target is dangerous. Mechanics-aware profiles remain reactive.
    let next=adaptive&&profile.target!=='focus'
     ?AGENT.selectTarget(r,cap?{...cap,rotCycleReady:(a.build()?.cooldowns?.corruptionCycle??-Infinity)<=(r.combatSeconds||0)}:null,baseline):selectThornAwareTarget(r,profile);
-   // Thornbloom counterplay uses live visible enemy status only.
-   if(next?.stage82?.type==='briarspine_horror'&&
-      next.stage82.bloomUntil>(r.combatSeconds||0)){
+   // Solar Rebuke counterplay uses live visible enemy status only.
+   if(next?.stage82?.type==='the_gilded'&&
+      next.stage82.rebukeUntil>(r.combatSeconds||0)){
     const safe=(r.enemies||[]).find(e=>e?.hp>0&&e!==next);
     if(safe){next=safe;thornRedirects++;}
-   }else if(next!==baseline&&next?.stage82?.type==='briarspine_horror')thornRedirects++;
+   }else if(next!==baseline&&next?.stage82?.type==='the_gilded')thornRedirects++;
    if(next&&a.selectCombatTarget(r,next)){switches++;
     if(next.stage83Summoned&&next.stage83Summoner==='elite')minionFocusSwitches++;}
   }

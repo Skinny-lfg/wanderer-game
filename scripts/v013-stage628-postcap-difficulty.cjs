@@ -8,7 +8,7 @@ const S=require('./simulate-progression.cjs');
 const T=globalThis.WandererAutomaticTalents;
 const FAMILIES=Object.freeze(['blood','decay','vitality','aegis','fury','magic']);
 const ELITES=Object.freeze(['tank','berserker','vampire','caster','gravecaller',
- 'oathbound_exarch','briarspine_horror','ashen_executioner']);
+ 'oathbound_exarch','the_gilded','ashen_executioner']);
 const LEVELS=Object.freeze([1,5,20,35,55,70,100,150,200]);
 const BANDS=Object.freeze([[1,5],[6,20],[21,35],[36,55],[56,70],[71,100],[101,150],[151,200]]);
 const GROUPS=Object.freeze([1,2,3,6,12]);

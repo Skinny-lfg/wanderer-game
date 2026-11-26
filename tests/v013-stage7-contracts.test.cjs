@@ -286,7 +286,7 @@ test('Stage 7.2 canonical reward plan cannot be replaced, increased or changed i
  const base=clone(g),selected=d.foundationState.contractId,prize=d.stage72RewardPlan.rewards[selected];
  const mutations=[
   state=>{state.dungeon.stage72RewardPlan.rewards[selected]={kind:'essence',essence:9999};},
-  state=>{state.dungeon.stage72RewardPlan.rewards[selected]={kind:'blueprint',recipeId:'epic_sanguine_edge'};},
+  state=>{state.dungeon.stage72RewardPlan.rewards[selected]={kind:'blueprint',recipeId:'epic_parting_blade'};},
   state=>{state.dungeon.stage72RewardPlan.knownRecipes.push('unknown');},
   state=>{state.dungeon.stage72RewardPlan.ids.reverse();}
  ];

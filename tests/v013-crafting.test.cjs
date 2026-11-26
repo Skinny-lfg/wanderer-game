@@ -6,20 +6,20 @@ function unlock(p,family,boss=false){return C.award(p,{family,boss});}
 test('catalog covers every weapon, physical armor slot, and three known craft rarities',()=>{assert.equal(new Set(C.RECIPES.map(r=>r.id)).size,C.RECIPES.length);for(const type of ['Sword','Mace','Bow','Daggers','Two-Handed','Staff','Wand'])assert(C.RECIPES.some(r=>r.rarity==='Uncommon'&&r.subtype===type));for(const slot of ['helm','armor','gloves','boots','belt'])for(const type of ['Cloth','Plate','Leather'])assert(C.RECIPES.some(r=>r.slot===slot&&r.subtype===type&&r.rarity==='Uncommon'));assert.deepEqual([...new Set(C.RECIPES.map(r=>r.rarity))],['Uncommon','Rare','Epic']);assert(C.RECIPES.filter(r=>r.rarity==='Epic').every(r=>C.TRAITS[r.trait]));});
 test('Realm grants materials but Blueprints require explicit discovery',()=>{
  let p=C.create();assert(C.unlocked(p,'green_sword'));assert(!C.unlocked(p,'blue_sword'));
- p=unlock(p,'blood');assert.equal(p.essence,1);assert(!C.unlocked(p,'blue_sword'));assert(!C.unlocked(p,'epic_sanguine_edge'));
+ p=unlock(p,'blood');assert.equal(p.essence,1);assert(!C.unlocked(p,'blue_sword'));assert(!C.unlocked(p,'epic_parting_blade'));
  p=unlock(p,'blood',true);assert.equal(p.essence,6);assert.equal(p.cores.blood,1);
  const learned=C.discover(p,'blue_sword');assert(learned);assert(C.unlocked(learned,'blue_sword'));assert(!C.unlocked(p,'blue_sword'));
  assert.equal(C.discover(learned,'blue_sword'),null,'duplicates must not be rewarded');
  assert.equal(C.discover(learned,'green_sword'),null,'starter Blueprints are already known');
  assert.equal(C.discover(learned,'missing'),null);
- assert(!C.unlocked(learned,'epic_sanguine_edge'));
- assert(C.unlocked(C.discover(learned,'epic_sanguine_edge'),'epic_sanguine_edge'));
+ assert(!C.unlocked(learned,'epic_parting_blade'));
+ assert(C.unlocked(C.discover(learned,'epic_parting_blade'),'epic_parting_blade'));
  assert(C.valid(learned));
 });
 test('resources are awarded per completed encounter and failure grants none',()=>{const original=C.create(),a=C.award(original,{family:'fury',completed:false});assert.equal(JSON.stringify(a),JSON.stringify(original));assert.equal(C.award(original,{family:'fury',elite:true}).essence,2);assert.equal(C.award(original,{family:'fury',event:true}).essence,1);assert.equal(original.essence,0);assert.throws(()=>C.award(original,{family:'unknown'}),/Invalid crafting encounter/);});
 test('Blueprint progress reports locked recipes, costs and material sources',()=>{
- const s=state(),p=C.progress(s,'epic_sanguine_edge',3);
- assert.equal(p.recipe.id,'epic_sanguine_edge');assert.equal(p.cost.tier,3);
+ const s=state(),p=C.progress(s,'epic_parting_blade',3);
+ assert.equal(p.recipe.id,'epic_parting_blade');assert.equal(p.cost.tier,3);
  assert.equal(p.unlocked,false);assert.equal(p.ready,false);
  assert.equal(p.requirements.find(x=>x.key==='cores').need,4);
  assert.match(p.requirements.find(x=>x.key==='cores').source,/blood/);
@@ -51,7 +51,7 @@ test('Forge has no Essence-paid focus and recipe output does not alter rolled ar
  assert.equal(crafted.crafting.essence,0);
 });
 test('insufficient resources, unknown or locked recipes never call the item factory',()=>{const s=state();let calls=0;const make=(...args)=>{calls++;return factory(...args);};assert.equal(C.prepareCraft(s,'green_sword',1,make),null);s.crafting.essence=1000;assert.equal(C.prepareCraft(s,'blue_sword',1,make),null);assert.equal(C.prepareCraft(s,'missing',1,make),null);s.fragments=0;assert.equal(C.prepareCraft(s,'green_sword',1,make),null);assert.equal(calls,0);});
-test('Epic recipes require affinity reagents and apply exactly their functional trait',()=>{const s=state();s.crafting=unlock(s.crafting,'blood');s.crafting=C.discover(s.crafting,'epic_sanguine_edge');s.crafting.essence=55;s.crafting.cores.blood=3;assert.equal(C.prepareCraft(s,'epic_sanguine_edge',1,factory),null);s.crafting.cores.blood=4;const result=C.prepareCraft(s,'epic_sanguine_edge',1,factory);assert(result);assert.equal(result.item.v013Trait,'blood_transfer');assert.equal(result.item.rarity,'Epic');assert.equal(result.crafting.cores.blood,0);assert.equal(result.crafting.essence,0);assert.equal(s.crafting.cores.blood,4);});
+test('Epic recipes require affinity reagents and apply exactly their functional trait',()=>{const s=state();s.crafting=unlock(s.crafting,'blood');s.crafting=C.discover(s.crafting,'epic_parting_blade');s.crafting.essence=55;s.crafting.cores.blood=3;assert.equal(C.prepareCraft(s,'epic_parting_blade',1,factory),null);s.crafting.cores.blood=4;const result=C.prepareCraft(s,'epic_parting_blade',1,factory);assert(result);assert.equal(result.item.v013Trait,'blood_transfer');assert.equal(result.item.rarity,'Epic');assert.equal(result.crafting.cores.blood,0);assert.equal(result.crafting.essence,0);assert.equal(s.crafting.cores.blood,4);});
 test('refining respects family, cost and one conversion per drought',()=>{let p=C.create();p.essence=3;for(let i=0;i<3;i++)p=unlock(p,'blood');assert.equal(C.refine(p,'fury'),null);const next=C.refine(p,'blood');assert.equal(next.essence,0);assert.equal(next.cores.blood,1);assert.equal(C.refine(next,'blood'),null);assert.equal(p.cores.blood,0);assert(!C.valid({...p,dryRooms:{blood:4}}));});
 test('invalid stored materials and impossible unlock provenance are rejected',()=>{const p=C.create();assert(C.valid(p));for(const mutate of [p=>p.essence=-1,p=>p.essence=.5,p=>p.cores.unknown=1,p=>p.cores.blood=Infinity,p=>p.realmFamilies=['blood','blood'],p=>p.bossFamilies=['blood'],p=>p.learnedRecipes=['missing']]){const broken=JSON.parse(JSON.stringify(p));mutate(broken);assert(!C.valid(broken));}assert.throws(()=>C.progress({fragments:1,crafting:{}}),/Invalid crafting progress/);});
 test('an invalid item factory cannot deduct materials',()=>{const s=state();s.crafting.essence=4;const before=JSON.stringify(s);assert.equal(C.prepareCraft(s,'green_sword',1,()=>({id:'wrong',slot:'armor',rarity:'Epic'})),null);assert.equal(JSON.stringify(s),before);});

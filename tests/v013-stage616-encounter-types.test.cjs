@@ -10,13 +10,13 @@ test('Exact eight real native group sizes plus Elite and Boss are distinct',()=>
 });
 test('Stage 6.16 report maps all eight native Elite IDs to in-game names only for display',()=>{
  const expected={
-  tank:'Gravebound Bulwark',
+  tank:'The Pallbearer',
   berserker:'Bloodscar Ravager',
-  vampire:'Sanguine Wraith',
+  vampire:'The Thirst',
   caster:'Voidborne Hexer',
   gravecaller:'Gravecaller',
-  oathbound_exarch:'Oathbound Exarch',
-  briarspine_horror:'Briarspine Horror',
+  oathbound_exarch:'The Shepherd',
+  the_gilded:'The Gilded',
   ashen_executioner:'Ashen Executioner'
  };
  assert.deepEqual(E.ELITE_DISPLAY_NAMES,expected);
