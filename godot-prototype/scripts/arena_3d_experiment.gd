@@ -17,18 +17,20 @@ var materials: Dictionary = {}
 var missing: Array[String] = []
 var fighters: Node3D
 var shadow_texture: ImageTexture
+var fire_lights: Array[OmniLight3D] = []
+var fire_time := 0.0
 
 func _ready() -> void:
 	var world := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#181921")
+	env.background_color = Color("#06070b")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("#b7ad9e")
-	env.ambient_light_energy = 0.32
+	env.ambient_light_energy = 0.07
 	env.fog_enabled = true
-	env.fog_light_color = Color("#292d38")
-	env.fog_density = 0.006
+	env.fog_light_color = Color("#08090e")
+	env.fog_density = 0.035
 	world.environment = env
 	add_child(world)
 	camera = Camera3D.new()
@@ -41,13 +43,13 @@ func _ready() -> void:
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees = Vector3(-48, -38, 0)
 	key.light_color = Color("#f1dfca")
-	key.light_energy = 1.35
+	key.light_energy = 0.28
 	key.shadow_enabled = true
 	add_child(key)
 	var rim := DirectionalLight3D.new()
 	rim.rotation_degrees = Vector3(-28, 145, 0)
 	rim.light_color = Color("#98add6")
-	rim.light_energy = 0.32
+	rim.light_energy = 0.12
 	add_child(rim)
 	# Repeat the imported floor mesh, aligning its upper surface to Y=0.
 	# Intentional small overlap avoids cracks between normalized tiles.
@@ -103,7 +105,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_1: _set_view(0)
 			KEY_2: _set_view(1)
-			KEY_3: _set_view(2)
 			KEY_SPACE: fighters.visible = not fighters.visible
 			KEY_H: hud.visible = not hud.visible
 
@@ -120,16 +121,10 @@ func _set_view(index: int) -> void:
 			positions = [Vector3(-5.0, 0, 1.4), Vector3(1.0, 0, -1.5), Vector3(5.0, 0, -1.5), Vector3(1.8, 0, 2.8), Vector3(5.8, 0, 2.8)]
 		1:
 			camera.projection = Camera3D.PROJECTION_PERSPECTIVE
-			camera.fov = 49.0
-			camera.position = Vector3(-11.5, 5.6, 10.5)
-			aim = Vector3(1.0, 1.3, -0.4)
-			positions = [Vector3(-5.0, 0, 3.4), Vector3(1.8, 0, -3.1), Vector3(5.4, 0, -2.4), Vector3(1.8, 0, 0.8), Vector3(6.0, 0, 1.5)]
-		2:
-			camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-			camera.size = 15.0
-			camera.position = Vector3(0, 20.0, 10.0)
-			aim = Vector3(0, 0, 0)
-			positions = [Vector3(-5.0, 0, 0.8), Vector3(0.7, 0, -2.2), Vector3(5.0, 0, -2.2), Vector3(0.7, 0, 2.5), Vector3(5.0, 0, 2.5)]
+			camera.fov = 48.0
+			camera.position = Vector3(-8.8, 3.9, 12.8)
+			aim = Vector3(0.5, 1.45, 0.0)
+			positions = [Vector3(-4.4, 0, 2.4), Vector3(0.9, 0, -2.8), Vector3(4.5, 0, -2.4), Vector3(1.2, 0, 1.4), Vector3(5.0, 0, 2.5)]
 	camera.look_at(aim)
 	for i in range(fighter_roots.size()):
 		if i >= positions.size():
@@ -137,16 +132,12 @@ func _set_view(index: int) -> void:
 		fighter_roots[i].position = positions[i]
 		var sprite := fighter_sprites[i]
 		var height := fighter_heights[i]
-		if index == 2:
-			sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			sprite.position = camera.global_transform.basis.y * height * 0.5 + Vector3(0, 0.04, 0)
-		else:
-			sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
-			sprite.position = Vector3(0, height * 0.5 + 0.04, 0)
+		sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+		sprite.position = Vector3(0, height * 0.5 + 0.04, 0)
 	for i in range(mode_buttons.size()):
 		mode_buttons[i].set_pressed_no_signal(i == index)
 	if mode_hint != null:
-		mode_hint.text = ["Side view", "Over-shoulder inspired", "Elevated tactical view"][index] + ("  |  LEGACY SPRITES: install V2 pack" if using_fallback else "")
+		mode_hint.text = ["Side view", "Cinematic duel"][index] + ("  |  LEGACY SPRITES: install V2 pack" if using_fallback else "")
 
 func _panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -212,9 +203,9 @@ func _build_hud() -> void:
 	mode_hint = _make_label("", 12, Color("#b7aa99"))
 	heading.add_child(mode_hint)
 	var group := ButtonGroup.new()
-	for i in range(3):
+	for i in range(2):
 		var button := Button.new()
-		button.text = ["1  Side", "2  Duel", "3  Tactical"][i]
+		button.text = ["1  Side", "2  Duel"][i]
 		button.toggle_mode = true
 		button.button_group = group
 		button.custom_minimum_size = Vector2(105, 34)
@@ -257,7 +248,7 @@ func _build_hud() -> void:
 		roster.add_child(enemy)
 		enemy.add_child(_make_label(names[i], 13))
 		enemy.add_child(_stat_bar([100.0, 76.0, 92.0, 64.0][i], Color("#973a42")))
-	foes.add_child(_make_label("1–3  Camera   |   H  HUD   |   Space  Sprites  ·  Illustrative stats only", 12, Color("#b7aa99")))
+	foes.add_child(_make_label("1–2  Camera   |   H  HUD   |   Space  Sprites  ·  Illustrative stats only", 12, Color("#b7aa99")))
 
 func _load_model(key: String) -> PackedScene:
 	if scenes.has(key):
@@ -362,16 +353,47 @@ func _warm_light(at: Vector3) -> void:
 	var light := OmniLight3D.new()
 	light.position = at
 	light.light_color = Color("#ffb570")
-	light.light_energy = 2.1
-	light.omni_range = 5.8
+	light.light_energy = 4.0
+	light.omni_range = 5.2
+	light.omni_attenuation = 1.5
+	light.shadow_enabled = true
 	add_child(light)
+	fire_lights.append(light)
+	_add_embers(at)
+
+func _process(delta: float) -> void:
+	fire_time += delta
+	for i in range(fire_lights.size()):
+		fire_lights[i].light_energy = 4.0 + 0.22 * sin(fire_time * 7.0 + i * 2.0) + 0.12 * sin(fire_time * 13.0 + i)
+
+func _add_embers(at: Vector3) -> void:
+	var particles := CPUParticles3D.new()
+	particles.position = at
+	particles.amount = 18
+	particles.lifetime = 2.0
+	particles.direction = Vector3.UP
+	particles.spread = 22.0
+	particles.gravity = Vector3(0, 0.15, 0)
+	particles.initial_velocity_min = 0.3
+	particles.initial_velocity_max = 0.9
+	particles.scale_amount_min = 0.4
+	particles.scale_amount_max = 1.0
+	var mesh := QuadMesh.new()
+	mesh.size = Vector2(0.035, 0.035)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.albedo_color = Color("#f5a450")
+	mesh.material = mat
+	particles.mesh = mesh
+	add_child(particles)
 
 func _make_shadow() -> ImageTexture:
 	var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
 	for y in range(64):
 		for x in range(64):
 			var r := Vector2((x - 31.5) / 31.5, (y - 31.5) / 31.5).length()
-			image.set_pixel(x, y, Color(0.02, 0.02, 0.035, pow(maxf(0.0, 1.0 - r), 1.4) * 0.86))
+			image.set_pixel(x, y, Color(0.02, 0.02, 0.035, pow(maxf(0.0, 1.0 - r), 0.85) * 0.95))
 	return ImageTexture.create_from_image(image)
 
 func _fighter(filename: String, fallback: String, height: float) -> void:
@@ -384,9 +406,10 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 	var shadow := Sprite3D.new()
 	shadow.texture = shadow_texture
 	shadow.pixel_size = 2.4 / 64.0
-	shadow.scale.y = 0.60
+	shadow.scale.y = 0.48
 	shadow.rotation_degrees.x = -90.0
-	shadow.position = Vector3(0, 0.035, 0)
+	shadow.position = Vector3(0, 0.025, 0)
+	shadow.shaded = false
 	root.add_child(shadow)
 	var sprite := Sprite3D.new()
 	if ResourceLoader.exists(path):
@@ -398,6 +421,8 @@ func _fighter(filename: String, fallback: String, height: float) -> void:
 		missing.append(filename)
 	sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 	sprite.shaded = false
+	# Keep painted character colors readable independently of the dark environment.
+	sprite.modulate = Color(0.88, 0.84, 0.80, 1.0)
 	sprite.position = Vector3(0, height * 0.5 + 0.04, 0)
 	root.add_child(sprite)
 	fighter_roots.append(root)
