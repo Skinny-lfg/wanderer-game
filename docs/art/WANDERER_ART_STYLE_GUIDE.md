@@ -1,6 +1,6 @@
 # Wanderer — Art Style Guide
-## Stylized Gothic Painterly — v1.2 (G2.4A.4)
-Date: 2026-11-26. Status: core artistic direction approved by owner after G2.4A.3; individual production assets and experimental Vitality palette still require validation. Mockup screen layouts are not approved. Revise this document when the owner approves changes; do not silently turn proposals into final assets.
+## Stylized Gothic Painterly — v1.3 (B3)
+Date: 2026-11-26. Status: core artistic direction approved by owner after G2.4A.3; individual production assets and experimental Vitality palette still require validation. Mockup screen layouts are not approved. Seventh Reach brand direction approved; B2 core assets validated with reservations, integration pending. Revise this document when the owner approves changes; do not silently turn proposals into final assets.
 
 ## Mandatory workflow
 Before creating, editing, commissioning or integrating any Wanderer art (images, concept art, UI, icons, items, characters, sprites, NPCs, enemies, environments or VFX), read this guide and inspect the original approved reference images when accessible. Treat those images as the primary style reference, not generic dark fantasy examples. If they cannot be opened, say so; do not claim visual verification. Apply this guide to the asset's function and real in-game scale. Preserve previously approved assets and G2.3B composition unless the owner explicitly requests redesign. No unapproved production changes.
@@ -73,6 +73,39 @@ Avoid photorealism, cartoon proportions, anime aesthetics, glossy plastic materi
 
 For isolated game assets, use clean silhouettes, consistent lighting, appropriate framing and transparent backgrounds where required.
 
+## Seventh Reach — brand identity (B3)
+**Status:** owner-approved creative name and visual direction, 2026-11-26. Seventh Reach is the public-facing creative identity; Wanderer remains the historical and technical project identifier until a controlled rebranding stage. Trademark availability is not confirmed. This section does not authorize changes to gameplay, save formats, internal identifiers, repository names or existing UI layouts.
+
+### Approved composition
+- Stylized Gothic Painterly, based on the owner-selected painted ivory-and-antique-gold logo and brand board. Preserve the actual approved master, not a fresh approximation; the B2 pack contains the master used for production.
+- Widely spaced uppercase serif SEVENTH above dominant, sculpted REACH; warm ivory faces, gold/bronze bevels, visible brushwork, painted directional shadows and restrained highlights. No photorealistic metallic sheen or excessive bloom.
+- Two subordinate concentric rings; six neutral faceted exterior fragments (one at top, one at bottom, four diagonals), representing the six Realms and Affinities. The seventh fragment in the A of REACH represents The Origin and the convergence of power. The isolated emblem has exactly six exterior fragments and one central fragment, with no text.
+- Preserve the typography-first hierarchy and symmetric, discreet inward lines. No additional lower flare, portal above the title, invented elemental glyphs, heavy stone plaque, giant crest or extra lateral fragments. Neutral across Affinities. The main brand is not a fire or Radiance emblem.
+- Brand materials follow the existing base palette: Obsidian, Worn Leather, Aged Bronze, Antique Gold and Ancient Ivory. Existing palette values are design references, not sampled logo colors; no specific commercial font is approved by this update.
+
+### Variant roles and current asset status
+| Asset | Intended use | B2 status |
+|---|---|---|
+| 01_full_logo.png | Main menu, title presentation | Master preserved; ready as visual base |
+| 02_logo_transparent.png | Dark UI, scenery, promotional overlays | RGBA verified; fully opaque RGB pixels match master; avoid light backgrounds |
+| 03_wordmark_transparent.png | Headers and compact UI | Stacked text without rings; 36 px transparent margin on every side, 1309 × 423 px |
+| 04_symbol_dark.png / 04_symbol_transparent.png | Loading, game icon | Six exterior nodes and one central node |
+| 05_ancient_ruins.png | Thematic presentation | Provisional; more natural weathering and moss required |
+| 06_forge.png | Thematic presentation | Provisional color/atmosphere treatment; acceptable base |
+| 07_arcane.png | Thematic presentation | Provisional color/atmosphere treatment; acceptable base |
+| 08_classic_painted.png | Lore, parchment, light backgrounds | Provisional; improve SEVENTH contrast before use |
+The four thematic treatments are derivatives of the main master, not separately painted final illustrations, and must preserve its geometry and letterforms. They do not define new Affinities or replace the main logo.
+
+### Production specification and validation
+B1/B2 local delivery: `Seventh_Reach_B2_Validated_Pack.zip` (27 files; PNG, ICO, README and two inspection images). ZIP integrity rechecked in B3. Main logo and transparent master are 1448 × 1086 px, not native 4K. Symbol masters are 1086 × 1086 px. Do not claim native 4K or final production quality by upscaling. Pack is not yet uploaded to GitHub or Drive.
+- Icons: simplified technical derivative for 16, 32 and 48 px; original painterly treatment at 64, 128, 256 and 512 px. Both dark-background icon and transparent symbol PNGs. Favicon ICO has distinct PNG frames at 16/32/48/64/128/256 px.
+- Validate alpha, clean edges, absence of baked checkerboards, legibility, safe margins, six-plus-one node count and typography consistency. Use the actual asset at intended display size. Transparent logo is primarily for dark backgrounds; use a suitable contrast treatment on bright scenes, not an unapproved recolor.
+- B2 provides a usable core brand base with reservations: thematic refinements, higher native resolution and in-game visual testing are pending. The selected style board is a reference, not a substitute for individual assets.
+- B4 integration remains separate: import approved core assets, replace only public-facing branding (main menu, title, loading, favicon and relevant metadata), preserve existing internal IDs and saves, test actual desktop and mobile layouts, and avoid touching gameplay. No integration performed in B3.
+
+### Canonical naming note
+The Lore Bible now uses Radiance (formerly Vitality) and Arcane (formerly Magic). The palette table above remains a record of the existing artistic color proposals; these naming changes do not approve new functional colors or change the prior experimental Golden Life palette status.
+
 ## Validation and next stages
 G2.4A.1 elite analysis, G2.4A.2 style guide, G2.4A.3 experimental boards and G2.4A.4 core artistic direction validation complete. Owner liked the second experimental asset board and individual elements, but noted that mockup layouts were too boxy. Preserve G2.3B composition; reduce ornamentation, especially repetitive bag slots, bars and secondary buttons. Production proceeds by component family, with individual visual approval before integration. G2.4B.1 Materials & Surfaces: test dark neutral interior surfaces, forged iron, aged bronze, leather, stone and fabric; no ornament, frames or text in usable textures. Keep surface texture subtle behind text and icons; prefer reusable seamless textures, validate tiling before calling them production-ready. Subsequent stages: slots/frames, buttons/navigation, resource bars, iconography, equipment art, Godot integration and visual audit.
 For each new asset: compare to approved elite references; verify materials, silhouette, lighting, detail hierarchy and readability at intended size; validate transparency and edges where relevant; check existing UI composition at 1280×720 and 1920×1080 when integrating. Report any limitations; never describe untested assets as validated. Update guide with approved decisions and version history.
@@ -83,3 +116,5 @@ For each new asset: compare to approved elite references; verify materials, silh
 - v1.1 — Aegis blue direction requested by owner; Golden Life Vitality authorized for experimentation only. No game or asset color changes.
 
 - v1.2 — Core painterly asset style approved for progressive production; mockup compositions rejected as too boxy. Materials & Surfaces begins; no game or asset changes.
+
+- v1.3 — B3: Seventh Reach brand identity and B2 asset specifications documented; existing artistic pillars, UI composition, gameplay and functional colors unchanged. Brand integration and remaining asset refinements pending.
