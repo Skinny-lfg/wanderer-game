@@ -91,13 +91,13 @@ function resolve(run,enemy,now){
    target.stage81??={family:state.family,role:target.role};
    target.stage81.charges=Math.min(2,(target.stage81.charges||0)+1);
    target.stage81.chargePower=Math.max(target.stage81.chargePower||0,definition.power);
-   target.stage81.chargedUntil=now+3.2;label='Enraged';result=1;
+   target.stage81.chargedUntil=now+3.2;label='Empowered';result=1;
    break;
   }
   case 'strike':{
    state.charges=definition.count||1;state.chargePower=definition.power;
    state.chargeEffect=definition.secondary||null;state.chargedUntil=now+3.2;
-   label='Enraged';result=state.charges;break;
+   label='Empowered';result=state.charges;break;
   }
   case 'weakening_hex':{
    run.playerDebuffUntil=Math.max(run.playerDebuffUntil||0,(run.phase1ClockBase||0)+now+2.2);
@@ -202,8 +202,8 @@ function status(enemy,now){
  if(enemy.stage81GuardUntil>now)return {kind:'guarding',label:'Guarding',detail:'Protected',remaining:enemy.stage81GuardUntil-now};
  if(s.role==='minion')return null;
  if(s.castingUntil>now)return {kind:'casting',label:'Casting',detail:s.name,remaining:Math.max(0,s.castingUntil-now)};
- if(s.charges>0&&s.chargedUntil>now)return {kind:'enraged',label:'Enraged',detail:s.name,remaining:Math.max(0,s.chargedUntil-now)};
- if(s.statusUntil>now)return {kind:s.status==='Enraged'?'enraged':s.status==='Interrupted'?'interrupted':'guarding',label:s.status,detail:s.name,remaining:s.statusUntil-now};
+ if(s.charges>0&&s.chargedUntil>now)return {kind:'enraged',label:'Empowered',detail:s.name,remaining:Math.max(0,s.chargedUntil-now)};
+ if(s.statusUntil>now)return {kind:s.status==='Empowered'?'enraged':s.status==='Interrupted'?'interrupted':'guarding',label:s.status,detail:s.name,remaining:s.statusUntil-now};
  return null;
 }
 function describe(enemy){

@@ -87,7 +87,7 @@ test('Fury rally and skirmisher rush are bounded queued attacks, not permanent D
  advance(r,tank,tank.stage81.nextAt);
  advance(r,tank,tank.stage81.castingUntil+.01);
  assert.equal(fighter.stage81.charges,1);
- assert(A.status(fighter,r.combatSeconds).label==='Enraged');
+ assert(A.status(fighter,r.combatSeconds).label==='Empowered');
  const bonus=A.consumeStrike(fighter,r.combatSeconds);assert(bonus?.bonus>.1);
  assert.equal(A.consumeStrike(fighter,r.combatSeconds),null);
  fighter.stage81.nextAt=r.combatSeconds+.2;
@@ -127,7 +127,7 @@ test('Minion passives require at least two living Minions of same Affinity and s
   two.hp=0;assert.equal(A.packFactor(r,one),1);assert.equal(A.directFactor(r,one),1);
  }
 });
-test('Stage 8.1 UI includes live Casting/Guarding/Enraged indicators and class tooltips',()=>{
+test('Stage 8.1 UI includes live Casting/Guarding/Empowered indicators and class tooltips',()=>{
  const src=fs.readFileSync('index.html','utf8');
  const css=fs.readFileSync('online/v013-combat-arena.css','utf8');
  assert(src.includes('online/v013-enemy-abilities.js'));

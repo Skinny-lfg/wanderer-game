@@ -149,7 +149,10 @@ function activeLegendarySignatures(){
 function legendaryRuntime(r){
  if(!r.legendaryState)r.legendaryState={};
  const t=r.legendaryState;
- if((ports.legendaryHas('veil-thousand-seals')||ports.legendaryHas('heartroot-carapace'))&&t.realm!==r.phase1Plane){t.realm=r.phase1Plane;t.veilGranted=false;t.veilBarrier=0;t.veilEarlierBarrier=0;t.veilReady=0;t.heartrootHealed=0;}
+ if(t.realm!==r.phase1Plane){t.realm=r.phase1Plane;t.heartrootHealed=0;}
+ if(t.encounter!==r.phase1Plane+':'+r.enc){
+  t.encounter=r.phase1Plane+':'+r.enc;t.veilGranted=false;t.veilBarrier=0;t.veilEarlierBarrier=0;t.veilReady=0;t.heartrootEncounterHeal=0;
+ }
  if(t.enemy!==r.enemy){t.enemy=r.enemy;t.markUntil=0;t.marked=false;t.weaken=0;t.killUsed=false;}
  return t;
 }
@@ -160,7 +163,7 @@ function legendaryProc(r,id){if(!ports.legendaryReady(r,id))return false;ports.p
 
 function legendaryReady(r,id){
  const d=globalThis.WandererLegendary?.DEFINITIONS[id];
- if(!d||!ports.legendaryHas(id)||!ports.setReady(r,'legendary:'+id,d.cooldown))return false;
+ if(!d||!ports.legendaryHas(id)||!ports.setReady(r,'legendary:'+id,id==='oathwall'&&r.stats?.main?.subtype==='Sword'?2.5:d.cooldown))return false;
  ports.addLog('✦ '+d.name,'good');return true;
 }
 
@@ -181,7 +184,7 @@ function legendaryAttackBonus(r,base,critical,cast){
  if(ports.legendaryHas('graft')&&ports.legendaryProc(r,'graft')){ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'graft')?.012:.008));t.verdantReady=ports.legendaryEmpowered(r,'graft')?.90:.60;}
  if(e.v012Rot?.length&&ports.legendaryHas('eye-of-morrow')&&ports.legendaryProc(r,'eye-of-morrow'))added+=Math.min(Math.round(base*(ports.legendaryEmpowered(r,'eye-of-morrow')?.85:.60)),Math.round(e.maxhp*(e.boss?.015:.025)));
  if(ports.legendaryHas('kingsbreaker')&&ports.legendaryProc(r,'kingsbreaker'))added+=Math.round(base*(ports.legendaryEmpowered(r,'kingsbreaker')?1.10:.80));
- if(critical&&ports.legendaryHas('tempest-talon')&&ports.legendaryProc(r,'tempest-talon'))added+=Math.round(base*(ports.legendaryEmpowered(r,'tempest-talon')?.35:.25));
+ if(critical&&ports.legendaryHas('tempest-talon')&&ports.legendaryProc(r,'tempest-talon'))added+=Math.round(base*(ports.legendaryEmpowered(r,'tempest-talon')?.45:.35));
  if(cast)added+=legendaryFundedBonus(r,r.legendaryFundedCost||0);
  return added;
 }
@@ -204,7 +207,7 @@ function spellCriticalDamage(r,amount){
 function legendaryOnHit(r,base,real){
  if(real<=0)return;
  const e=r.enemy;
- if(ports.legendaryHas('chalice-hollow-king')&&e.bleedStacks>0&&ports.legendaryProc(r,'chalice-hollow-king'))ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'chalice-hollow-king')?.015:.01));
+ if(ports.legendaryHas('chalice-hollow-king')&&e.bleedStacks>0&&ports.legendaryProc(r,'chalice-hollow-king'))ports.setHeal(r,r.maxhp*(ports.legendaryEmpowered(r,'chalice-hollow-king')?.015:.01)+ (r.hp<r.maxhp*.5?r.maxhp*.005:0));
  if(e.hp<=0)return;
  if(ports.legendaryHas('crimson-fang')&&ports.legendaryProc(r,'crimson-fang')){const dots=e.dots.bleed;dots.push({damage:WandererV012Buildcraft.dotPotency(Math.max(1,Math.round(WandererV012Buildcraft.bleedDamage(ports.phase1Build,base*(ports.legendaryEmpowered(r,'crimson-fang')?.16:.12)))),r.stats),remaining:4});ports.synchronizeDots(e);}
  if(ports.legendaryHas('gravewake')&&ports.legendaryProc(r,'gravewake'))WandererV012Buildcraft.applyRot(ports.phase1Build,ports.phase2Context(r),base*(ports.legendaryEmpowered(r,'gravewake')?.10:.07));
@@ -220,13 +223,13 @@ function legendaryDefensiveEffects(r,blocked,hit,absorbed=0,broken=false){
 function legendaryRealmStart(r){
  if(!ports.legendaryHas('veil-thousand-seals'))return;
  const t=ports.legendaryRuntime(r);
- if(ports.legendaryHas('veil-thousand-seals')&&!t.veilGranted){t.veilGranted=true;t.veilEarlierBarrier=r.barrier;t.veilBarrier=ports.setBarrier(r,r.maxhp*((r.stats?.main?.subtype==='Sword'&&r.stats?.off?.subtype==='Shield')?(ports.legendaryEmpowered(r,'veil-thousand-seals')?.04:.025):(ports.legendaryEmpowered(r,'veil-thousand-seals')?.06:.04)));if(t.veilBarrier>0)ports.phase6Proc(r,'Legendary: veil-thousand-seals: barrier');}
+ if(ports.legendaryHas('veil-thousand-seals')&&!t.veilGranted){t.veilGranted=true;t.veilEarlierBarrier=r.barrier;t.veilBarrier=ports.setBarrier(r,ports.legendaryEmpowered(r,'veil-thousand-seals')?r.maxhp*.04+(r.stats?.spellPower||0)*.08:r.maxhp*.03+(r.stats?.spellPower||0)*.05);if(t.veilBarrier>0)ports.phase6Proc(r,'Legendary: veil-thousand-seals: barrier');}
 }
 
 function legendaryTick(r,dt){
  const t=ports.legendaryRuntime(r);
  ports.legendaryRealmStart(r);
- if(ports.legendaryHas('heartroot-carapace')&&r.hp>0&&r.hp<r.maxhp*.7){const budget=Math.max(0,r.maxhp*.10-(t.heartrootHealed||0));if(budget>0){const healed=ports.setHeal(r,Math.min(budget/(1+Math.max(0,Number(r.stats?.healingPower)||0)),r.maxhp*(ports.legendaryEmpowered(r,'heartroot-carapace')?.003:.002)*dt));if(healed>0){t.heartrootHealed=(t.heartrootHealed||0)+healed;ports.phase6Proc(r,'Legendary: heartroot-carapace');}}}
+ if(ports.legendaryHas('heartroot-carapace')&&r.hp>0&&r.hp<r.maxhp*.7){const budget=Math.max(0,Math.min(r.maxhp*.16-(t.heartrootHealed||0),r.maxhp*.04-(t.heartrootEncounterHeal||0)));if(budget>0){const healed=ports.setHeal(r,Math.min(budget/(1+Math.max(0,Number(r.stats?.healingPower)||0)),r.maxhp*(ports.legendaryEmpowered(r,'heartroot-carapace')?.003:.002)*dt));if(healed>0){t.heartrootHealed=(t.heartrootHealed||0)+healed;t.heartrootEncounterHeal=(t.heartrootEncounterHeal||0)+healed;ports.phase6Proc(r,'Legendary: heartroot-carapace');}}}
 }
 
 
@@ -822,7 +825,7 @@ function updateFight(){
    else if(event.type==='activate'){
     ports.phase6Metric(r,'enemyAbilityCasts',1);
     ports.addLog('✦ '+event.enemy.name+' uses '+event.ability+(event.target!==event.enemy?' on '+event.target.name:'')+(event.result?' · '+event.result:''),'spell');
-     const visualKind=event.label==='Guarding'?'ward':event.label==='Renewing'?'heal':event.label==='Enraged'&&event.target!==event.enemy?'rally':null;
+     const visualKind=event.label==='Guarding'?'ward':event.label==='Renewing'?'heal':event.label==='Empowered'&&event.target!==event.enemy?'rally':null;
      if(visualKind&&event.result>0)ports.combatLinkEffect?.(r,visualKind,event.enemy,[event.target]);
    }
   }
@@ -975,7 +978,7 @@ function updateFight(){
    damageBlocked=Math.max(1,Math.round(raw*(barrierGuard?(s.blockReduction||.35):s.blockReduction)));raw-=damageBlocked;
    ports.addLog('🛡 BLOCK! Prevented '+damageBlocked+' damage','good');ports.animateDefense();
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
-   if(s.off?.subtype==='Shield'&&ports.legendaryHas('oathwall')&&ports.legendaryProc(r,'oathwall')){const baseFactor=s.main?.subtype==='Mace'?1.4:1;const base=Math.max(1,Math.round(s.attack*baseFactor-WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)));ports.setDirectEnemyDamage(r,base*(ports.legendaryEmpowered(r,'oathwall')?1.10:.75),'🛡 Oathwall Counterattack');if(e.hp<=0){ports.winEncounter();return;}}
+   if(s.off?.subtype==='Shield'&&ports.legendaryHas('oathwall')&&ports.legendaryProc(r,'oathwall')){const baseFactor=s.main?.subtype==='Mace'?1.4:1;const base=Math.max(1,Math.round(s.attack*baseFactor-WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)));ports.setDirectEnemyDamage(r,base*(ports.legendaryEmpowered(r,'oathwall')?(s.main?.subtype==='Mace'?1.25:1.20):.90),'🛡 Oathwall Counterattack');if(e.hp<=0){ports.winEncounter();return;}}
    if(s.off?.subtype==='Shield'&&s.main?.subtype==='Sword'&&!ports.legendaryHas('oathwall')&&ports.setReady(r,'shieldBaseCounter',2.5)){
     const baseFactor=s.main.subtype==='Mace'?1.4:1;
     const base=Math.max(1,Math.round(s.attack*baseFactor-WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)));
