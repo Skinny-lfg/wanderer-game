@@ -488,8 +488,7 @@ function offhandOnMainHit(r,hpDamage){
 function talentManaCost(amount,r){if(amount<=0)return 0;const reduction=Math.min(.25,Math.max(0,Number(r?.stats?.manaCostReduction)||0));return Math.max(1,Math.round(amount*(1-reduction)*100)/100);}
 function elementManaCost(b,kind,base){const mode=WandererV012Buildcraft.magicMode(b),row=({"arcane":[9,13,10,0],"frost":[10,15,12,8],"fire":[13,18,18,12],"lightning":[14,20,20,14]})[mode];return row?.[{Wand:0,Staff:1,infusion:2,automatic:3}[kind]]??base;}
 function v013FundedCost(baseCost,r=ports.state.run){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),cost=v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;return talentManaCost(cost,r);}
-function v013SpellMultiplier(r){const nodes=ports.state.automaticTalents?.nodes||[],element=ports.phase1Build?.element,enemy=r.enemy;return (element==='fire'&&nodes.includes('fire_focus')?.9:1)*(element==='frost'&&nodes.includes('frost_focus')&&enemy.slowTime>0?1.2:1)*(element==='lightning'&&nodes.includes('lightning_focus')?1.35:1)*(element==='fire'&&nodes.includes('living_inferno')&&enemy.dots?.burn?.length?1.25:1)*(element==='frost'&&nodes.includes('absolute_winter')&&enemy.slowTime>0?1.2:1);}
-function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'))&&!ports.state.automaticTalents?.nodes?.includes('lightning_focus');}
+function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('storm_mastery'));}
 function v013LightningChainFactors(){
  // Five ordinary jumps, six with Storm Mastery. With at most four live arena
  // slots, the later jumps revisit earlier targets instead of hitting reserves.
@@ -668,7 +667,7 @@ function weaponAttack(r,offhandStrike=false){
  const specialized=ports.state.automaticTalents?.nodes||[];
  if(specialized.includes('blood_focus'))damage=Math.max(1,Math.round(damage*.9));
  if(specialized.includes('aegis_bulwark'))damage=Math.max(1,Math.round(damage*.9));
- if(cast)damage=Math.max(1,Math.round(damage*v013SpellMultiplier(r)));
+ if(cast)damage=Math.max(1,Math.round(damage));
  if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))damage=Math.max(1,Math.round(damage*1.1));
  if(cast&&v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
  if(!offhandStrike)r.unfundedAttack=caster&&!cast;
@@ -1052,7 +1051,7 @@ function phase2Context(r){
  dot(kind,potency,options={}){
   if(!['bleed','burn'].includes(kind))return;
   ports.phase6Proc(r,kind+' application');const values=e.dots[kind]||(e.dots[kind]=[]);
-  if(kind!=='bleed'&&values.length>=12)values.shift();const raw=Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency*(ports.state.automaticTalents?.nodes?.includes('fire_focus')?1.35:1)));
+  if(kind!=='bleed'&&values.length>=12)values.shift();const raw=Math.max(1,Math.round(kind==='bleed'?WandererV012Buildcraft.bleedDamage(ports.phase1Build,potency):potency));
   const controlled=kind==='burn'&&options.controlledBurn===true;
   values.push({damage:WandererV012Buildcraft.dotPotency(controlled?Math.max(1,Math.round(raw*1.25)):raw,r.stats),remaining:3,...(controlled?{controlledBase:WandererV012Buildcraft.dotPotency(raw,r.stats)}:{}),...(kind==='burn'&&options.primaryOnly===true?{primaryOnly:true}:{})});
   if(controlled)ports.phase6Metric(r,'controlled_burnApplications',1);ports.synchronizeDots(e);
@@ -1122,7 +1121,7 @@ function phase2MagicTick(r){
  b.runtime.lastSpellAt=ctx.now;ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;offhandPaidAction(r);ctx.power=r.stats.spellPower;ctx.amp=1;ctx.funded=true;
  ports.combatEffect('Wand',({fire:'burn',frost:'slow',lightning:'shock'})[b.element]);
  if(v013Traits().includes('ward')&&ports.setReady(r,'v013Ward',6))ports.setBarrier(r,r.maxhp*.02);
- let spellDamage=Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70*v013SpellMultiplier(r)));if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.1));
+ let spellDamage=Math.max(1,Math.round(WandererV012Buildcraft.elementalPower(b,ctx.power)*.70));if(v013Traits().includes('focused')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1))spellDamage=Math.max(1,Math.round(spellDamage*1.1));
  if(learned('spell_echo')){r.echoCount=((r.echoCount||0)+1)%3;if(!r.echoCount)spellDamage+=Math.max(1,Math.round(spellDamage*.1*learned('spell_echo')));}
  const chainBase=spellDamage;
  if(r.enemy.baseDef>0&&r.enemy.def<r.enemy.baseDef)spellDamage=Math.max(1,Math.round(spellDamage*(1+(b.runtime.talentBonuses?.sunderDamage||0))));

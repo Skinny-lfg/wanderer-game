@@ -33,3 +33,38 @@ test('C1 clean sheet: only current catalog/runtime are loaded into root and Tale
  assert.equal(T.create().treeVersion,15);
  for(const old of [8,9,10,11,12,13,14])assert.equal(T.valid({...T.create(),treeVersion:old}),false);
 });
+
+
+test('consolidation: every node has a legal v15 purchase route within the 100 point cap',()=>{
+ require('../combat/talent-requirements.js');
+ const R=globalThis.WandererTalentRequirements;
+ for(const n of T.NODES){
+  const mode=n.element||'arcane',available=T.NODES.filter(x=>!x.pending&&(!x.element||x.element===mode));
+  const route=R.plan(available,{},n.id);
+  assert(route,n.id);
+  let p={...T.create(),xp:T.MAX_POINTS*T.POINT_XP,...(mode==='arcane'?{}:{element:mode})};
+  for(const id of route.steps){p=T.allocate(p,id);assert(p,n.id+' cannot buy '+id);}
+  assert(T.valid(p)&&p.nodes.includes(n.id),n.id);
+ }
+});
+test('consolidation: every catalog entry is used and only current mixed pairs exist',()=>{
+ const ids=new Set(T.NODES.map(n=>n.id)),passives=new Set(T.NODES.map(n=>n.passiveId));
+ for(const p of globalThis.WandererV012Buildcraft.CATALOG)assert(passives.has(p.id),p.id);
+ for(const p of C.NODES)assert(ids.has(p.id),p.id);
+ const mixed=T.NODES.filter(n=>n.kind==='mixed');
+ const pairs=[...new Set(mixed.map(n=>n.pair.join('+')))].sort();
+ assert.deepEqual(pairs,['aegis+arcane','arcane+decay','blood+fury','decay+blood','fury+radiance','radiance+aegis']);
+ assert.equal(mixed.length,18);
+});
+test('consolidation: no retired talent gates or descriptions remain in current core runtime',()=>{
+ const retired=["hemovore","crimson_pact","rot_recovery","rot_symbiosis","life_conduit","lifeweave","lifeweaver","fury_momentum","living_inferno","absolute_winter","fire_focus","frost_focus","lightning_focus"];
+ for(const id of retired){
+  assert(!T.NODES.some(n=>n.id===id),id);
+  assert.equal(T.allocate({...T.create(),xp:10000},id),null,id);
+ }
+ for(const path of ['combat/v012-buildcraft.js','combat/talent-catalog.js','combat/talent-graph-next.js','combat/v012-combat-runtime.js','combat/talent-graph-bridge.js','combat/talent-graph-runtime.js']){
+  const source=fs.readFileSync(path,'utf8');
+  assert.equal(fs.readFileSync('docs/'+path,'utf8'),source,path+' mirror');
+  for(const id of retired)assert(!new RegExp('\\b'+id+'\\b','i').test(source),path+': '+id);
+ }
+});
