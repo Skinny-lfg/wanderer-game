@@ -105,8 +105,8 @@ test('Stage 4 Plague Spread uses current Dungeon death hook, no duplicate Buildc
 test('Stage 4 frozen Stage 3 audit rejects any unrelated Affinity regression',()=>{
  assert.equal(F.cases.valid,48);
  assert.equal(F.ferventLifeCases.length,4);
- const groups=F.values.map(row=>Object.fromEntries(F.fields.map((field,i)=>[field,row[i]])));
- const fixture=()=>({settings:{...F.settings,output:'ignored'},summary:{valid:48,errors:0,timeouts:0,groups:groups.map(x=>({...x}))}});
+ const groups=[...R.frozenGroups().values()];
+ const fixture=()=>({settings:{...F.settings,builds:[...new Set(groups.map(x=>x.build))],output:'ignored'},summary:{valid:48,errors:0,timeouts:0,groups:groups.map(x=>({...x}))}});
  assert.equal(R.compare(fixture()).length,24);
  const altered=fixture();
  altered.summary.groups.find(x=>x.build==='pure-arcane').meanManaSpent++;

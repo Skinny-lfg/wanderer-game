@@ -1,0 +1,78 @@
+name: v0.13 consolidated - final regression and integration audit
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['.github/workflows/v013-final-regression-integration.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  directed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [talent, legendary, expedition, economy, enemies, progression, historical]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run bounded regression suite
+        shell: bash
+        run: |
+          case "${{ matrix.suite }}" in
+            talent) npm run test:v013:talent-graph && node --test tests/talent-requirements.test.cjs tests/v013-specializations.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-stage4-hybrid-links.test.cjs ;;
+            legendary) node --test tests/v013-legendary-encounter-budget.test.cjs tests/v013-stage45-6-legendary-p0.test.cjs tests/v012-legendary-limit.test.cjs tests/v012-phase-c1.test.cjs ;;
+            expedition) node --test tests/v013-expedition-foundation.test.cjs tests/v013-map-intelligence.test.cjs tests/v013-map-ui.test.cjs tests/v013-map-fog.test.cjs tests/v013-dungeon-checkpoint-integrity.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-full-expedition-integration.test.cjs tests/v013-stage6-boons.test.cjs tests/v013-stage7-contracts.test.cjs tests/v013-stage73-shrines.test.cjs tests/v013-stage74-potions.test.cjs tests/v013-anchor-rune-combat.test.cjs ;;
+            economy) node --test tests/v013-crafting.test.cjs tests/v013-loot.test.cjs tests/v013-gear-loot-daggers.test.cjs tests/v013-gear-roll-diversity.test.cjs tests/v013-craft-preview.test.cjs tests/v012-economy.test.cjs tests/v0120-equipment.test.cjs ;;
+            enemies) node --test tests/v013-stage80-enemy-roster.test.cjs tests/v013-stage81-enemy-abilities.test.cjs tests/v013-stage82-elite-abilities.test.cjs tests/v013-stage83-boss-infrastructure.test.cjs tests/v013-stage84-six-bosses.test.cjs tests/v013-stage85-combat-links.test.cjs tests/v013-boss-modifiers-runtime.test.cjs ;;
+            progression) node --test tests/v013-s1-parity.test.cjs tests/v013-s2-decisions.test.cjs tests/v013-natural-progression.test.cjs tests/v013-stage94-human-decisions.test.cjs ;;
+            historical) node --test tests/v013-c7-legacy-retirement.test.cjs tests/v013-c8-clean-sheet.test.cjs tests/v013-c8-ui-wiring.test.cjs tests/v013-c9-dead-code.test.cjs tests/v013-stage1-affinities.test.cjs tests/v013-stage2-barrier.test.cjs tests/v013-stage3-vitality-decay.test.cjs tests/v013-talent-structure.test.cjs tests/v013-general-suite-audit.test.cjs ;;
+          esac
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Real Chromium versus CLI tick parity
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN"; else npx playwright install chromium; fi
+          node --test tests/v013-runtime-parity.test.cjs
+      - name: Browser clean sheet smoke
+        if: always()
+        shell: bash
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME_BIN" ]; then export WANDERER_BROWSER="$CHROME_BIN"; fi
+          npm run test:v013:browser
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Canonical runtime consumers and mirrored modules
+        shell: bash
+        run: |
+          for f in combat/*.js economy/*.js online/*.js; do if [ -f "docs/$f" ]; then cmp "$f" "docs/$f" || exit 1; fi; done
+          echo "=== remaining canonical talent ID references in runtime ==="
+          git grep -nE 'toxic_touch|relentless_assault|arcane_echo|fury_recovery|storm_mastery|spell_echo|crimson_feast' -- combat economy online index.html || true
+          echo "=== shared trait and enemy domain references (review only) ==="
+          git grep -nE 'blood_transfer|crimson_rush' -- combat economy online index.html | cut -c1-350 || true
+          echo "=== asset identity ==="
+          for f in corrupting_touch.png elemental_echo.png blightburst.png crimson_onslaught.webp; do cmp "assets/passives/$f" "docs/assets/passives/$f"; done
+          git diff --check HEAD^ HEAD

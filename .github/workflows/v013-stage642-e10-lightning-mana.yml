@@ -41,11 +41,11 @@ jobs:
           const snapshots=sample.accounts.filter(a=>a.snapshot);
           if(snapshots.length!==1||snapshots[0].snapshot.state.equip.weapon.subtype!=='Staff')throw Error('Unexpected genuine Lightning E10 checkpoint count or weapon');
           const before=snapshots[0].snapshot,progress=before.state.automaticTalents;
-          const cfg={...P.BUILDS['arcane-lightning-pure'],milestones:['overcharge','mana_spring','storm_mastery'],orderedMilestones:true};
+          const cfg={...P.BUILDS['arcane-lightning-pure'],milestones:['overcharge','mana_spring','forked_lightning'],orderedMilestones:true};
           const planned=P.propose(T,T.reset(progress),cfg);
           const afterProgress={...T.reset(progress),nodes:planned.expectedNodes,element:'lightning'};
           if(!T.valid(afterProgress)||afterProgress.xp!==progress.xp||
-             !['overcharge','storm_mastery','mana_spring'].every(x=>afterProgress.nodes.includes(x)))
+             !['overcharge','forked_lightning','mana_spring'].every(x=>afterProgress.nodes.includes(x)))
            throw Error('Lightning mana respec not legal/fully funded');
           const after={...before,state:{...before.state,automaticTalents:afterProgress},talentSpent:afterProgress.nodes.length};
           const sizes=[4,8,12],shard=Number(process.env.SHARD),rows=[];

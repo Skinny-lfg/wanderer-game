@@ -46,7 +46,7 @@ jobs:
           fs.writeFileSync('reports/stage643-audit/reachability.json',JSON.stringify(out,null,2)+'\n');
           console.log('STAGE643_REACHABILITY='+JSON.stringify({nodeCount:out.nodeCount,
            distinct:out.distinct,absent:out.refsAbsentFromV15,missing:absent}));
-          const required=['bow_pierce','fan_of_blades','cleave_mastery','mace_shockwave','sword_sweep','single_target_mastery','overcharge','storm_mastery','plague_spread','grave_bloom','stored_force','living_recovery'];
+          const required=['bow_pierce','fan_of_blades','cleave_mastery','mace_shockwave','sword_sweep','single_target_mastery','overcharge','forked_lightning','plague_spread','grave_bloom','stored_force','living_recovery'];
           const lost=required.filter(id=>!live.has(id));if(lost.length)throw Error('Unreachable critical combat skills: '+lost);
           JS
       - uses: actions/upload-artifact@v4

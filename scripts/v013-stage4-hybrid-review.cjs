@@ -17,19 +17,21 @@ const PAIRS=Object.freeze([
 const FIELDS=Object.freeze(['meanHealingPerSecond','meanBarrierAtEntry','meanBarrierGenerated','meanBarrierAbsorbed','meanDotPerSecond','meanManaSpent','meanSpellPower']);
 const OUTPUT='reports/v013-stage4-hybrid-review.json';
 const round=(v,d=3)=>Number(Number(v).toFixed(d));
+// Translate only immutable Stage 3 report cohort labels, never saved player data.
+const historicalCohort=id=>({'pure-vitality':'pure-radiance','pure-magic':'pure-arcane','fury-vitality':'fury-radiance','vitality-aegis':'radiance-aegis','aegis-magic':'aegis-arcane','magic-decay':'arcane-decay'})[id]||id;
 function frozenGroups(){
  assert.equal(FROZEN.schemaVersion,1);
  assert.equal(FROZEN.cases.valid,48);
  assert.equal(FROZEN.values.length,24);
  return new Map(FROZEN.values.map(row=>{
   const data=Object.fromEntries(FROZEN.fields.map((key,i)=>[key,row[i]]));
-  return [data.build+'|'+data.level,data];
+  data.build=historicalCohort(data.build);return [data.build+'|'+data.level,data];
  }));
 }
 function compare(current,{postBarrierReset=false,postOffhandReroll=false}={}){
  const before=frozenGroups(),settings={...current.settings};
  delete settings.output;
- assert.deepEqual(settings,FROZEN.settings,'Stage 4 must use exact Stage 3 scenarios');
+ assert.deepEqual(settings,{...FROZEN.settings,builds:FROZEN.settings.builds.map(historicalCohort)},'Stage 4 must use exact Stage 3 scenarios');
  assert.equal(current.summary.valid,48,'Native baseline cases changed');
  assert.equal(current.summary.errors,0);
  assert.equal(current.summary.timeouts,0);
@@ -113,7 +115,7 @@ function stress(current){
 function marginalEstimate(previousRows){
  // Observed historical activations, not guaranteed healing. Excess healing
  // now converts to the uncapped encounter-scoped pool; timing may change.
- const eligible=previousRows.filter(r=>r.build==='fury-radiance');
+ const eligible=previousRows.filter(r=>historicalCohort(r.build)==='fury-radiance');
  return eligible.map(r=>({level:r.level,seed:r.seed,attackPower:r.attackPower,
   maxHealth:r.maxHealth,actualHealingBefore:r.healingActual,
   triggers:r.passiveActivations?.fervent_life||0,
