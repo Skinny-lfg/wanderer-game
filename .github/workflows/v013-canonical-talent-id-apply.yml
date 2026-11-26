@@ -1,0 +1,112 @@
+name: v0.13 consolidated - apply canonical talent IDs
+on:
+  push:
+    branches: [release/v013-consolidated]
+    paths: ['.github/workflows/v013-canonical-talent-id-apply.yml']
+permissions:
+  contents: write
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/release/v013-consolidated'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v013-consolidated
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply and compare approved canonical identity changes
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          cat > /tmp/canonical-talent-ids.cjs <<'MIGRATION'
+          'use strict';
+          // One-shot source migration, not a runtime alias. Run only on the consolidated integration branch.
+          const fs=require('node:fs'),cp=require('node:child_process'),vm=require('node:vm'),assert=require('node:assert/strict');
+          const ids={blood_transfer:'sanguine_echo',toxic_touch:'corrupting_touch',blight:'blightburst',relentless_assault:'sundering_assault',arcane_echo:'elemental_echo',crimson_rush:'crimson_onslaught',fury_recovery:'defiant_surge',storm_mastery:'forked_lightning',spell_echo:'resonant_sequence',crimson_feast:'third_cut'};
+          const camel={bloodTransfer:'sanguineEcho',toxicTouch:'corruptingTouch',relentlessAssault:'sunderingAssault',arcaneEcho:'elementalEcho',crimsonRush:'crimsonOnslaught',furyRecovery:'defiantSurge',stormMastery:'forkedLightning',spellEcho:'resonantSequence',crimsonFeast:'thirdCut'};
+          const graphFiles=['combat/v012-buildcraft.js','combat/talent-catalog.js','combat/talent-graph-next.js','combat/talent-graph-bridge.js','combat/talent-graph-runtime.js'];
+          function graph(){const env=vm.createContext({});for(const p of graphFiles)vm.runInContext(fs.readFileSync(p,'utf8'),env,{filename:p});return JSON.parse(JSON.stringify(env.WandererAutomaticTalents.NODES));}
+          const before=graph();
+          assert.equal(before.length,420);
+          for(const old of Object.keys(ids))assert(before.some(n=>n.id===old),'Missing baseline node '+old);
+          function renamed(s){
+           for(const [old,next] of Object.entries(ids)){
+            if(old==='blight')continue;
+            s=s.replaceAll(old,next);
+           }
+           // Exact standalone ID or derived identity; do not touch elemental_blight, enemy names, or general words.
+           s=s.replace(/(?<![A-Za-z0-9_])blight(?![A-Za-z0-9_])/g,'blightburst')
+              .replace(/(?<![A-Za-z0-9_])gate_blight(?![A-Za-z0-9_])/g,'gate_blightburst')
+              .replace(/\bblight_rank(?=\d)/g,'blightburst_rank')
+              .replaceAll('ability_blight','ability_blightburst');
+           for(const [old,next] of Object.entries(camel))s=s.replaceAll(old,next);
+           return s;
+          }
+          const tracked=cp.execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean);
+          const files=tracked.filter(p=>/\.(js|cjs|mjs|html|json)$/.test(p)&&!/(^docs\/|^reports\/|^assets\/|\/vendor\/|\/assets\/|package-lock\.json$)/.test(p));
+          const touched=[];
+          const protectedPaths=new Set(['economy/v012-equipment-runtime.js','economy/v013-crafting.js','online/v012-save.js','tests/v013-crafting.test.cjs']);
+          for(const p of files){
+           const old=fs.readFileSync(p,'utf8');
+           let next=old.split('\n').map(line=>{
+            let s=renamed(line);
+            // Gear trait and its shared combat notification remain independent of the purchased talent.
+            if(protectedPaths.has(p)||/c\.traits\?\.includes\('blood_transfer'\)|traits:\s*\[["']blood_transfer["']\]/.test(line))s=s.replaceAll('sanguine_echo','blood_transfer');
+            s=s.replaceAll('sanguine_echo_burst','blood_transfer_burst');
+            // Enemy-domain identifiers, if any, are not talent identities.
+            if(p.startsWith('online/v013-enemy-'))s=s.replaceAll('crimson_onslaught','crimson_rush');
+            return s;
+           }).join('\n');
+           if(next!==old){fs.writeFileSync(p,next);touched.push(p);}
+          }
+          for(const p of touched){const mirror='docs/'+p;if(tracked.includes(mirror)){fs.copyFileSync(p,mirror);touched.push;}}
+          const assetPairs=[['arcane_echo.png','elemental_echo.png'],['blight.png','blightburst.png'],['crimson_rush.webp','crimson_onslaught.webp'],['toxic_touch.png','corrupting_touch.png']];
+          for(const prefix of ['assets/passives/','docs/assets/passives/'])for(const [old,next] of assetPairs){
+           assert(fs.existsSync(prefix+old),prefix+old);assert(!fs.existsSync(prefix+next),prefix+next);fs.renameSync(prefix+old,prefix+next);
+          }
+          const after=graph();
+          const normalized=JSON.parse(renamed(JSON.stringify(before)));
+          assert.deepEqual(after,normalized,'Renaming changed graph structure, positions, descriptions or numeric values');
+          for(const [old,next] of Object.entries(ids)){assert(after.some(n=>n.id===next),next);assert(!after.some(n=>n.id===old),old);}
+          const src=fs.readFileSync('combat/v012-buildcraft.js','utf8');
+          assert(src.includes("specialized(b,'sanguine_echo')"));
+          assert(src.includes("c.traits?.includes('blood_transfer')"));
+          assert(fs.readFileSync('economy/v013-crafting.js','utf8').includes("blood_transfer"));
+          const report=['# Canonical talent ID migration','', 'One-shot clean-sheet migration. No save alias, balance edits or deployment.','', '| Previous ID | Canonical ID |','|---|---|',...Object.entries(ids).map(([a,b])=>'| '+a+' | '+b+' |'),'','All 420 nodes match the baseline after normalizing only the approved identities.','', 'Shared gear trait blood_transfer and shared trigger blood_transfer_burst deliberately retained. Enemy-domain identities are not renamed. Frozen historical reports retained.','', '## Changed source files','',...touched.map(p=>'- '+p),'','## Renamed assets','',...assetPairs.map(([a,b])=>'- '+a+' → '+b+' (root and docs mirror)'),''];
+          fs.writeFileSync('reports/v013-consolidated-canonical-talent-ids.md',report.join('\n'));
+          console.log('Migrated '+touched.length+' source files; 420/420 graph nodes structurally identical after canonical ID substitution.');
+          console.log('Changed sources:\n'+touched.join('\n'));
+          
+          MIGRATION
+          node /tmp/canonical-talent-ids.cjs
+          git diff --check
+      - name: Run current talent and simulator regressions
+        run: |
+          npm run test:v013:talent-graph
+          node --test tests/talent-requirements.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-specializations.test.cjs tests/v013-strategic-build-agents.test.cjs tests/v013-stage643-aoe-mechanics.test.cjs tests/v013-crafting.test.cjs
+      - name: Validate root and Pages mirrors
+        run: |
+          for f in combat/talent-{catalog,graph-next,graph-bridge,graph-runtime}.js combat/v012-{buildcraft,combat-runtime}.js combat/action-bar.js; do cmp "$f" "docs/$f"; done
+          git diff --stat
+      - name: Save reviewable patch regardless of test outcome
+        if: always()
+        run: |
+          git add -A
+          git diff --cached --binary > /tmp/canonical-talent-ids.patch
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: canonical-talent-id-patch
+          path: /tmp/canonical-talent-ids.patch
+      - name: Commit validated migration (same branch, no force or deploy)
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --cached --quiet && exit 1
+          git commit -m "Consolidate ten approved canonical talent IDs and consumers"
+          git push origin HEAD:refs/heads/release/v013-consolidated
+          echo "MIGRATION_COMMIT=$(git rev-parse HEAD)"
