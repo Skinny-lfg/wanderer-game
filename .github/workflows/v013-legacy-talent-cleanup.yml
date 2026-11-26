@@ -4,8 +4,14 @@ on:
   push:
     branches:
       - audit/v013
+      - release/v013-consolidated
     paths:
       - '.github/workflows/v013-legacy-talent-cleanup.yml'
+      - 'combat/talent-*.js'
+      - 'combat/v012-buildcraft.js'
+      - 'combat/v012-combat-runtime.js'
+      - 'tests/talent-graph*.test.cjs'
+      - 'tests/v013-c1-catalog-equivalence.test.cjs'
   workflow_dispatch:
 
 permissions:
@@ -45,3 +51,20 @@ jobs:
           echo "TESTED_COMMIT=${GITHUB_SHA}"
           echo "TARGET_BRANCH=${GITHUB_REF}"
           echo "No deployment or merge in this workflow."
+
+  consolidated-v15:
+    if: github.ref == 'refs/heads/release/v013-consolidated'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate live talent graph, legal paths and mirrored runtime
+        run: npm run test:v013:talent-graph
+      - name: Validate current native builds and adjacent hybrids
+        if: always()
+        run: node --test tests/talent-requirements.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-specializations.test.cjs tests/v013-stage4-hybrid-links.test.cjs
