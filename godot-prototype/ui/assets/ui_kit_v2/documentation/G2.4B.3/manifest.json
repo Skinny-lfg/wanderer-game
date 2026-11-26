@@ -1,0 +1,623 @@
+{
+  "stage": "G2.4B.3",
+  "source": "G2.4B.1 textures; G2.4B.2 visual reference; Art Style Guide v1.2; approved v2 visual reference from conversation; reconstructed, not extracted from mockup",
+  "assets": [
+    {
+      "file": "assets/buttons/primary_normal.png",
+      "family": "primary",
+      "state": "normal",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "e49afd3e8d8d4ab4017c5eda2c74b770fba5927cc9d47046239b8c0fca09d690"
+    },
+    {
+      "file": "assets/buttons/primary_hover.png",
+      "family": "primary",
+      "state": "hover",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "083581de97be3212fb6b68cd9c63f99f778ce1ef44540896f3bd6b98d41bc982"
+    },
+    {
+      "file": "assets/buttons/primary_pressed.png",
+      "family": "primary",
+      "state": "pressed",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "6646342073d1fe7108f833cda1a7ffa20efea4aa82b6da50c5fc5b6ad67c4c94"
+    },
+    {
+      "file": "assets/buttons/primary_disabled.png",
+      "family": "primary",
+      "state": "disabled",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "864fd8ff8a51f7937efc416b75ddbde70263b4db00e9514d17cd749991e869b8"
+    },
+    {
+      "file": "assets/buttons/secondary_normal.png",
+      "family": "secondary",
+      "state": "normal",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "73971d71dd3980a376a0469aae4f2e4362fda6fd9887d720d413184b17b5858d"
+    },
+    {
+      "file": "assets/buttons/secondary_hover.png",
+      "family": "secondary",
+      "state": "hover",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "a52ea16a3d37ac26b364cfa1f245004c8c0387c61dbe03519ae7cba97fb2c69d"
+    },
+    {
+      "file": "assets/buttons/secondary_pressed.png",
+      "family": "secondary",
+      "state": "pressed",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "08adf22e899f843d2c343c4a8bc77adada75bbc377b7b074bd839c2ba1ea732a"
+    },
+    {
+      "file": "assets/buttons/secondary_disabled.png",
+      "family": "secondary",
+      "state": "disabled",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "7a040e2150aacc16dc99397824dc1ed3bdcb8ef93c643ac29372c1181707255b"
+    },
+    {
+      "file": "assets/buttons/danger_normal.png",
+      "family": "danger",
+      "state": "normal",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "231623f347619a41f080e78c4486c58c8e19145e671e6fbfab84d25e46a46930"
+    },
+    {
+      "file": "assets/buttons/danger_hover.png",
+      "family": "danger",
+      "state": "hover",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "fc04d7f4008bd1d3b0285399d7ef7f2c321be3fd8c0f3b03f5fb66c8c1d12227"
+    },
+    {
+      "file": "assets/buttons/danger_pressed.png",
+      "family": "danger",
+      "state": "pressed",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "cc84f192c381dda81fbbdd320cf5caf114b87bc0c27f7caf2a2d38225a31f8ca"
+    },
+    {
+      "file": "assets/buttons/danger_disabled.png",
+      "family": "danger",
+      "state": "disabled",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "fe7afda5b19b4f2ed13d02e6f84fcee0dae7c984f9831bf727151825293874c7"
+    },
+    {
+      "file": "assets/navigation/nav_normal.png",
+      "family": "nav",
+      "state": "normal",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "c6f5adc70958cc8f8ec3aaba933d7c2513a59d6e95385ed3ee6ef460fd5d83c3"
+    },
+    {
+      "file": "assets/navigation/nav_hover.png",
+      "family": "nav",
+      "state": "hover",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "d39cba6536f36d476e108a373eb843682264bbc7ba3fe575eaef4aa20a056c16"
+    },
+    {
+      "file": "assets/navigation/nav_pressed.png",
+      "family": "nav",
+      "state": "pressed",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "fd1d87e76c976a5b81d4a20ffc6fdd9401fad869a645b333e4ffb7e1168fa8ac"
+    },
+    {
+      "file": "assets/navigation/nav_disabled.png",
+      "family": "nav",
+      "state": "disabled",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "6111efa254c4487c396db9c912e0d79a4d0a5f16bc4ab48414a4d5b45b44ef6b"
+    },
+    {
+      "file": "assets/navigation/nav_selected.png",
+      "family": "nav",
+      "state": "selected",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "4282551649a4e9344dde876892460c70f4277bab4b03c3043728ab50d6bb980e"
+    },
+    {
+      "file": "assets/buttons/focus_overlay.png",
+      "family": "focus",
+      "state": "overlay",
+      "size": [
+        320,
+        64
+      ],
+      "texture_margins": {
+        "left": 24,
+        "top": 12,
+        "right": 24,
+        "bottom": 12
+      },
+      "minimum_size": [
+        64,
+        28
+      ],
+      "content_margins": {
+        "left": 24,
+        "top": 10,
+        "right": 24,
+        "bottom": 10
+      },
+      "draw_center": true,
+      "axis_stretch": "stretch",
+      "sha256": "a8f31d96d03f75af753c5ab310ecc1a2e25708481be19aaadae03bdc46f3d09e"
+    },
+    {
+      "file": "assets/buttons/primary_crest_top_normal.png",
+      "family": "primary_crest",
+      "state": "normal",
+      "side": "top",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_top",
+      "offset_y": 0,
+      "sha256": "e176f69fd0762f11d3b5e2d63364be9b5f381d543a5b0c27e5882da7dca6e2a2"
+    },
+    {
+      "file": "assets/buttons/primary_crest_bottom_normal.png",
+      "family": "primary_crest",
+      "state": "normal",
+      "side": "bottom",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_bottom",
+      "offset_y": 0,
+      "sha256": "16e31c54608a396ce7cf5f32014d09cf1f1ab9256950de9085b749866d69cce6"
+    },
+    {
+      "file": "assets/buttons/primary_crest_top_hover.png",
+      "family": "primary_crest",
+      "state": "hover",
+      "side": "top",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_top",
+      "offset_y": 0,
+      "sha256": "2e6b413594fbf587603fb4c8e6a0f0efbf93738fa64c9f73daeb2909ff98bd7a"
+    },
+    {
+      "file": "assets/buttons/primary_crest_bottom_hover.png",
+      "family": "primary_crest",
+      "state": "hover",
+      "side": "bottom",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_bottom",
+      "offset_y": 0,
+      "sha256": "9887be9acb59b6e88fb581eb4399373c46613389a7c3b31e2e9af6979abd7ba3"
+    },
+    {
+      "file": "assets/buttons/primary_crest_top_pressed.png",
+      "family": "primary_crest",
+      "state": "pressed",
+      "side": "top",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_top",
+      "offset_y": 0,
+      "sha256": "f0f84bd3c157a1fef419f6a069afe4232c9117da422f9996a1375972c606d75b"
+    },
+    {
+      "file": "assets/buttons/primary_crest_bottom_pressed.png",
+      "family": "primary_crest",
+      "state": "pressed",
+      "side": "bottom",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_bottom",
+      "offset_y": 0,
+      "sha256": "d1d7282fe7309ae53cdca10c83fad291bae4c812135eb9f5fa4e73af551966b1"
+    },
+    {
+      "file": "assets/buttons/primary_crest_top_disabled.png",
+      "family": "primary_crest",
+      "state": "disabled",
+      "side": "top",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_top",
+      "offset_y": 0,
+      "sha256": "6a47cae0b623f58714490881368c4e235263270fa40e3411bf13826ae9b633e7"
+    },
+    {
+      "file": "assets/buttons/primary_crest_bottom_disabled.png",
+      "family": "primary_crest",
+      "state": "disabled",
+      "side": "bottom",
+      "size": [
+        32,
+        12
+      ],
+      "usage": "fixed-size centered overlay, no 9-slice; ignore mouse; hide below width 200 px",
+      "anchor": "center_bottom",
+      "offset_y": 0,
+      "sha256": "26fdd476ae434b5112031623d36dea09a32a26be412db6a782da7b939ccb68cd"
+    }
+  ],
+  "revision": "v2 \u2014 thinner Primary frame, separate fixed-size top/bottom crests; remaining 14 PNGs unchanged"
+}

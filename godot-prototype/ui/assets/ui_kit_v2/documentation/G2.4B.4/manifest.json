@@ -1,0 +1,125 @@
+{
+  "stage": "G2.4B.4",
+  "status": "candidate, not integrated",
+  "canvas_px": [
+    320,
+    32
+  ],
+  "nine_slice_margins_px": {
+    "left": 16,
+    "right": 16,
+    "top": 7,
+    "bottom": 7
+  },
+  "min_tested_size_px": [
+    100,
+    16
+  ],
+  "layer_order": [
+    "bar_track",
+    "fill_<resource>",
+    "bar_frame"
+  ],
+  "fill_clip": "Resize all layers to full target size first. Clip the fill layer horizontally based on its alpha >=128 bounds, not by scaling to current value. Use clip width left + round((right-left)*ratio); at zero hide fill; at full show all pixels.",
+  "resources": [
+    "health",
+    "mana",
+    "barrier",
+    "experience"
+  ],
+  "assets": [
+    {
+      "path": "assets/resource_bars/bar_frame.png",
+      "size": [
+        320,
+        32
+      ],
+      "mode": "RGBA",
+      "sha256": "21946432038fd32bace5da4272190d028a2cd8f6e3a92f4ecc55162a140ffd88"
+    },
+    {
+      "path": "assets/resource_bars/bar_track.png",
+      "size": [
+        320,
+        32
+      ],
+      "mode": "RGBA",
+      "sha256": "fe5069718740283865b895c1afc9e7e8660967eb2cc0758943e148467bd0bb47"
+    },
+    {
+      "path": "assets/resource_bars/fill_barrier.png",
+      "size": [
+        320,
+        32
+      ],
+      "mode": "RGBA",
+      "sha256": "64f5177f8946989b01497f637f74eacd99ddafdfbf720ddb0515c9ea92d970e9"
+    },
+    {
+      "path": "assets/resource_bars/fill_experience.png",
+      "size": [
+        320,
+        32
+      ],
+      "mode": "RGBA",
+      "sha256": "933ed2f1ddbeff9a8606d31f753243fa91c22d199b5ecff72afcf3cf9e71c5ab"
+    },
+    {
+      "path": "assets/resource_bars/fill_health.png",
+      "size": [
+        320,
+        32
+      ],
+      "mode": "RGBA",
+      "sha256": "2af2efc5e38b75d5a7972b248ae53a4f1fc8a6ab9dc9c15ea5cd6cc72c3ecb49"
+    },
+    {
+      "path": "assets/resource_bars/fill_mana.png",
+      "size": [
+        320,
+        32
+      ],
+      "mode": "RGBA",
+      "sha256": "1ed20099c202eef6a25c9779d4423aa8e2ad35c694309029ea79876d9304555b"
+    }
+  ],
+  "validation": {
+    "pngs": 6,
+    "nine_slice_cases": 36,
+    "dynamic_fill_cases": 120,
+    "sizes": [
+      [
+        100,
+        16
+      ],
+      [
+        160,
+        20
+      ],
+      [
+        240,
+        24
+      ],
+      [
+        320,
+        32
+      ],
+      [
+        420,
+        32
+      ],
+      [
+        520,
+        40
+      ]
+    ],
+    "fill_ratios": [
+      0,
+      0.01,
+      0.25,
+      0.5,
+      1
+    ],
+    "godot_run": false
+  }
+}

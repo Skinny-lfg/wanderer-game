@@ -1,0 +1,686 @@
+{
+  "png_count": 68,
+  "assets": [
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_aged_bronze.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_aged_bronze.png",
+      "sha256": "70a5f918aaa136a8321a1655659084b7a4b96d90ccdd93926af571f3cca8146e",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_ash_cloth.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_ash_cloth.png",
+      "sha256": "db8368686d85055ad75b95ec21010c829567c417b7bb38f72d01fdd1da40d879",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_charcoal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_charcoal.png",
+      "sha256": "ea0fbf235c154770140f23105bf8c90c1cbe89546bef0c4ba99934f0945497cd",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_crimson_cloth.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_crimson_cloth.png",
+      "sha256": "e91b02d25723732690408bd18e457985c0dc547908972c3ad04936959738fafa",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_dark_stone.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_dark_stone.png",
+      "sha256": "a67ceaacb931a3593b4841d6cfd1b020867d9de2bbdef7c0af616623c5c7f849",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_forged_iron.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_forged_iron.png",
+      "sha256": "31f221c71198cf32aac610e8b6b910329441dc8b6b3eb10457a24cc359c4a834",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_parchment.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_parchment.png",
+      "sha256": "9729f7004e6717aca0822b1e4d33c0396cb8ce1da72eaf023885d23eae832e56",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.1",
+      "source_zip": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+      "source_path": "textures/surface_worn_leather.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/materials/surface_worn_leather.png",
+      "sha256": "bb7e214f54470c13026868ac748522054aee83bd19a0d6a0ee80aa9e9de87e9f",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/ornaments/crest_optional.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/ornaments/crest_optional.png",
+      "sha256": "3cec28aeed84398e5b6d82a1eec1df06878c72f6fa868b0fc6d2a3e46579d2cb",
+      "width": 256,
+      "height": 128,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_common.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_common.png",
+      "sha256": "8eb9d700f70994299021f058c3aad3011ba77e0b2f49a39b1fe7a6286f2a562a",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_epic.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_epic.png",
+      "sha256": "2a309c58fec8256ec3c11be7b58d940fed1a9357d6eea2882c081bd3a4221790",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_grey.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_grey.png",
+      "sha256": "d7e4f0ac783e9f0e9439bf4fda61ec7a7ebf0eddec2e43153e9d00f25728d99d",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_legendary.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_legendary.png",
+      "sha256": "c3a6a86e90435b46eb3ae7bcfb9250c5847d9777d2358c21aff24bfc24b1cde3",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_neutral.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_neutral.png",
+      "sha256": "1fe0bd060e6e7a6326b0e796886dbb2fb7affcf1d72dbf6ae8d879e60da41610",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_rare.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_rare.png",
+      "sha256": "ffa14a3dcf4dd9f609244472930489ea8910e19d5abd6d6a3c69b5c6599983b6",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_frame_uncommon.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_frame_uncommon.png",
+      "sha256": "bda1a19539eed0eedae63d5e424a2411432fa56c9f102f5eb537260c6734ddce",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/bag_surface.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/bag_surface.png",
+      "sha256": "519fea2c3dc6f93fb99de9a8ced989e30b3032d549d963ffc1c26d95277a7cb7",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_common.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_common.png",
+      "sha256": "e941ecf5ab6c74f5751189a0c3c3c9f05c1b82ab5adb58b9a692c07a3db14cf6",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_epic.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_epic.png",
+      "sha256": "278941f1ee2a01566789de34ac08f1f5c0818cd6fe8ae4b5714d4bbff2860a75",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_grey.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_grey.png",
+      "sha256": "6d0eed87c78c1458ae2834ec1d86b393a19a710c396194a8e2fd68343fd77fb3",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_legendary.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_legendary.png",
+      "sha256": "0d8f950a2265b91d9b0a3fb29322e25fe24eeeeff63ef048239f4827f9849b30",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_neutral.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_neutral.png",
+      "sha256": "da6afc2327f0d51df42aade6fe1029cb200cbb1a6215294b3c9e33253e11e762",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_rare.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_rare.png",
+      "sha256": "f73277646812f1d9e22d94d32d67906ce88006b57a15bdb8b9f459d5a916bb3d",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_frame_uncommon.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_frame_uncommon.png",
+      "sha256": "48f8fa00e1ce00480e045d7163c215a0d221b40f46109f0d4df31e7a77f410a6",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/equip_surface.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/equip_surface.png",
+      "sha256": "169a1eb0860834bcdc014925d64ca61b5c2ae96fb7e33d5c28dc9083d5e3fcf4",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/slot_state_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/slot_state_hover.png",
+      "sha256": "4c7abbdb80c9cb922adf2b98da34e04f074728d1095ffec6333ab9af9a8cf759",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/slots/slot_state_selected.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/slots/slot_state_selected.png",
+      "sha256": "bcef714a933a68935f2e2ef50b45d0c67ef343e20eda0f5efdf7be8ad0c96134",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/surfaces/surface_charcoal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/surfaces/surface_charcoal.png",
+      "sha256": "ea0fbf235c154770140f23105bf8c90c1cbe89546bef0c4ba99934f0945497cd",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/surfaces/surface_worn_leather.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/surfaces/surface_worn_leather.png",
+      "sha256": "bb7e214f54470c13026868ac748522054aee83bd19a0d6a0ee80aa9e9de87e9f",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_common.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_common.png",
+      "sha256": "0cd2f9130c1ae4df5b011e668821f3ab532aa44dc74fa5a5037c8f56e10b5dba",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_epic.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_epic.png",
+      "sha256": "8e71f448040acef2044f69b081b5f2a770bbb62f501919bfa7dac312b7839cad",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_grey.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_grey.png",
+      "sha256": "0cc01948f827933bd0269b43cedc34eb281d59e66af6aaaa2e3fa0a8a47c82ee",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_legendary.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_legendary.png",
+      "sha256": "1b36dc41c30af633185914c0c3c59b6e8733595d0fab71078b13d53daec29a7a",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_neutral.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_neutral.png",
+      "sha256": "0e8a71caca3b46abca819d1e1adb4e63f88f84ee619dd31a0a3a3bf0297ec3de",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_rare.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_rare.png",
+      "sha256": "01e743bb4ef23b746e1ca96a61eab941bf0e01c4c44decb1210067132703dab1",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.2",
+      "source_zip": "Wanderer_G2.4B.2_Slots_Frames.zip",
+      "source_path": "assets/tooltip/tooltip_frame_uncommon.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/frames/tooltip/tooltip_frame_uncommon.png",
+      "sha256": "1de84e1ab80ccbf94ea9527454f11feea1c42f7714f8227d93c06a15da8e86c0",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/danger_disabled.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/danger_disabled.png",
+      "sha256": "fe7afda5b19b4f2ed13d02e6f84fcee0dae7c984f9831bf727151825293874c7",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/danger_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/danger_hover.png",
+      "sha256": "fc04d7f4008bd1d3b0285399d7ef7f2c321be3fd8c0f3b03f5fb66c8c1d12227",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/danger_normal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/danger_normal.png",
+      "sha256": "231623f347619a41f080e78c4486c58c8e19145e671e6fbfab84d25e46a46930",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/danger_pressed.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/danger_pressed.png",
+      "sha256": "cc84f192c381dda81fbbdd320cf5caf114b87bc0c27f7caf2a2d38225a31f8ca",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/focus_overlay.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/focus_overlay.png",
+      "sha256": "a8f31d96d03f75af753c5ab310ecc1a2e25708481be19aaadae03bdc46f3d09e",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_bottom_disabled.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_bottom_disabled.png",
+      "sha256": "26fdd476ae434b5112031623d36dea09a32a26be412db6a782da7b939ccb68cd",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_bottom_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_bottom_hover.png",
+      "sha256": "9887be9acb59b6e88fb581eb4399373c46613389a7c3b31e2e9af6979abd7ba3",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_bottom_normal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_bottom_normal.png",
+      "sha256": "16e31c54608a396ce7cf5f32014d09cf1f1ab9256950de9085b749866d69cce6",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_bottom_pressed.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_bottom_pressed.png",
+      "sha256": "d1d7282fe7309ae53cdca10c83fad291bae4c812135eb9f5fa4e73af551966b1",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_top_disabled.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_top_disabled.png",
+      "sha256": "6a47cae0b623f58714490881368c4e235263270fa40e3411bf13826ae9b633e7",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_top_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_top_hover.png",
+      "sha256": "2e6b413594fbf587603fb4c8e6a0f0efbf93738fa64c9f73daeb2909ff98bd7a",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_top_normal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_top_normal.png",
+      "sha256": "e176f69fd0762f11d3b5e2d63364be9b5f381d543a5b0c27e5882da7dca6e2a2",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_crest_top_pressed.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_crest_top_pressed.png",
+      "sha256": "f0f84bd3c157a1fef419f6a069afe4232c9117da422f9996a1375972c606d75b",
+      "width": 32,
+      "height": 12,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_disabled.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_disabled.png",
+      "sha256": "864fd8ff8a51f7937efc416b75ddbde70263b4db00e9514d17cd749991e869b8",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_hover.png",
+      "sha256": "083581de97be3212fb6b68cd9c63f99f778ce1ef44540896f3bd6b98d41bc982",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_normal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_normal.png",
+      "sha256": "e49afd3e8d8d4ab4017c5eda2c74b770fba5927cc9d47046239b8c0fca09d690",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/primary_pressed.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/primary_pressed.png",
+      "sha256": "6646342073d1fe7108f833cda1a7ffa20efea4aa82b6da50c5fc5b6ad67c4c94",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/secondary_disabled.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/secondary_disabled.png",
+      "sha256": "7a040e2150aacc16dc99397824dc1ed3bdcb8ef93c643ac29372c1181707255b",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/secondary_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/secondary_hover.png",
+      "sha256": "a52ea16a3d37ac26b364cfa1f245004c8c0387c61dbe03519ae7cba97fb2c69d",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/secondary_normal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/secondary_normal.png",
+      "sha256": "73971d71dd3980a376a0469aae4f2e4362fda6fd9887d720d413184b17b5858d",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/buttons/secondary_pressed.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/buttons/secondary_pressed.png",
+      "sha256": "08adf22e899f843d2c343c4a8bc77adada75bbc377b7b074bd839c2ba1ea732a",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/navigation/nav_disabled.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/navigation/nav_disabled.png",
+      "sha256": "6111efa254c4487c396db9c912e0d79a4d0a5f16bc4ab48414a4d5b45b44ef6b",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/navigation/nav_hover.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/navigation/nav_hover.png",
+      "sha256": "d39cba6536f36d476e108a373eb843682264bbc7ba3fe575eaef4aa20a056c16",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/navigation/nav_normal.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/navigation/nav_normal.png",
+      "sha256": "c6f5adc70958cc8f8ec3aaba933d7c2513a59d6e95385ed3ee6ef460fd5d83c3",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/navigation/nav_pressed.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/navigation/nav_pressed.png",
+      "sha256": "fd1d87e76c976a5b81d4a20ffc6fdd9401fad869a645b333e4ffb7e1168fa8ac",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.3",
+      "source_zip": "Wanderer_G2.4B.3_Buttons_Navigation_v2.zip",
+      "source_path": "assets/navigation/nav_selected.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/navigation/nav_selected.png",
+      "sha256": "4282551649a4e9344dde876892460c70f4277bab4b03c3043728ab50d6bb980e",
+      "width": 320,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.4",
+      "source_zip": "Wanderer_G2.4B.4_Resource_Bars.zip",
+      "source_path": "assets/resource_bars/bar_frame.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/resource_bars/bar_frame.png",
+      "sha256": "21946432038fd32bace5da4272190d028a2cd8f6e3a92f4ecc55162a140ffd88",
+      "width": 320,
+      "height": 32,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.4",
+      "source_zip": "Wanderer_G2.4B.4_Resource_Bars.zip",
+      "source_path": "assets/resource_bars/bar_track.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/resource_bars/bar_track.png",
+      "sha256": "fe5069718740283865b895c1afc9e7e8660967eb2cc0758943e148467bd0bb47",
+      "width": 320,
+      "height": 32,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.4",
+      "source_zip": "Wanderer_G2.4B.4_Resource_Bars.zip",
+      "source_path": "assets/resource_bars/fill_barrier.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/resource_bars/fill_barrier.png",
+      "sha256": "64f5177f8946989b01497f637f74eacd99ddafdfbf720ddb0515c9ea92d970e9",
+      "width": 320,
+      "height": 32,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.4",
+      "source_zip": "Wanderer_G2.4B.4_Resource_Bars.zip",
+      "source_path": "assets/resource_bars/fill_experience.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/resource_bars/fill_experience.png",
+      "sha256": "933ed2f1ddbeff9a8606d31f753243fa91c22d199b5ecff72afcf3cf9e71c5ab",
+      "width": 320,
+      "height": 32,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.4",
+      "source_zip": "Wanderer_G2.4B.4_Resource_Bars.zip",
+      "source_path": "assets/resource_bars/fill_health.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/resource_bars/fill_health.png",
+      "sha256": "2af2efc5e38b75d5a7972b248ae53a4f1fc8a6ab9dc9c15ea5cd6cc72c3ecb49",
+      "width": 320,
+      "height": 32,
+      "mode": "RGBA"
+    },
+    {
+      "stage": "G2.4B.4",
+      "source_zip": "Wanderer_G2.4B.4_Resource_Bars.zip",
+      "source_path": "assets/resource_bars/fill_mana.png",
+      "path": "godot-prototype/ui/assets/ui_kit_v2/resource_bars/fill_mana.png",
+      "sha256": "1ed20099c202eef6a25c9779d4423aa8e2ad35c694309029ea79876d9304555b",
+      "width": 320,
+      "height": 32,
+      "mode": "RGBA"
+    }
+  ],
+  "note": "Exact source PNG bytes. Stage B.2 contains two separate surface copies; retained as packaged. Stage manifests retained unchanged for reference; use this manifest for repository paths."
+}

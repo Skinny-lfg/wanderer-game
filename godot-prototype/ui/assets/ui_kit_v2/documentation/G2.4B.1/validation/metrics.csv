@@ -1,0 +1,9 @@
+file,source,source_size,before_H,before_V,after_H,after_V,internal_H,internal_V,ratio_H,ratio_V,edge_test
+surface_charcoal.png,dark_gothic_painted_stone_texture.png,1254x1254,2.812,2.313,1.414,1.407,1.739,1.816,0.813,0.775,PASS
+surface_dark_stone.png,painterly_gothic_dark_stone_texture.png,1254x1254,3.14,3.321,1.486,1.804,2.049,2.225,0.725,0.811,PASS
+surface_forged_iron.png,hand_painted_forged_iron_texture.png,1254x1254,3.167,4.201,2.064,2.197,2.785,3.11,0.741,0.706,PASS
+surface_aged_bronze.png,aged_hammered_bronze_texture.png,1254x1254,6.759,7.903,3.432,5.485,5.2,6.561,0.66,0.836,PASS
+surface_parchment.png,aged_watercolor_parchment_texture.png,1254x1254,6.306,6.614,2.908,3.604,3.956,4.694,0.735,0.768,PASS
+surface_worn_leather.png,dark_painterly_leather_texture.png,1254x1254,3.659,3.362,1.918,2.271,2.823,3.314,0.679,0.685,PASS
+surface_crimson_cloth.png,painterly_deep_burgundy_woven_cloth.png,1254x1254,4.37,4.411,3.645,4.062,5.188,5.498,0.703,0.739,PASS
+surface_ash_cloth.png,painterly_ash_gray_linen_texture.png,1254x1254,5.392,4.261,3.341,4.272,4.954,5.791,0.674,0.738,PASS

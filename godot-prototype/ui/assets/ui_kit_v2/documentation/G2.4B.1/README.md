@@ -1,0 +1,8 @@
+# Wanderer G2.4B.1 — Materials & Surfaces
+Eight 512 × 512 RGB PNG textures, with no frames, text or embedded ornaments. Prepared from generated originals, which remain unchanged. Uses the regenerated parchment and original bronze.
+
+## Processing and validation
+Lanczos resize to 576 × 576, 64-pixel smoothstep overlap blend of opposing sides on both axes, shifted so the wrap boundary lies inside the overlap. Output 512 × 512; decoded and verified PNG dimensions and mode. The CSV compares boundary RGB RMS to typical adjacent-pixel RMS inside the final tile. Both directions must have ratio <= 1.25 (project heuristic, not a universal seamless standard). All eight pass; all measured ratios are below 1.0. Visual review of the 3 × 3 comparisons at reduced scale found no abrupt boundaries. Periodic motifs may still be noticeable, particularly metal surfaces. Ash cloth vertical RMS is essentially unchanged relative to direct resizing, but remains below its typical interior gradient. No Godot runtime validation performed.
+
+## Godot integration
+Import the PNGs under the existing UI asset structure (inspect repository before choosing path). Use lossless texture import for UI, a TextureRect with STRETCH_TILE where repeating is desired, texture repeat enabled when needed. Keep frames and fills separate. Avoid stretching the texture behind text; adjust modulate/opacity to maintain legibility. Use charcoal as the default neutral background and bronze only for selected details. Do not replace approved layouts or other assets without review. Test at 1280 × 720 and 1920 × 1080. This package is prepared for integration, not yet installed or tested in Godot.

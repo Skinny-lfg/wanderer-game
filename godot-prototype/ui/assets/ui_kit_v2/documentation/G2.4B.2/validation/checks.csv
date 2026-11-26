@@ -1,0 +1,29 @@
+file,test,result
+assets/slots/bag_frame_neutral.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/bag_frame_grey.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/bag_frame_common.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/bag_frame_uncommon.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/bag_frame_rare.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/bag_frame_epic.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/bag_frame_legendary.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_neutral.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_grey.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_common.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_uncommon.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_rare.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_epic.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/slots/equip_frame_legendary.png,"RGBA, transparent center and corner, opaque border pixels",PASS
+assets/tooltip/tooltip_frame_neutral.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/tooltip/tooltip_frame_grey.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/tooltip/tooltip_frame_common.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/tooltip/tooltip_frame_uncommon.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/tooltip/tooltip_frame_rare.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/tooltip/tooltip_frame_epic.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/tooltip/tooltip_frame_legendary.png,"alpha, invariant straight edges, 5 nine-slice sizes, exact corner preservation",PASS
+assets/slots/bag_surface.png,"PNG decodes, dimensions match manifest",PASS
+assets/slots/equip_surface.png,"PNG decodes, dimensions match manifest",PASS
+assets/surfaces/surface_charcoal.png,"PNG decodes, dimensions match manifest",PASS
+assets/surfaces/surface_worn_leather.png,"PNG decodes, dimensions match manifest",PASS
+assets/slots/slot_state_hover.png,"PNG decodes, dimensions match manifest",PASS
+assets/slots/slot_state_selected.png,"PNG decodes, dimensions match manifest",PASS
+assets/ornaments/crest_optional.png,"PNG decodes, dimensions match manifest",PASS

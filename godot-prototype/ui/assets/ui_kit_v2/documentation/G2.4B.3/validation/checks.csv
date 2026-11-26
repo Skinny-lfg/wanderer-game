@@ -1,0 +1,27 @@
+file,RGBA,dimensions,alpha,nine_slice_corner_tests
+assets/buttons/primary_normal.png,PASS,PASS,PASS,6/6
+assets/buttons/primary_hover.png,PASS,PASS,PASS,6/6
+assets/buttons/primary_pressed.png,PASS,PASS,PASS,6/6
+assets/buttons/primary_disabled.png,PASS,PASS,PASS,6/6
+assets/buttons/secondary_normal.png,PASS,PASS,PASS,6/6
+assets/buttons/secondary_hover.png,PASS,PASS,PASS,6/6
+assets/buttons/secondary_pressed.png,PASS,PASS,PASS,6/6
+assets/buttons/secondary_disabled.png,PASS,PASS,PASS,6/6
+assets/buttons/danger_normal.png,PASS,PASS,PASS,6/6
+assets/buttons/danger_hover.png,PASS,PASS,PASS,6/6
+assets/buttons/danger_pressed.png,PASS,PASS,PASS,6/6
+assets/buttons/danger_disabled.png,PASS,PASS,PASS,6/6
+assets/navigation/nav_normal.png,PASS,PASS,PASS,6/6
+assets/navigation/nav_hover.png,PASS,PASS,PASS,6/6
+assets/navigation/nav_pressed.png,PASS,PASS,PASS,6/6
+assets/navigation/nav_disabled.png,PASS,PASS,PASS,6/6
+assets/navigation/nav_selected.png,PASS,PASS,PASS,6/6
+assets/buttons/focus_overlay.png,PASS,PASS,PASS,6/6
+assets/buttons/primary_crest_top_normal.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_bottom_normal.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_top_hover.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_bottom_hover.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_top_pressed.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_bottom_pressed.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_top_disabled.png,PASS,PASS,PASS,N/A — fixed overlay
+assets/buttons/primary_crest_bottom_disabled.png,PASS,PASS,PASS,N/A — fixed overlay

@@ -1,0 +1,430 @@
+{
+  "stage": "G2.4B.2",
+  "status": "candidate assets; offline tested; not integrated",
+  "style_guide_version": "1.2",
+  "source_material_pack": "Wanderer_G2.4B.1_Materials_Surfaces.zip",
+  "rarity_colors": "candidate values from guide; retain runtime mapping",
+  "assets": [
+    {
+      "path": "assets/slots/bag_frame_neutral.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "1fe0bd060e6e7a6326b0e796886dbb2fb7affcf1d72dbf6ae8d879e60da41610",
+      "rarity": "neutral",
+      "color": "#8D7962",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/bag_frame_grey.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "d7e4f0ac783e9f0e9439bf4fda61ec7a7ebf0eddec2e43153e9d00f25728d99d",
+      "rarity": "grey",
+      "color": "#77777A",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/bag_frame_common.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "8eb9d700f70994299021f058c3aad3011ba77e0b2f49a39b1fe7a6286f2a562a",
+      "rarity": "common",
+      "color": "#BCBCB7",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/bag_frame_uncommon.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "bda1a19539eed0eedae63d5e424a2411432fa56c9f102f5eb537260c6734ddce",
+      "rarity": "uncommon",
+      "color": "#65A56C",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/bag_frame_rare.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "ffa14a3dcf4dd9f609244472930489ea8910e19d5abd6d6a3c69b5c6599983b6",
+      "rarity": "rare",
+      "color": "#518FCA",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/bag_frame_epic.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "2a309c58fec8256ec3c11be7b58d940fed1a9357d6eea2882c081bd3a4221790",
+      "rarity": "epic",
+      "color": "#A477CE",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/bag_frame_legendary.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "c3a6a86e90435b46eb3ae7bcfb9250c5847d9777d2358c21aff24bfc24b1cde3",
+      "rarity": "legendary",
+      "color": "#D7A74E",
+      "recommended_display_px": [
+        56,
+        84
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_neutral.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "da6afc2327f0d51df42aade6fe1029cb200cbb1a6215294b3c9e33253e11e762",
+      "rarity": "neutral",
+      "color": "#8D7962",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_grey.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "6d0eed87c78c1458ae2834ec1d86b393a19a710c396194a8e2fd68343fd77fb3",
+      "rarity": "grey",
+      "color": "#77777A",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_common.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "e941ecf5ab6c74f5751189a0c3c3c9f05c1b82ab5adb58b9a692c07a3db14cf6",
+      "rarity": "common",
+      "color": "#BCBCB7",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_uncommon.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "48f8fa00e1ce00480e045d7163c215a0d221b40f46109f0d4df31e7a77f410a6",
+      "rarity": "uncommon",
+      "color": "#65A56C",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_rare.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "f73277646812f1d9e22d94d32d67906ce88006b57a15bdb8b9f459d5a916bb3d",
+      "rarity": "rare",
+      "color": "#518FCA",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_epic.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "278941f1ee2a01566789de34ac08f1f5c0818cd6fe8ae4b5714d4bbff2860a75",
+      "rarity": "epic",
+      "color": "#A477CE",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/equip_frame_legendary.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "0d8f950a2265b91d9b0a3fb29322e25fe24eeeeff63ef048239f4827f9849b30",
+      "rarity": "legendary",
+      "color": "#D7A74E",
+      "recommended_display_px": [
+        72,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_neutral.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "0e8a71caca3b46abca819d1e1adb4e63f88f84ee619dd31a0a3a3bf0297ec3de",
+      "rarity": "neutral",
+      "color": "#8D7962",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_grey.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "0cc01948f827933bd0269b43cedc34eb281d59e66af6aaaa2e3fa0a8a47c82ee",
+      "rarity": "grey",
+      "color": "#77777A",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_common.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "0cd2f9130c1ae4df5b011e668821f3ab532aa44dc74fa5a5037c8f56e10b5dba",
+      "rarity": "common",
+      "color": "#BCBCB7",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_uncommon.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "1de84e1ab80ccbf94ea9527454f11feea1c42f7714f8227d93c06a15da8e86c0",
+      "rarity": "uncommon",
+      "color": "#65A56C",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_rare.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "01e743bb4ef23b746e1ca96a61eab941bf0e01c4c44decb1210067132703dab1",
+      "rarity": "rare",
+      "color": "#518FCA",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_epic.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "8e71f448040acef2044f69b081b5f2a770bbb62f501919bfa7dac312b7839cad",
+      "rarity": "epic",
+      "color": "#A477CE",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/tooltip/tooltip_frame_legendary.png",
+      "role": "transparent_frame",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "1b36dc41c30af633185914c0c3c59b6e8733595d0fab71078b13d53daec29a7a",
+      "rarity": "legendary",
+      "color": "#D7A74E",
+      "nine_slice_margins_px": {
+        "left": 48,
+        "top": 48,
+        "right": 48,
+        "bottom": 48
+      },
+      "draw_center": false,
+      "edge_mode": "stretch_or_tile",
+      "recommended_display_margin_px": 12,
+      "recommended_min_size_px": [
+        96,
+        96
+      ]
+    },
+    {
+      "path": "assets/slots/bag_surface.png",
+      "role": "slot_fill",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "519fea2c3dc6f93fb99de9a8ced989e30b3032d549d963ffc1c26d95277a7cb7",
+      "source_material": "charcoal"
+    },
+    {
+      "path": "assets/slots/equip_surface.png",
+      "role": "slot_fill",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "169a1eb0860834bcdc014925d64ca61b5c2ae96fb7e33d5c28dc9083d5e3fcf4",
+      "source_material": "forged_iron"
+    },
+    {
+      "path": "assets/surfaces/surface_charcoal.png",
+      "role": "tileable_surface",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "sha256": "ea0fbf235c154770140f23105bf8c90c1cbe89546bef0c4ba99934f0945497cd",
+      "source_material": "charcoal"
+    },
+    {
+      "path": "assets/surfaces/surface_worn_leather.png",
+      "role": "tileable_surface",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "sha256": "bb7e214f54470c13026868ac748522054aee83bd19a0d6a0ee80aa9e9de87e9f",
+      "source_material": "worn_leather"
+    },
+    {
+      "path": "assets/slots/slot_state_hover.png",
+      "role": "interaction_overlay",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "4c7abbdb80c9cb922adf2b98da34e04f074728d1095ffec6333ab9af9a8cf759"
+    },
+    {
+      "path": "assets/slots/slot_state_selected.png",
+      "role": "interaction_overlay",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "sha256": "bcef714a933a68935f2e2ef50b45d0c67ef343e20eda0f5efdf7be8ad0c96134"
+    },
+    {
+      "path": "assets/ornaments/crest_optional.png",
+      "role": "optional_ornament",
+      "width": 256,
+      "height": 128,
+      "mode": "RGBA",
+      "sha256": "3cec28aeed84398e5b6d82a1eec1df06878c72f6fa868b0fc6d2a3e46579d2cb",
+      "recommended_display_px": [
+        64,
+        32
+      ]
+    }
+  ]
+}

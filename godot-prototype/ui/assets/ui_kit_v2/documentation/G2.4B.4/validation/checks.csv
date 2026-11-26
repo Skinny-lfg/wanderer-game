@@ -1,0 +1,157 @@
+test,asset,case,result
+nine_slice,bar_frame,100x16,PASS
+nine_slice,bar_frame,160x20,PASS
+nine_slice,bar_frame,240x24,PASS
+nine_slice,bar_frame,320x32,PASS
+nine_slice,bar_frame,420x32,PASS
+nine_slice,bar_frame,520x40,PASS
+nine_slice,bar_track,100x16,PASS
+nine_slice,bar_track,160x20,PASS
+nine_slice,bar_track,240x24,PASS
+nine_slice,bar_track,320x32,PASS
+nine_slice,bar_track,420x32,PASS
+nine_slice,bar_track,520x40,PASS
+nine_slice,fill_health,100x16,PASS
+nine_slice,fill_health,160x20,PASS
+nine_slice,fill_health,240x24,PASS
+nine_slice,fill_health,320x32,PASS
+nine_slice,fill_health,420x32,PASS
+nine_slice,fill_health,520x40,PASS
+nine_slice,fill_mana,100x16,PASS
+nine_slice,fill_mana,160x20,PASS
+nine_slice,fill_mana,240x24,PASS
+nine_slice,fill_mana,320x32,PASS
+nine_slice,fill_mana,420x32,PASS
+nine_slice,fill_mana,520x40,PASS
+nine_slice,fill_barrier,100x16,PASS
+nine_slice,fill_barrier,160x20,PASS
+nine_slice,fill_barrier,240x24,PASS
+nine_slice,fill_barrier,320x32,PASS
+nine_slice,fill_barrier,420x32,PASS
+nine_slice,fill_barrier,520x40,PASS
+nine_slice,fill_experience,100x16,PASS
+nine_slice,fill_experience,160x20,PASS
+nine_slice,fill_experience,240x24,PASS
+nine_slice,fill_experience,320x32,PASS
+nine_slice,fill_experience,420x32,PASS
+nine_slice,fill_experience,520x40,PASS
+fill_clip,health,100x16 @ 0%,PASS
+fill_clip,health,100x16 @ 1%,PASS
+fill_clip,health,100x16 @ 25%,PASS
+fill_clip,health,100x16 @ 50%,PASS
+fill_clip,health,100x16 @ 100%,PASS
+fill_clip,health,160x20 @ 0%,PASS
+fill_clip,health,160x20 @ 1%,PASS
+fill_clip,health,160x20 @ 25%,PASS
+fill_clip,health,160x20 @ 50%,PASS
+fill_clip,health,160x20 @ 100%,PASS
+fill_clip,health,240x24 @ 0%,PASS
+fill_clip,health,240x24 @ 1%,PASS
+fill_clip,health,240x24 @ 25%,PASS
+fill_clip,health,240x24 @ 50%,PASS
+fill_clip,health,240x24 @ 100%,PASS
+fill_clip,health,320x32 @ 0%,PASS
+fill_clip,health,320x32 @ 1%,PASS
+fill_clip,health,320x32 @ 25%,PASS
+fill_clip,health,320x32 @ 50%,PASS
+fill_clip,health,320x32 @ 100%,PASS
+fill_clip,health,420x32 @ 0%,PASS
+fill_clip,health,420x32 @ 1%,PASS
+fill_clip,health,420x32 @ 25%,PASS
+fill_clip,health,420x32 @ 50%,PASS
+fill_clip,health,420x32 @ 100%,PASS
+fill_clip,health,520x40 @ 0%,PASS
+fill_clip,health,520x40 @ 1%,PASS
+fill_clip,health,520x40 @ 25%,PASS
+fill_clip,health,520x40 @ 50%,PASS
+fill_clip,health,520x40 @ 100%,PASS
+fill_clip,mana,100x16 @ 0%,PASS
+fill_clip,mana,100x16 @ 1%,PASS
+fill_clip,mana,100x16 @ 25%,PASS
+fill_clip,mana,100x16 @ 50%,PASS
+fill_clip,mana,100x16 @ 100%,PASS
+fill_clip,mana,160x20 @ 0%,PASS
+fill_clip,mana,160x20 @ 1%,PASS
+fill_clip,mana,160x20 @ 25%,PASS
+fill_clip,mana,160x20 @ 50%,PASS
+fill_clip,mana,160x20 @ 100%,PASS
+fill_clip,mana,240x24 @ 0%,PASS
+fill_clip,mana,240x24 @ 1%,PASS
+fill_clip,mana,240x24 @ 25%,PASS
+fill_clip,mana,240x24 @ 50%,PASS
+fill_clip,mana,240x24 @ 100%,PASS
+fill_clip,mana,320x32 @ 0%,PASS
+fill_clip,mana,320x32 @ 1%,PASS
+fill_clip,mana,320x32 @ 25%,PASS
+fill_clip,mana,320x32 @ 50%,PASS
+fill_clip,mana,320x32 @ 100%,PASS
+fill_clip,mana,420x32 @ 0%,PASS
+fill_clip,mana,420x32 @ 1%,PASS
+fill_clip,mana,420x32 @ 25%,PASS
+fill_clip,mana,420x32 @ 50%,PASS
+fill_clip,mana,420x32 @ 100%,PASS
+fill_clip,mana,520x40 @ 0%,PASS
+fill_clip,mana,520x40 @ 1%,PASS
+fill_clip,mana,520x40 @ 25%,PASS
+fill_clip,mana,520x40 @ 50%,PASS
+fill_clip,mana,520x40 @ 100%,PASS
+fill_clip,barrier,100x16 @ 0%,PASS
+fill_clip,barrier,100x16 @ 1%,PASS
+fill_clip,barrier,100x16 @ 25%,PASS
+fill_clip,barrier,100x16 @ 50%,PASS
+fill_clip,barrier,100x16 @ 100%,PASS
+fill_clip,barrier,160x20 @ 0%,PASS
+fill_clip,barrier,160x20 @ 1%,PASS
+fill_clip,barrier,160x20 @ 25%,PASS
+fill_clip,barrier,160x20 @ 50%,PASS
+fill_clip,barrier,160x20 @ 100%,PASS
+fill_clip,barrier,240x24 @ 0%,PASS
+fill_clip,barrier,240x24 @ 1%,PASS
+fill_clip,barrier,240x24 @ 25%,PASS
+fill_clip,barrier,240x24 @ 50%,PASS
+fill_clip,barrier,240x24 @ 100%,PASS
+fill_clip,barrier,320x32 @ 0%,PASS
+fill_clip,barrier,320x32 @ 1%,PASS
+fill_clip,barrier,320x32 @ 25%,PASS
+fill_clip,barrier,320x32 @ 50%,PASS
+fill_clip,barrier,320x32 @ 100%,PASS
+fill_clip,barrier,420x32 @ 0%,PASS
+fill_clip,barrier,420x32 @ 1%,PASS
+fill_clip,barrier,420x32 @ 25%,PASS
+fill_clip,barrier,420x32 @ 50%,PASS
+fill_clip,barrier,420x32 @ 100%,PASS
+fill_clip,barrier,520x40 @ 0%,PASS
+fill_clip,barrier,520x40 @ 1%,PASS
+fill_clip,barrier,520x40 @ 25%,PASS
+fill_clip,barrier,520x40 @ 50%,PASS
+fill_clip,barrier,520x40 @ 100%,PASS
+fill_clip,experience,100x16 @ 0%,PASS
+fill_clip,experience,100x16 @ 1%,PASS
+fill_clip,experience,100x16 @ 25%,PASS
+fill_clip,experience,100x16 @ 50%,PASS
+fill_clip,experience,100x16 @ 100%,PASS
+fill_clip,experience,160x20 @ 0%,PASS
+fill_clip,experience,160x20 @ 1%,PASS
+fill_clip,experience,160x20 @ 25%,PASS
+fill_clip,experience,160x20 @ 50%,PASS
+fill_clip,experience,160x20 @ 100%,PASS
+fill_clip,experience,240x24 @ 0%,PASS
+fill_clip,experience,240x24 @ 1%,PASS
+fill_clip,experience,240x24 @ 25%,PASS
+fill_clip,experience,240x24 @ 50%,PASS
+fill_clip,experience,240x24 @ 100%,PASS
+fill_clip,experience,320x32 @ 0%,PASS
+fill_clip,experience,320x32 @ 1%,PASS
+fill_clip,experience,320x32 @ 25%,PASS
+fill_clip,experience,320x32 @ 50%,PASS
+fill_clip,experience,320x32 @ 100%,PASS
+fill_clip,experience,420x32 @ 0%,PASS
+fill_clip,experience,420x32 @ 1%,PASS
+fill_clip,experience,420x32 @ 25%,PASS
+fill_clip,experience,420x32 @ 50%,PASS
+fill_clip,experience,420x32 @ 100%,PASS
+fill_clip,experience,520x40 @ 0%,PASS
+fill_clip,experience,520x40 @ 1%,PASS
+fill_clip,experience,520x40 @ 25%,PASS
+fill_clip,experience,520x40 @ 50%,PASS
+fill_clip,experience,520x40 @ 100%,PASS
