@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -442,3 +442,66 @@ jobs:
         with:
           name: b31a-summary
           path: reports/b31a/summary.json
+
+  b31b-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b31b-compensation]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-b12c-surrender.test.cjs
+      - run: node scripts/v013-b31b-twohand-compensation.cjs smoke
+
+  b31b-study:
+    needs: b31b-gate
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        study: [0,1,2,3,4,5,6,7]
+        scenario: [0,1,2,3,4]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b31b-twohand-compensation.cjs study ${{ matrix.study }} ${{ matrix.scenario }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31b-study-${{ matrix.study }}-${{ matrix.scenario }}
+          path: reports/b31b/study-${{ matrix.study }}-${{ matrix.scenario }}.json
+
+  b31b-summary:
+    needs: b31b-study
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b31b-study-*
+          merge-multiple: true
+          path: reports/b31b
+      - run: node scripts/v013-b31b-twohand-compensation.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b31b-summary
+          path: reports/b31b/summary.json
