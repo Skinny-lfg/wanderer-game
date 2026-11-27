@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -1061,3 +1061,111 @@ jobs:
         with:
           name: b31f-staff-summary
           path: reports/b31f/staff-summary.json
+
+  b31g-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b31g-native]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/v013-b31g-native-weapons.cjs gate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31g-gate
+          path: reports/b31g/gate.json
+
+  b31g-physical:
+    needs: b31g-gate
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        study: [0,1,2,3,4,5,6,7,8,9,10,11]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46009009709
+          pattern: b31f-physical-${{ matrix.study }}-*
+          merge-multiple: true
+          path: reports/b31f-reference
+      - run: node scripts/v013-b31g-native-weapons.cjs replay physical ${{ matrix.study }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31g-physical-${{ matrix.study }}
+          path: reports/b31g/physical-${{ matrix.study }}.json
+
+  b31g-staff:
+    needs: b31g-gate
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        study: [0,1,2,3,4,5,6]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46009009709
+          pattern: b31f-staff-${{ matrix.study }}-*
+          merge-multiple: true
+          path: reports/b31f-reference
+      - run: node scripts/v013-b31g-native-weapons.cjs replay staff ${{ matrix.study }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31g-staff-${{ matrix.study }}
+          path: reports/b31g/staff-${{ matrix.study }}.json
+
+  b31g-summary:
+    needs: [b31g-physical, b31g-staff]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b31g-*
+          merge-multiple: true
+          path: reports/b31g
+      - run: node scripts/v013-b31g-native-weapons.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b31g-summary
+          path: reports/b31g/summary.json

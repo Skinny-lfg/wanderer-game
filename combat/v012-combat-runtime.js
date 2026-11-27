@@ -486,7 +486,7 @@ function offhandOnMainHit(r,hpDamage){
  }
 }
 function talentManaCost(amount,r){if(amount<=0)return 0;const reduction=Math.min(.25,Math.max(0,Number(r?.stats?.manaCostReduction)||0));return Math.max(1,Math.round(amount*(1-reduction)*100)/100);}
-function elementManaCost(b,kind,base){const mode=WandererV012Buildcraft.magicMode(b),row=({"arcane":[9,13,10,0],"frost":[10,15,12,8],"fire":[13,18,18,12],"lightning":[14,20,20,14]})[mode];return row?.[{Wand:0,Staff:1,infusion:2,automatic:3}[kind]]??base;}
+function elementManaCost(b,kind,base){const mode=WandererV012Buildcraft.magicMode(b),row=({"arcane":[9,13,10,0],"frost":[10,15,12,8],"fire":[13,18,18,12],"lightning":[14,20,20,14]})[mode];const price=row?.[{Wand:0,Staff:1,infusion:2,automatic:3}[kind]]??base;return kind==='Staff'?price*.75:price;}
 function v013FundedCost(baseCost,r=ports.state.run){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),cost=v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;return talentManaCost(cost,r);}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('forked_lightning'));}
 function v013LightningChainFactors(){
@@ -650,7 +650,7 @@ function weaponAttack(r,offhandStrike=false){
   r.legendaryFundedCost=cost;
   ports.phase6Metric(r,'manaSpent',cost);ports.phase6Metric(r,'fundedCasts',1);r.mp-=cost;cast=true;element=null;
   r.manaFallbackLogged=false;
-  const factor=kind==='Staff'?1.32:1.05;
+  const factor=kind==='Staff'?1.60:1.05;
   damage=Math.max(1,Math.round((ports.phase1Build?.element?WandererV012Buildcraft.elementalPower(ports.phase1Build,s.spellPower):s.spellPower)*factor));
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   ports.addLog((ports.ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ports.ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');

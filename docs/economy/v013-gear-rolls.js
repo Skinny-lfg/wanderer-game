@@ -125,6 +125,14 @@ function apply(item,basePower,random,influence=null){
   if(item.armorType==='Leather')item.evasionRating=Math.min(SECONDARY_CAPS.evasionRating[item.rarity],(item.evasionRating||0)+Math.max(1,Math.round(basePower*.22)));
  }
  if(item.subtype==='Wand'||item.subtype==='Staff')item.atk=0;
+ // B3.1G: compensate for the absent off-hand through the actual stored item
+ // offensive affix, not through a second derived character-stat multiplier.
+ // Half-point Attack values are deliberate: preserve the validated x1.5 exactly.
+ // This is a new-roll rule, never a migration of previously stored items.
+ if(item.slot==='weapon'){
+  if(['Bow','Two-Handed'].includes(item.subtype))item.atk=(item.atk||0)*1.5;
+  if(item.subtype==='Staff')item.spell=(item.spell||0)*2;
+ }
  item.affixes=[...selected];item.v013StatCount=selected.length;
  item.v013Budget=Math.round(total*100)/100;
  item.craftingProfile=item.rarity==='Common'?null:selected.find(k=>PRIMARY.includes(k))||null;
