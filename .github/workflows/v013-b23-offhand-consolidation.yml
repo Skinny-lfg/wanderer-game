@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -162,3 +162,116 @@ jobs:
         with:
           name: b23b-stalemate
           path: reports/b23b
+
+  final-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b23c-final]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-stage81-enemy-abilities.test.cjs tests/v013-b12c-surrender.test.cjs
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/v013-runtime-parity.test.cjs tests/v013-s1-parity.test.cjs
+
+  final-control:
+    needs: final-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45983097723
+          pattern: b23-*
+          merge-multiple: true
+          path: reports/b23
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45985885699
+          name: b23a-recovery
+          path: reports/b23a
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45986706270
+          name: b23b-stalemate
+          path: reports/b23b
+      - run: node scripts/v013-b23c-final.cjs control
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b23c-control
+          path: reports/b23c
+
+  final-agents:
+    needs: final-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [0,1,2,3,4,5,6,7]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45983097723
+          name: b23-agent-${{ matrix.profile }}
+          path: reports/b23
+      - run: node scripts/v013-b23c-final.cjs agent ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b23c-agent-${{ matrix.profile }}
+          path: reports/b23c
+
+  final-summary:
+    needs: [final-control, final-agents]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b23c-*
+          merge-multiple: true
+          path: reports/b23c
+      - run: node scripts/v013-b23c-final.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b23c-final-summary
+          path: reports/b23c/final-summary.json

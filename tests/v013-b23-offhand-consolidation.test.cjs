@@ -71,3 +71,16 @@ test('B2.3A: Camp probe records actual native talent validity, never a hard-code
  const a=create(28023,undefined,{}, {skipPersistence:true,now:1720000000000});
  assert.equal(nativeCampProbe(a).legal,true);
 });
+
+test('B2.3C: Surrender is a resolved defeat, not a death or a timeout; paired denominators retain it',()=>{
+ const {metrics,delta}=require('../scripts/v013-b23-offhand-confirmation.cjs');
+ const win={won:true,died:false,timedOut:false,seconds:10},dead={won:false,died:true,timedOut:false,seconds:20},giveup={won:false,died:false,surrendered:true,timedOut:false,seconds:605},timeout={won:false,died:false,timedOut:true,seconds:1430};
+ const m=metrics([win,dead,giveup,timeout]);assert.equal(m.n,4);assert.equal(m.resolved,3);assert.equal(m.wins,1);assert.equal(m.losses,2);assert.equal(m.deaths,1);assert.equal(m.surrenders,1);assert.equal(m.timeouts,1);assert.equal(m.winPct,33.333);
+ const d=delta([{arms:{old:win,approved:giveup}},{arms:{old:giveup,approved:win}},{arms:{old:dead,approved:timeout}}],'old','approved');assert.equal(d.n,2);assert.equal(d.delta,0);assert.equal(d.gains,1);assert.equal(d.losses,1);
+});
+test('B2.3C: H23 pair-score uses owned status and rejects two-handed secondary gear without forcing a choice',()=>{
+ const d=item('offhand','Off-Hand Dagger',{atk:5}),w=item('weapon','Mace',{atk:20}),stats={attack:70,spellPower:40,mana:70,manaRegen:3,agi:5,int:5,spdFlat:0};
+ const h={families:['blood','decay'],armor:'Leather',weapons:['Mace'],offhands:['Daggers'],adaptiveNodes:[],synergyContext:{stats}};const h23={...h,offhandPolicy:'b23'},e={weapon:w};
+ const gain=p=>N.adaptiveGearGain(d,p,'offhand',e);assert(gain(h23)>gain(h));assert(gain({...h23,adaptiveNodes:['bleeding_edge']})>gain(h23));assert(gain({...h23,adaptiveNodes:['corrupting_touch']})>gain(h23));
+ assert.equal(N.adaptiveGearGain(d,h23,'offhand',{weapon:item('weapon','Staff')}),-Infinity);
+});
