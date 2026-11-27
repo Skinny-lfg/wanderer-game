@@ -44,10 +44,10 @@ function referencePackages(a,p,level,seed){
  // to the earned account or modify its RNG. Reuse same rolled main/off item
  // across packages, so Sword/Shield, Sword/Dagger, Sword/None isolate offhand.
  const lab=create(seed,undefined,{}, {skipPersistence:true,now:1720000000000+seed});
- const rarity=level===3?'Uncommon':'Rare',current=a.state().equip,main=new Map(),off=new Map();
+ const rarity=level===3?'Uncommon':'Rare',expectedTier=globalThis.WandererV013Crafting.tierBand(level),current=a.state().equip,main=new Map(),off=new Map();
  for(const [,w,o] of HANDS){
-  if(!main.has(w)){const item=lab.makeItem(level,'weapon',null,'loot',w,rarity);assert.equal(item.subtype,w);assert.equal(item.tier,level);assert.equal(item.rarity,rarity);main.set(w,item);}
-  if(o&&!off.has(o)){const item=lab.makeItem(level,'offhand',null,'loot',o==='Daggers'?'Off-Hand Dagger':o,rarity);assert.equal(offType(item),o);assert.equal(item.tier,level);assert.equal(item.rarity,rarity);off.set(o,item);}
+  if(!main.has(w)){const item=lab.makeItem(level,'weapon',null,'loot',w,rarity);assert.equal(item.subtype,w);assert.equal(item.tier,expectedTier);assert.equal(item.rarity,rarity);main.set(w,item);}
+  if(o&&!off.has(o)){const item=lab.makeItem(level,'offhand',null,'loot',o==='Daggers'?'Off-Hand Dagger':o,rarity);assert.equal(offType(item),o);assert.equal(item.tier,expectedTier);assert.equal(item.rarity,rarity);off.set(o,item);}
  }
  return HANDS.flatMap(([label,w,o])=>{
   const weapon=main.get(w),secondary=o?off.get(o):null,eq={...current,weapon,offhand:secondary};
@@ -138,7 +138,7 @@ function aggregate(){
  const accounts=xs.flatMap(x=>x.accounts),cps=accounts.flatMap(a=>a.snapshots);assert.equal(new Set(cps.map(c=>c.id+'/'+c.seed+'/'+c.level)).size,cps.length);
  const profiles=xs.flatMap(x=>LEVELS.map(level=>({id:x.id,level,accounts:x.accounts.length,...summarize(x.accounts.flatMap(a=>a.snapshots).filter(c=>c.level===level))})));
  const levels=LEVELS.map(level=>({level,...summarize(cps.filter(c=>c.level===level))}));
- const report={baseline:BASE,commit:process.env.GITHUB_SHA,native:xs[0].native,accounts:accounts.length,reachedE10:accounts.filter(a=>a.endLevel>=10).length,clearedE10:accounts.filter(a=>a.clearedE10).length,checkpoints:cps.length,fights:sum(cps,c=>c.rows.length),levels,profiles,scope:'Conditional on natural reach. Current and best visible owned package per subtype by unchanged Combat-Aware score. Reference hands independently rolled at same E/rarity, not earned, with same actual nonhand equipment, talents and runes. One roll per checkpoint, not equal realized affixes or total hand budget. Native staged fights with full HP/MP, no natural preparation; five equally weighted scenarios. No causal claim for standalone main weapon across different offhands. Eight independent starting cohorts per profile, repeated encounters correlated.'};
+ const report={baseline:BASE,commit:process.env.GITHUB_SHA,native:xs[0].native,accounts:accounts.length,reachedE10:accounts.filter(a=>a.endLevel>=10).length,clearedE10:accounts.filter(a=>a.clearedE10).length,checkpoints:cps.length,fights:sum(cps,c=>c.rows.length),levels,profiles,scope:'Conditional on natural reach. Current and best visible owned package per subtype by unchanged Combat-Aware score. Reference hands independently rolled at same requested E/native gear tier band/rarity, not earned, with same actual nonhand equipment, talents and runes. One roll per checkpoint, not equal realized affixes or total hand budget. Native staged fights with full HP/MP, no natural preparation; five equally weighted scenarios. No causal claim for standalone main weapon across different offhands. Eight independent starting cohorts per profile, repeated encounters correlated.'};
  write('summary',report);
  for(const x of profiles)console.log('B32D8_PROFILE='+JSON.stringify({id:x.id,level:x.level,checkpoints:x.checkpoints,fights:x.fights,timeouts:x.timeouts,preferredOwned:x.preferredOwned,currentPreferred:x.currentPreferred,ownedSelectedPreferred:x.ownedSelectedPreferred,referenceSelectedPreferred:x.referenceSelectedPreferred,current:x.current,ownedSelected:x.ownedSelected,currentVsOwned:x.currentVsOwned,referencePackages:x.referencePackages,referenceSelection:x.referenceSelection}));
  console.log('B32D8_OVERVIEW='+JSON.stringify({...report,profiles:undefined,levels:levels.map(({referencePairs,referenceByScenario,availability,...l})=>l)}));
@@ -148,8 +148,18 @@ function smoke(){
  assert.equal(execFileSync('git',['diff','--name-only',BASE,'HEAD','--','combat','online','economy','index.html','docs','scripts/v013-b32c-equipment-policy.cjs','scripts/v013-b32d7-combat-aware-policy.cjs','scripts/v013-natural-progression.cjs'],{encoding:'utf8'}).trim(),'');
  // Native generated fixture only for quick structural smoke; actual study
  // exclusively calls capture after progression from E1.
- const id=IDS[0],p=profile(id),a=create(SEED,undefined,{}, {skipPersistence:true,now:1720000000000+SEED});a.setup(3,'Sword','Uncommon');a.setUnlocked(3);
- const cp=capture({a,level:3,attempt:1,seed:SEED,profile:p},id);assert(cp);const rs=[cp.current,...cp.owned,...cp.reference].map(h=>cell(cp,h,SC[0],0));assert.equal(new Set(rs.map(r=>r.scenarioHash)).size,1);assert.equal(new Set(rs.map(r=>r.nonhands)).size,1);
- console.log('B32D8_SMOKE='+JSON.stringify({packages:cp.reference.length,owned:cp.owned.length,matched:true,policyDrift:false}));
+ const id=IDS[0],p=profile(id),levels=[];
+ for(const level of LEVELS){
+  const a=create(SEED,undefined,{}, {skipPersistence:true,now:1720000000000+SEED});a.setup(level,'Sword',level===3?'Uncommon':'Rare');a.setUnlocked(level);
+  const cp=capture({a,level,attempt:1,seed:SEED,profile:p},id);assert(cp);
+  const expectedTier=globalThis.WandererV013Crafting.tierBand(level);
+  assert.equal(expectedTier,level===3?3:5);
+  assert(cp.reference.every(h=>[h.weapon,h.offhand].filter(Boolean).every(i=>i.tier===expectedTier)));
+  for(const [si,sc] of SC.entries()){
+   const rs=[cp.current,...cp.owned,...cp.reference].map(h=>cell(cp,h,sc,si));assert.equal(new Set(rs.map(r=>r.scenarioHash)).size,1);assert.equal(new Set(rs.map(r=>r.nonhands)).size,1);
+  }
+  levels.push({level,expectedTier,packages:cp.reference.length,owned:cp.owned.length});
+ }
+ console.log('B32D8_SMOKE='+JSON.stringify({levels,matched:true,policyDrift:false}));
 }
 const [cmd,pi]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='study')run(Number(pi));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');

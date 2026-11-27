@@ -176,7 +176,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     const old=owned.find(x=>x.id===item.id);
     if(!old||JSON.stringify({...old,slot:item.slot,subtype:old.subtype==='Off-Hand Dagger'?'Daggers':old.subtype})!==JSON.stringify(item)&&JSON.stringify(old)!==JSON.stringify(item))throw Error('Unowned or modified B3.2D.8 hand item');
    }
-  }else if(![handStudy.weapon,handStudy.offhand].filter(Boolean).every(x=>x.rarity===opts.rarity&&x.tier===gearE))throw Error('Reference hand tier or rarity mismatch');
+  }else if(![handStudy.weapon,handStudy.offhand].filter(Boolean).every(x=>x.rarity===opts.rarity&&x.tier===globalThis.WandererV013Crafting.tierBand(gearE)))throw Error('Reference hand tier or rarity mismatch');
  }
  if(earned){
   if(earned.level!==level||earned.unlocked<level||
