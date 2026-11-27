@@ -91,7 +91,7 @@ module.exports=function createHarness(seed=1,source=fs.readFileSync(path.join(ro
    seed:()=>phase4Seed,random:gameRandom},
   feedback:()=>auditFeedback={logs:[],floats:[]},rng:value=>{Math.random=()=>value;gameRandom=()=>value;},
   encounter({count=3,boss=false,elite=false}={}){const g=phase1Controller.state;Object.assign(g.selected,{mobCount:count,boss,elite:elite||boss});state.run.status="ready";phase1StartWave();return state.run;},
-  stats:phase2Stats,baseStats:totalStats,statSources:stats=>WandererV012GearStats.breakdown(state.equip,state.runes,state.runeSlots,statContext(),stats),statMarkup:phase3StatValue,makeItem,
+  stats:phase2Stats,baseStats:totalStats,projectAttributeStats(key){const next=WandererAutomaticTalents.allocateAttribute(state.automaticTalents,key);if(!next)return null;const context=statContext(null);return WandererV012GearStats.totalStats(state.equip,null,null,{...context,state:{...state,automaticTalents:next},build:null,phase6Run:null});},statSources:stats=>WandererV012GearStats.breakdown(state.equip,state.runes,state.runeSlots,statContext(),stats),statMarkup:phase3StatValue,makeItem,
   gear:{itemStats,evasionChance,gearEvasionRating,tryDodge,enemyAttackType,statsWidget,itemComparison,setCounts,setBonuses,itemSource,itemImg,detailEffectHtml,offhandEffectPanel,offhandComparePanel,gearTrend,comparisonWarning,legendaryDescription,
    weaponAttack,legendaryReady,legendaryAttackBonus,enemyDebuffMarkup,dungeonEquipmentOdds,placeholderIcon,renderStash,
    renderForge:()=>auditForge(),renderMerchant:()=>auditMerchant(),

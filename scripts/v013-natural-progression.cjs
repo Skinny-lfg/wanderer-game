@@ -388,8 +388,9 @@ function spendEarnedAttributes(a,profile){
  const order=first==='decay'&&!caster?['str','int','end','int',profile.weapons?.[0]==='Daggers'?'agi':'str']:rotations[first]||rotations.blood;
  const choices=[];
  while(T.availableAttributes(s.automaticTalents)>0){
-  const spent=T.spentAttributes(s.automaticTalents),key=order[spent%order.length];
+  const spent=T.spentAttributes(s.automaticTalents),ranked=EQUIPMENT_AI.attributes(profile)?EQUIPMENT_AI.attributeChoices(a,profile):[],best=ranked[0],key=best?.key||order[spent%order.length];
   if(!a.talentActions.attribute(key))throw Error('Native attribute purchase rejected '+key);
+  if(best){const actual=EQUIPMENT_AI.utility(a,profile,s.equip,Math.max(1,a.controller().state.unlocked||1));EQUIPMENT_AI.trace(profile,{phase:'attributes',kind:'attribute',key,gain:best.gain,expected:best.score,actual,projectionMatch:Math.abs(actual-best.score)<1e-6,alternatives:ranked});}
   choices.push(key);
  }
  if(s.automaticTalents.xp!==before.xp||!T.valid(s.automaticTalents))
@@ -410,7 +411,7 @@ function prepareEarnedAbility(a,profile){
  return chosen;
 }
 function handGain(a,profile,item,slot){const equip=a.state().equip,prior=equip[slot];const g=EQUIPMENT_AI.gain(a,profile,item,slot,equip);return g!==null?g:adaptiveCommitment(profile)?adaptiveGearGain(item,profile,slot,equip):isolatedAdaptive(profile)?isolatedGearGain(item,profile,slot,equip):identityGain(item,prior,profile,slot);}
-function handTargets(item,profile){return EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item?.slot)?EQUIPMENT_AI.targets(item):null;}
+function handTargets(item,profile){return EQUIPMENT_AI.full(profile)?EQUIPMENT_AI.gearTargets(item):EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item?.slot)?EQUIPMENT_AI.targets(item):null;}
 function equipEarned(a,profile,between=false){
  const actions=[];
  if(decisionQuality(profile))refreshSynergyContext(a,profile);
@@ -450,6 +451,19 @@ function equipEarned(a,profile,between=false){
   }
  }
 
+ if(EQUIPMENT_AI.full(profile)&&a.state().equip.weapon){
+  const phase=between?'bag':'stash',used=new Set();
+  for(let step=0;step<6;step++){
+   const visible=(between?a.bag.items().filter(x=>x.kind!=='valuable'):a.state().stash).filter(x=>x?.id&&x.slot&&!['weapon','offhand'].includes(x.slot)&&!used.has(x.id));
+   const choices=visible.flatMap(item=>EQUIPMENT_AI.gearTargets(item).map(target=>({item,target,gain:EQUIPMENT_AI.gain(a,profile,item,target)}))).filter(x=>Number.isFinite(x.gain)).sort((x,y)=>y.gain-x.gain||String(x.item.id).localeCompare(String(y.item.id))||x.target.localeCompare(y.target));
+   const best=choices.find(x=>x.gain>=2.5);if(!best)break;
+   const {item,target,gain}=best,prior=a.state().equip[target],level=Math.max(1,a.controller().state.unlocked||1),before=EQUIPMENT_AI.utility(a,profile,a.state().equip,level);used.add(item.id);
+   const ok=a.equip(item.id,target),actual=ok?EQUIPMENT_AI.utility(a,profile,a.state().equip,level)-before:null;
+   EQUIPMENT_AI.trace(profile,{phase,kind:'nonhandEquip',id:item.id,subtype:item.subtype,armorType:item.armorType||null,slot:target,gain,actualGain:actual,accepted:!!ok,projectionMatch:!ok||Math.abs(actual-gain)<1e-6});
+   if(ok){actions.push({slot:target,item:item.name,rarity:item.rarity,previous:prior?.name||null,gain:round(gain)});if(decisionQuality(profile))refreshSynergyContext(a,profile);}
+  }
+  return actions;
+ }
  for(const item of items){
   if(EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot))continue;
   const offhandDagger=(profile.offhandPolicy==='b23'||profile.offhands?.includes('Daggers'))&&
@@ -799,7 +813,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  if(a.economyCanAct()){
   const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&
    !item.locked&&!item.recoveryStarter&&item.id&&
-   (EQUIPMENT_AI.stable(profile)&&['weapon','offhand'].includes(item.slot)?false:EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot)?EQUIPMENT_AI.targets(item).every(slot=>{const gain=handGain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5));
+   (EQUIPMENT_AI.stable(profile)&&['weapon','offhand'].includes(item.slot)?false:EQUIPMENT_AI.full(profile)?EQUIPMENT_AI.gearTargets(item).every(slot=>{const gain=EQUIPMENT_AI.gain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot)?EQUIPMENT_AI.targets(item).every(slot=>{const gain=handGain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5));
   if(surplus.length){
    const ids=surplus.map(item=>item.id),expected=surplus.reduce((sum,item)=>sum+a.sale(item),0);
    const before=s.fragments;

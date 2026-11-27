@@ -67,7 +67,9 @@ function adaptiveScore(x,b,profile,weapon){
 }
 
 
-function stable(p){return p?.equipmentIntelligence==='b32c1-stable';}
+function full(p){return ['b32d-full','b32d-attributes'].includes(p?.equipmentIntelligence);}
+function attributes(p){return p?.equipmentIntelligence==='b32d-attributes';}
+function stable(p){return p?.equipmentIntelligence==='b32c1-stable'||full(p);}
 function enabled(p){return p?.equipmentIntelligence==='b32c-soft'||stable(p);}
 function targets(item){if(!item)return [];if(item.subtype==='Off-Hand Dagger')return ['offhand'];if(item.subtype==='Daggers')return ['weapon','offhand'];return [item.slot];}
 function projected(equip,item,slot){
@@ -80,23 +82,25 @@ function projected(equip,item,slot){
  if(new Set(ids).size!==ids.length)return null;
  return next;
 }
-function features(a,equip,level){
- const stats=a.baseStats(equip),t=a.state().automaticTalents,extra={rawAttackSpeed:stats.rawAttackSpeed,spdFlat:stats.spdFlat,critDamage:stats.critDamage||0,dotPower:stats.dotPower||0};
+function features(a,equip,level,override=null){
+ const stats=override||a.baseStats(equip),t=a.state().automaticTalents,extra={rawAttackSpeed:stats.rawAttackSpeed,spdFlat:stats.spdFlat,critDamage:stats.critDamage||0,dotPower:stats.dotPower||0};
  return adaptiveFeatures({stats,adaptiveStats:extra,weapon:equip.weapon.subtype,off:equip.offhand?.subtype||null,nodes:[...t.nodes],equipment:equip},t.element||'arcane',level);
 }
 
  // One absolute utility for all legal hand sets. Legendary signatures remain
  // unmodeled; a bounded retention term acknowledges this unknown value instead
  // of mixing H23 and Adaptive scores on different edges of the same search.
-function utility(a,p,equip,level){
- const x=features(a,equip,level),ranks=ownedRanks(a.state().automaticTalents.nodes),w=equip.weapon.subtype,o=equip.offhand?.subtype;
+function utility(a,p,equip,level,override=null){
+ const x=features(a,equip,level,override),ranks=ownedRanks(a.state().automaticTalents.nodes),w=equip.weapon.subtype,o=equip.offhand?.subtype;
  const specific=(w==='Bow'?(ranks.bow_pierce||0):w==='Two-Handed'?(ranks.cleave_mastery||0):w==='Daggers'?(ranks.fan_of_blades||0):w==='Sword'&&o==='Shield'?(ranks.sword_sweep||0):w==='Mace'?(ranks.mace_shockwave||0):0);
  const owned=a.state().automaticTalents.nodes.length,commit=Math.min(1,owned/30),preferred=p.weapons?.includes(w)?1:0;
  const score=.25*(.65*Math.log(x.single)+.35*Math.log(x.normalDurability))+.40*(.55*Math.log(x.group)+.45*Math.log(x.normalDurability))+.35*(.42*Math.log(x.single)+.58*Math.log(x.bossDurability));
  // Actual acquired weapon-specialization nodes, not planned nodes. Small
  // extra value covers unknown downstream synergies; no hard weapon lock.
- const signature=(equip.weapon?.rarity==='Legendary'?1:0)+(equip.offhand?.rarity==='Legendary'?1:0);
- return 100*(score+.035*commit*preferred+.025*Math.min(4,specific)+.06*signature);
+ const signature=full(p)?Object.values(equip).filter(x=>x?.rarity==='Legendary').length:(equip.weapon?.rarity==='Legendary'?1:0)+(equip.offhand?.rarity==='Legendary'?1:0);
+ // Provisional bounded loot-quality credit, not a prediction of future drops.
+ const loot=full(p)?.005*clamp(num((override||a.baseStats(equip)).lootQuality),0,10):0;
+ return 100*(score+.035*commit*preferred+.025*Math.min(4,specific)+.06*signature+loot);
 }
 function key(equip){return [equip.weapon?.id||null,equip.offhand?.id||null].join('|');}
 function stableGain(a,p,from,to){
@@ -134,9 +138,23 @@ function plans(a,p,items,between){
  return candidates.sort((x,y)=>y.gain-x.gain||x.steps.length-y.steps.length||key(x.next).localeCompare(key(y.next)));
 }
 
+function gearTargets(item){if(!item)return [];return ['ring1','ring2'].includes(item.slot)?['ring1','ring2']:targets(item);}
+function projectGear(equip,item,slot){
+ if(HANDS.has(slot))return projected(equip,item,slot);
+ if(!item||!Object.hasOwn(equip,slot)||!gearTargets(item).includes(slot))return null;
+ const next={...equip,[slot]:{...item,slot}};
+ const ids=Object.values(next).filter(x=>x?.id).map(x=>x.id);
+ if(new Set(ids).size!==ids.length||Object.values(next).filter(x=>x?.rarity==='Legendary').length>2)return null;
+ return next;
+}
+function attributeChoices(a,p){
+ const eq=a.state().equip;if(!eq.weapon)return [];
+ const level=Math.max(1,a.controller().state.unlocked||1),baseline=utility(a,p,eq,level);
+ return a.talents.ATTRIBUTES.map(key=>{const projected=a.projectAttributeStats(key);return projected?{key,gain:utility(a,p,eq,level,projected)-baseline,score:utility(a,p,eq,level,projected)}:null;}).filter(Boolean).sort((a,b)=>b.gain-a.gain||a.key.localeCompare(b.key));
+}
 function gain(a,p,item,slot,equip=a.state().equip){
- if(!enabled(p)||!HANDS.has(slot)||!equip?.weapon)return null;
- const next=projected(equip,item,slot);if(!next)return -Infinity;
+ if(!enabled(p)||(!full(p)&&!HANDS.has(slot))||!equip?.weapon)return null;
+ const next=full(p)?projectGear(equip,item,slot):projected(equip,item,slot);if(!next)return -Infinity;
  if(stable(p))return stableGain(a,p,equip,next);
  // Legendary signatures have not been modeled. Preserve H23 for choices
  // involving an equipped or candidate legendary hand item until B4.
@@ -146,4 +164,4 @@ function gain(a,p,item,slot,equip=a.state().equip){
  assert(Number.isFinite(score),'Non-finite adaptive hand gain');return score;
 }
 function trace(p,entry){if(typeof p.equipmentTrace==='function')p.equipmentTrace(entry);}
-module.exports={enabled,stable,targets,projected,gain,trace,adaptiveFeatures,adaptiveScore,utility,stableGain,key,plans,threshold};
+module.exports={enabled,stable,full,attributes,targets,gearTargets,projectGear,attributeChoices,projected,gain,trace,adaptiveFeatures,adaptiveScore,utility,stableGain,key,plans,threshold};
