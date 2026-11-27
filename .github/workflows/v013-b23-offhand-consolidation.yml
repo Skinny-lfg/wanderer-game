@@ -611,13 +611,52 @@ jobs:
       - run: npm ci
       - run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-b12c-surrender.test.cjs tests/v013-stage64-mana-fallback.test.cjs
       - run: npm test
+
+  b31d-gear-audit:
+    needs: b31d-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - run: node scripts/v013-b31d-gear-budget-audit.cjs
       - uses: actions/upload-artifact@v4
         with:
           name: b31d-gear-budget
           path: reports/b31d/gear-budget.json
+
+  b31d-staff-smoke:
+    needs: b31d-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - run: node scripts/v013-b31d-staff-economy.cjs smoke
-      - run: node scripts/v013-b31d-physical-stack.cjs smoke
+
+  b31d-physical-parity:
+    needs: b31d-gate
+    permissions:
+      contents: read
+      actions: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: actions/download-artifact@v4
         with:
           github-token: ${{ github.token }}
@@ -638,8 +677,21 @@ jobs:
           name: b31d-physical-parity
           path: reports/b31d/physical-parity.json
 
-  b31d-staff:
+  b31d-stack-smoke:
     needs: b31d-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b31d-physical-stack.cjs smoke
+
+  b31d-staff:
+    needs: b31d-staff-smoke
     strategy:
       fail-fast: false
       max-parallel: 12
@@ -662,7 +714,7 @@ jobs:
           path: reports/b31d/staff-${{ matrix.study }}-${{ matrix.scenario }}.json
 
   b31d-summary:
-    needs: b31d-staff
+    needs: [b31d-staff, b31d-gear-audit, b31d-physical-parity]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -674,8 +726,16 @@ jobs:
           node-version: '22'
       - uses: actions/download-artifact@v4
         with:
-          pattern: b31d-*
+          pattern: b31d-staff-*-*
           merge-multiple: true
+          path: reports/b31d
+      - uses: actions/download-artifact@v4
+        with:
+          name: b31d-gear-budget
+          path: reports/b31d
+      - uses: actions/download-artifact@v4
+        with:
+          name: b31d-physical-parity
           path: reports/b31d
       - run: node scripts/v013-b31d-staff-economy.cjs aggregate
       - uses: actions/upload-artifact@v4
@@ -685,7 +745,7 @@ jobs:
           path: reports/b31d/summary.json
 
   b31d-physical-stack:
-    needs: b31d-gate
+    needs: b31d-stack-smoke
     strategy:
       fail-fast: false
       max-parallel: 12

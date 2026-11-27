@@ -49,7 +49,7 @@ function metrics(rows){
 }
 function aggregate(){
  const xs=specs.flatMap((st,si)=>SC.map((sc,ci)=>JSON.parse(fs.readFileSync(OUT+'/staff-'+si+'-'+ci+'.json','utf8'))));assert.equal(new Set(xs.map(x=>x.native)).size,1);const results=[],all=xs.flatMap(x=>x.cases.flatMap(c=>c.rows));
- const gearBudget=JSON.parse(fs.readFileSync(OUT+'/gear-budget.json','utf8'));assert.equal(gearBudget.commit,process.env.GITHUB_SHA);assert.equal(gearBudget.rolls,24000);
+ const gearBudget=JSON.parse(fs.readFileSync(OUT+'/gear-budget.json','utf8'));assert.equal(gearBudget.commit,process.env.GITHUB_SHA);assert.equal(gearBudget.rolls,22800);
  const replay=JSON.parse(fs.readFileSync(OUT+'/physical-parity.json','utf8'));assert.equal(replay.commit,process.env.GITHUB_SHA);assert.equal(replay.replayed,72);assert.equal(replay.matched,72);
  for(const x of xs){assert.equal(x.commit,process.env.GITHUB_SHA);assert.equal(x.cases.length,N);assert.equal(new Set(x.cases.map(c=>c.seed)).size,N);for(const c of x.cases)assert.deepEqual(c.rows.map(r=>r.id),ARMS.map(a=>a.id));
   const by=Object.fromEntries(ARMS.map(a=>[a.id,{...metrics(x.cases.map(c=>c.rows.find(r=>r.id===a.id))),paired:A.paired(x.cases,'native',a.id),vsOrb:A.paired(x.cases,'Wand+Orb',a.id),vsTome:A.paired(x.cases,'Wand+Tome',a.id)}]));
@@ -58,7 +58,7 @@ function aggregate(){
   const row={study:x.study,scenario:x.scenario,arms:by,interaction};results.push(row);
   console.log('B31D_STUDY='+JSON.stringify({study:x.study,scenario:x.scenario,arms:Object.fromEntries(Object.entries(by).map(([id,v])=>[id,{n:v.n,wins:v.wins,timeout:v.timeout,DPS:v.DPS,actualSP:v.actualSP,weaponSpell:v.weaponSpell,weaponSpellContribution:v.weaponSpellContribution,basePerMainHit:v.basePerMainHit,effectiveMainHit:v.effectiveMainHit,secondaryDPS:v.secondaryDPS,secondaryDotDPS:v.secondaryDotDPS,takenPerSec:v.takenPerSec,absorbedPerSec:v.absorbedPerSec,barrierGeneratedPerSec:v.barrierGeneratedPerSec,manaRemaining:v.manaRemaining,mana:v.mana,paired:v.paired,vsOrb:v.vsOrb,vsTome:v.vsTome}])),interaction}));
  }
- assert.equal(all.length,10500);const summary={baseline:BASE,commit:process.env.GITHUB_SHA,native:xs[0].native,fights:all.length,timeouts:all.filter(x=>x.timeout).length,surrenders:all.filter(x=>x.surrendered).length,physicalParity:replay,gearBudget:{rolls:gearBudget.rolls,tiers:gearBudget.tiers,rarities:gearBudget.rarities,source:gearBudget.source},results,scope:'50 new matched seeds, fixed legal E10 Rare builds; Staff variants VM only; physical changes explicitly approved. No natural global balance claim.'};write('summary',summary);console.log('B31D_OVERVIEW='+JSON.stringify({...summary,results:undefined}));if(summary.timeouts)process.exitCode=1;
+ assert.equal(all.length,10500);const summary={baseline:BASE,commit:process.env.GITHUB_SHA,native:xs[0].native,fights:all.length,timeouts:all.filter(x=>x.timeout).length,surrenders:all.filter(x=>x.surrendered).length,physicalParity:replay,gearBudget:{rolls:gearBudget.rolls,tiers:gearBudget.tiers,rarities:gearBudget.rarities,unavailableLegendary:gearBudget.unavailableLegendary,source:gearBudget.source},results,scope:'50 new matched seeds, fixed legal E10 Rare builds; Staff variants VM only; physical changes explicitly approved. No natural global balance claim.'};write('summary',summary);console.log('B31D_OVERVIEW='+JSON.stringify({...summary,results:undefined}));if(summary.timeouts)process.exitCode=1;
 }
 function physicalParity(){
  const checks=[],oldDir='reports/b31c-physical-reference';
