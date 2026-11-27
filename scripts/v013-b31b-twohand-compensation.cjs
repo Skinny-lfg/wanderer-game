@@ -92,3 +92,5 @@ function smoke(){
  console.log('B31B_SMOKE='+JSON.stringify({studies:specs.length,productionDrift:false,unchangedNative:true}));
 }
 if(require.main===module){const [cmd,si,ci]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='study')run(Number(si),Number(ci));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
+
+module.exports={sources,metrics,configs};

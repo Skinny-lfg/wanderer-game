@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -505,3 +505,89 @@ jobs:
         with:
           name: b31b-summary
           path: reports/b31b/summary.json
+
+  b31c-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b31c-validation]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-b12c-surrender.test.cjs tests/v013-stage64-mana-fallback.test.cjs
+      - run: node scripts/v013-b31c-compensation-validation.cjs smoke
+
+  b31c-physical:
+    needs: b31c-gate
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        study: [0,1,2,3,4,5,6,7,8,9,10,11]
+        scenario: [0,1,2,3,4]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b31c-compensation-validation.cjs study physical ${{ matrix.study }} ${{ matrix.scenario }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31c-physical-${{ matrix.study }}-${{ matrix.scenario }}
+          path: reports/b31c/physical-${{ matrix.study }}-${{ matrix.scenario }}.json
+
+  b31c-staff:
+    needs: b31c-gate
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        study: [0,1,2,3]
+        scenario: [0,1,2]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b31c-compensation-validation.cjs study staff ${{ matrix.study }} ${{ matrix.scenario }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31c-staff-${{ matrix.study }}-${{ matrix.scenario }}
+          path: reports/b31c/staff-${{ matrix.study }}-${{ matrix.scenario }}.json
+
+  b31c-summary:
+    needs: [b31c-physical, b31c-staff]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b31c-*
+          merge-multiple: true
+          path: reports/b31c
+      - run: node scripts/v013-b31c-compensation-validation.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b31c-summary
+          path: reports/b31c/summary.json
