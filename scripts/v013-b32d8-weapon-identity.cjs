@@ -71,7 +71,7 @@ function capture({a,level,attempt,seed,profile:p},id){
 function collect(id,i,count=COUNT){
  const seed=SEED+i*131,p=profile(id),snapshots=[];
  const acc=N.simulateAccount(seed,id,{...N.DEFAULTS,...D.CONFIG,tickLimit:13000},{researchProfiles:{[id]:p},decisionModel:'adaptive',equipEarnedRunes:true,onCamp:probe=>{
-  const cp=capture(probe,id);if(cp)snapshots.push(cp);return null;
+  const cp=capture(probe,id);if(cp)snapshots.push(cp);return {legal:probe.a.talents.valid(probe.a.state().automaticTalents),stats:probe.a.baseStats()};
  }});
  assert.equal(acc.startXp,0);assert(acc.initialGear.items.every(x=>x.startingGear));
  const audit=A.audit(id,[acc]),issues=[...audit.issues];for(const t of acc.attempts)issues.push(...D.compatibilityIssues(t,p));
@@ -113,7 +113,7 @@ function write(name,x){fs.mkdirSync(OUT,{recursive:true});fs.writeFileSync(OUT+'
 function run(pi){const id=IDS[pi];assert(id);const accounts=Array.from({length:COUNT},(_,i)=>studyAccount(id,i));write('study-'+pi,{pi,id,commit:process.env.GITHUB_SHA,native:S.sourceFingerprint().sha256,accounts});console.log('B32D8_SHARD='+JSON.stringify({id,accounts:accounts.length,checkpoints:sum(accounts,a=>a.snapshots.length),fights:sum(accounts,a=>sum(a.snapshots,c=>c.rows.length))}));}
 function stats(rows){
  const wins=rows.filter(r=>r.won),mana=rows.filter(r=>r.mpMax>0),funded=sum(rows,r=>n(r.funded)),unfunded=sum(rows,r=>n(r.unfunded));
- return {n:rows.length,wins:wins.length,winPct:rows.length?100*wins.length/rows.length:null,timeouts:rows.filter(r=>r.timeout).length,utility:mean(rows,r=>r.utility),winSeconds:mean(wins,r=>r.seconds),dps:mean(rows,r=>r.seconds?r.damage/r.seconds:0),aoeDps:mean(rows,r=>r.seconds?n(r.secondary)/r.seconds:0),dotDps:mean(rows,r=>r.seconds?n(r.dot)/r.seconds:0),hpEndPct:mean(rows,r=>100*r.hpEnd/Math.max(1,r.hpMax)),manaEndPct:mean(mana,r=>100*r.mpEnd/r.mpMax),funded,unfunded,paidFraction:funded+unfunded?funded/(funded+unfunded):null,parries:sum(rows,r=>n(r.defense?.parries)),blocks:sum(rows,r=>n(r.defense?.shield)),healed:mean(rows,r=>n(r.healed)),absorbed:mean(rows,r=>n(r.absorbed))};
+ return {n:rows.length,wins:wins.length,winPct:rows.length?100*wins.length/rows.length:null,timeouts:rows.filter(r=>r.timeout).length,utility:mean(rows,r=>r.utility),winSeconds:mean(wins,r=>r.seconds),dps:mean(rows,r=>r.seconds?r.damage/r.seconds:0),aoeDps:mean(rows,r=>r.seconds?n(r.secondary)/r.seconds:0),dotDps:mean(rows,r=>r.seconds?n(r.dot)/r.seconds:0),hpEndPct:mean(rows,r=>100*r.hpEnd/Math.max(1,r.hpMax)),manaEndPct:mean(mana,r=>100*r.mpEnd/r.mpMax),funded,unfunded,paidFraction:funded+unfunded?funded/(funded+unfunded):null,parries:sum(rows,r=>n(r.defense?.parries)),shieldDamagePrevented:sum(rows,r=>n(r.defense?.shield)),healed:mean(rows,r=>n(r.healed)),absorbed:mean(rows,r=>n(r.absorbed))};
 }
 function pairs(a,b){const key=r=>r.cpKey+'/'+r.scenario,map=new Map(b.map(r=>[key(r),r])),matched=a.flatMap(x=>map.has(key(x))?[[x,map.get(key(x))]]:[]);let aOnly=0,bOnly=0,unresolved=0,correct=0,incorrect=0;for(const [x,y] of matched){if(x.timeout||y.timeout){unresolved++;continue;}if(x.won===y.won)continue;if(x.won)aOnly++;else bOnly++;if(x.utility===y.utility)continue;if((x.utility>y.utility)===x.won)correct++;else incorrect++;}return {n:matched.length,aOnly,bOnly,unresolved,correct,incorrect,bothWinTimeDelta:mean(matched.filter(([x,y])=>x.won&&y.won),([x,y])=>x.seconds-y.seconds)};}
 function summarize(cps){
@@ -160,6 +160,10 @@ function smoke(){
   }
   levels.push({level,expectedTier,packages:cp.reference.length,owned:cp.owned.length});
  }
- console.log('B32D8_SMOKE='+JSON.stringify({levels,matched:true,policyDrift:false}));
+ // End-to-end natural checkpoint and actual replay, not just generated fixtures.
+ const probe=studyAccount(id,0);
+ assert(probe.snapshots.some(c=>c.level===3),'Natural smoke did not reach E3');
+ assert(probe.snapshots.every(c=>c.rows.length>0),'Missing natural replay');
+ console.log('B32D8_SMOKE='+JSON.stringify({levels,natural:{id:probe.id,seed:probe.seed,endLevel:probe.endLevel,checkpoints:probe.snapshots.map(c=>c.level),fights:sum(probe.snapshots,c=>c.rows.length)},matched:true,policyDrift:false}));
 }
 const [cmd,pi]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='study')run(Number(pi));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');
