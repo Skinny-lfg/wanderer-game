@@ -163,6 +163,21 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
  // a native onCamp checkpoint (E already unlocked); never reroll, synthesize
  // affixes, grant Talents or pretend this is a naturally reached Boss room.
  const earned=opts.earnedCheckpoint||null;
+ const handStudy=opts.stageB32D8Hands;
+ if(handStudy!==undefined){
+  if(!earned||opts.lockScenarioStreams!==true||!['owned','reference'].includes(handStudy.origin)||!handStudy.weapon?.id||handStudy.weapon.slot!=='weapon')throw Error('Invalid B3.2D.8 detached hand study');
+  if(['Two-Handed','Bow','Staff'].includes(handStudy.weapon.subtype)&&handStudy.offhand)throw Error('Illegal two-handed B3.2D.8 pair');
+  if(handStudy.offhand&&handStudy.offhand.slot!=='offhand')throw Error('Illegal offhand slot');
+  const next={...earned.equip,weapon:handStudy.weapon,offhand:handStudy.offhand||null},items=Object.values(next).filter(Boolean);
+  if(new Set(items.map(x=>x.id)).size!==items.length||items.filter(x=>x.rarity==='Legendary').length>2)throw Error('Illegal B3.2D.8 equipment');
+  if(handStudy.origin==='owned'){
+   const owned=[...Object.values(earned.equip).filter(Boolean),...(earned.ownedStash||[])];
+   for(const item of [handStudy.weapon,handStudy.offhand].filter(Boolean)){
+    const old=owned.find(x=>x.id===item.id);
+    if(!old||JSON.stringify({...old,slot:item.slot,subtype:old.subtype==='Off-Hand Dagger'?'Daggers':old.subtype})!==JSON.stringify(item)&&JSON.stringify(old)!==JSON.stringify(item))throw Error('Unowned or modified B3.2D.8 hand item');
+   }
+  }else if(![handStudy.weapon,handStudy.offhand].filter(Boolean).every(x=>x.rarity===opts.rarity&&x.tier===gearE))throw Error('Reference hand tier or rarity mismatch');
+ }
  if(earned){
   if(earned.level!==level||earned.unlocked<level||
      !earned.equip||!earned.equip.weapon||
@@ -243,6 +258,7 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
    // The later arena-style encounter is deliberately staged, never played
    // as a claim of a naturally traversed Expedition.
    a.state().equip=JSON.parse(JSON.stringify(earned.equip));
+   if(handStudy!==undefined){a.state().equip.weapon=JSON.parse(JSON.stringify(handStudy.weapon));a.state().equip.offhand=handStudy.offhand?JSON.parse(JSON.stringify(handStudy.offhand)):null;}
    a.state().runes=JSON.parse(JSON.stringify(earned.runes));
    a.state().runeSlots=[...earned.runeSlots];
   }else a.setup(gearE,build.weapon,opts.rarity);
