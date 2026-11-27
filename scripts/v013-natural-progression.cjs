@@ -12,6 +12,7 @@ const AGENT=require('./v013-agent-strategy.cjs');
 const PLANNER=require('./v013-build-planner.cjs');
 const EQUIPMENT_AI=require('./v013-b32c-equipment-policy.cjs');
 const TRANSITION=require('./v013-b32d2-transition-policy.cjs');
+const ACQUISITION=require('./v013-b32d3-acquisition-policy.cjs');
 require('../combat/v012-gear-stats.js');
 const GEAR_STATS=globalThis.WandererV012GearStats;
 require('../online/v013-map-intelligence.js');
@@ -527,6 +528,7 @@ function craftEarned(a,profile,level){
 function gearInvestmentCandidates(a,profile,level){
  const s=a.state(),forge=a.forge,options=[];
  if(!forge||!a.economyCanAct()||forge.canCraft&&!forge.canCraft())return options;
+ const acquisition=ACQUISITION.context(a,profile);
  const efficiency=(gain,fragments,essence,reagents)=>gain/(Math.max(1,fragments)+4*Math.max(0,essence)+12*Object.values(reagents||{}).reduce((a,b)=>a+b,0));
  for(const recipe of forge.recipes){
   const base=forge.progress(recipe.id,level);if(!base?.ready)continue;
@@ -540,11 +542,11 @@ function gearInvestmentCandidates(a,profile,level){
   for(const {influence,progress} of variants){
    const example=forge.preview(recipe.id,level,influence);if(!example)continue;
    const targets=handTargets(example,profile)||(adaptiveCommitment(profile)?adaptiveTargets(example,profile):decisionQuality(profile)?gearDecisionTargets(example,profile):['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot]);
-   const target=targets.filter(slot=>investmentAllowed(example,profile,slot,s.equip)).map(slot=>({slot,gain:investmentGain(example,profile,slot,s.equip,a)}))
+   const target=targets.filter(slot=>investmentAllowed(example,profile,slot,s.equip)).map(slot=>({slot,...ACQUISITION.value(a,profile,example,slot,investmentGain(example,profile,slot,s.equip,a),acquisition,'forge')}))
     .sort((x,y)=>y.gain-x.gain)[0];
    if(target&&EQUIPMENT_AI.enabled(profile))EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'offer',recipe:recipe.id,slot:target.slot,subtype:example.subtype,gain:Number.isFinite(target.gain)?target.gain:null,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents});
    if(!target||target.gain<5)continue;
-   options.push({recipe,target,influence,gain:target.gain,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence,progress.cost.reagents)});
+   options.push({recipe,target,influence,gain:target.gain,acquisition,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence,progress.cost.reagents)});
   }
  }
  return options;
@@ -565,7 +567,13 @@ function investEarnedGear(a,profile,level){
    throw Error('Native Forge cost mismatch');
   const actual=EQUIPMENT_AI.enabled(profile)?handGain(a,profile,item,best.target.slot):gearScore(item,profile,best.target.slot)-gearScore(s.equip[best.target.slot],profile,best.target.slot);
   const weaponAtDecision=s.equip.weapon?.subtype||null;
+  const actualEvaluation=ACQUISITION.value(a,profile,item,best.target.slot,actual,best.acquisition,'forge');
+  if(ACQUISITION.risk(profile)){
+   ACQUISITION.learn(a,item,best.target.slot,best.target.immediate,actual);
+   EQUIPMENT_AI.trace(profile,{phase:'acquisition',kind:'forecast',source:'forge',id:item.id,rarity:item.rarity,slot:best.target.slot,subtype:item.subtype,predicted:best.target.immediate,actual:Number.isFinite(actual)?actual:null,decisionGain:best.gain,penalty:best.target.penalty,strategicGain:best.target.strategicGain,actualPackageCredit:actualEvaluation.strategicGain});
+  }
   const equipped=equipEarned(a,profile,false);
+  if(ACQUISITION.strategic(profile))equipped.push(...TRANSITION.execute(a,profile));
   EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'craft',id:item.id,recipe:best.recipe.id,slot:best.target.slot,subtype:item.subtype,gain:best.gain,actualGain:Number.isFinite(actual)?actual:null,accepted:true,equipped:Object.values(s.equip).some(x=>x?.id===item.id),fragments:best.fragments,essence:best.essence,reagents:best.reagents});
   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
    fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},influence:best.influence,
@@ -897,25 +905,29 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   const healthOffer=s.apothecary?.stock?.find(p=>p.kind==='health'&&p.price<=s.gold);
   const reserve=decisionModel==='legacy'?(owns('health')?0:14):
    owns('health')||!healthOffer?0:healthOffer.price;
+  const acquisition=ACQUISITION.context(a,profile);
   const candidates=(s.merchant?.stock||[]).map((item,index)=>{
    const slots=handTargets(item,profile)||merchantDecisionTargets(item,profile);
-   const best=slots.map(slot=>({slot,gain:investmentGain(item,profile,slot,s.equip,a)})).sort((a,b)=>b.gain-a.gain)[0];
+   const best=slots.map(slot=>({slot,...ACQUISITION.value(a,profile,item,slot,investmentGain(item,profile,slot,s.equip,a),acquisition,'merchant')})).sort((a,b)=>b.gain-a.gain)[0];
    if(EQUIPMENT_AI.enabled(profile))EQUIPMENT_AI.trace(profile,{phase:'merchant',kind:'offer',id:item.id,subtype:item.subtype,slot:best?.slot,gain:Number.isFinite(best?.gain)?best.gain:null,cost:item.goldPrice,affordable:item.goldPrice<=s.gold-reserve});
    return {item,index,...best};
   }).filter(x=>Number.isFinite(x.gain)&&x.item?.goldPrice<=s.gold-reserve&&x.gain>(decisionModel==='legacy'?8:5))
-   .sort((x,y)=>y.gain-x.gain||x.item.goldPrice-y.item.goldPrice);
+    .sort((x,y)=>ACQUISITION.strategic(profile)?y.gain/Math.max(1,y.item.goldPrice)-x.gain/Math.max(1,x.item.goldPrice)||y.gain-x.gain:y.gain-x.gain||x.item.goldPrice-y.item.goldPrice);
   for(const {item,index} of candidates.slice(0,decisionModel==='legacy'?1:2)){
    if(s.gold<item.goldPrice+reserve||s.merchant?.stock?.[index]?.id!==item.id)continue;
    if(decisionQuality(profile)&&!gearDecisionTargets(item,profile).some(slot=>investmentGain(item,profile,slot,s.equip)>5))continue;
    if(adaptiveCommitment(profile)&&!adaptiveTargets(item,profile).some(slot=>investmentGain(item,profile,slot,s.equip)>5))continue;
    if(compatibilityGuard(profile)&&!decisionQuality(profile)&&item.slot==='offhand'&&!investmentAllowed(item,profile,item.slot,s.equip))continue;
    const weaponAtDecision=s.equip.weapon?.subtype||null;
-   const adaptiveBest=EQUIPMENT_AI.enabled(profile)?(handTargets(item,profile)||merchantDecisionTargets(item,profile)).map(slot=>({slot,gain:investmentGain(item,profile,slot,s.equip,a)})).sort((x,y)=>y.gain-x.gain)[0]:null;
+   const refreshed=ACQUISITION.context(a,profile);
+   const adaptiveBest=EQUIPMENT_AI.enabled(profile)?(handTargets(item,profile)||merchantDecisionTargets(item,profile)).map(slot=>({slot,...ACQUISITION.value(a,profile,item,slot,investmentGain(item,profile,slot,s.equip,a),refreshed,'merchant')})).sort((x,y)=>y.gain-x.gain)[0]:null;
    if(EQUIPMENT_AI.enabled(profile)&&!(adaptiveBest?.gain>5))continue;
    if(a.purchaseNative(index)){
+    if(ACQUISITION.risk(profile))EQUIPMENT_AI.trace(profile,{phase:'acquisition',kind:'forecast',source:'merchant',id:item.id,rarity:item.rarity,slot:adaptiveBest.slot,subtype:item.subtype,predicted:adaptiveBest.immediate,actual:adaptiveBest.immediate,decisionGain:adaptiveBest.gain,penalty:0,strategicGain:adaptiveBest.strategicGain});
     if(adaptiveBest)EQUIPMENT_AI.trace(profile,{phase:'merchant',kind:'buy',id:item.id,subtype:item.subtype,slot:adaptiveBest.slot,gain:adaptiveBest.gain,cost:item.goldPrice,accepted:true});
     actions.bought.push({name:item.name,cost:item.goldPrice,gain:round(adaptiveBest?adaptiveBest.gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)),...(compatibilityGuard(profile)?{slot:adaptiveBest?.slot||item.slot,subtype:item.subtype,weaponAtDecision}:{})});
     actions.equipped.push(...equipEarned(a,profile,false));
+    if(ACQUISITION.strategic(profile))actions.equipped.push(...TRANSITION.execute(a,profile));
    }
   }
  }
@@ -931,7 +943,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.unspentFragments=s.fragments;
  actions.unspentEssence=s.crafting?.essence||0;
  actions.unspentReagents={...s.crafting?.cores};
- if(typeof profile.equipmentTrace==='function')profile.equipmentTrace({phase:'camp',kind:'afterCamp',level,weapon:s.equip.weapon?.subtype||null,offhand:s.equip.offhand?.subtype||null,hands:[s.equip.weapon,s.equip.offhand].filter(Boolean).map(x=>({id:x.id,subtype:x.subtype,rarity:x.rarity,atk:x.atk,spell:x.spell})),nodes:[...s.automaticTalents.nodes],stats:a.baseStats(),armor:gearSnapshot(a).items.filter(x=>['helm','armor','gloves','boots','belt'].includes(x.slot)),preferredWeapons:[...profile.weapons],crafts:actions.crafted,buys:actions.bought,equips:actions.equipped});
+ if(typeof profile.equipmentTrace==='function')profile.equipmentTrace({phase:'camp',kind:'afterCamp',level,weapon:s.equip.weapon?.subtype||null,offhand:s.equip.offhand?.subtype||null,hands:[s.equip.weapon,s.equip.offhand].filter(Boolean).map(x=>({id:x.id,subtype:x.subtype,rarity:x.rarity,atk:x.atk,spell:x.spell})),nodes:[...s.automaticTalents.nodes],stats:a.baseStats(),armor:gearSnapshot(a).items.filter(x=>['helm','armor','gloves','boots','belt'].includes(x.slot)),preferredWeapons:[...profile.weapons],equippedIds:Object.values(s.equip).filter(Boolean).map(x=>x.id),crafts:actions.crafted,buys:actions.bought,equips:actions.equipped});
  return actions;
 }
 function capabilities(a){
