@@ -509,6 +509,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   const score=AI.utility(a,p,eq,level,s),withoutPreference=AI.utility(a,{...p,weapons:[]},eq,level,s);
   if(!Number.isFinite(score)||!Number.isFinite(withoutPreference)||JSON.stringify(a.state())!==before)throw Error('Invalid utility observation');
   weaponUtilityAudit={score,withoutPreference,features,weaponBudget:eq.weapon.v013Budget,offhandBudget:eq.offhand?.v013Budget||0};
+  if(opts.stageB32D7Audit===true){const candidate=AI.utility(a,{...p,equipmentIntelligence:'b32d7-combat-aware'},eq,level,s);if(!Number.isFinite(candidate)||JSON.stringify(a.state())!==before)throw Error('Invalid candidate observation');weaponUtilityAudit.candidate=candidate;}
  }
  const equipmentAudit=opts.stageB31EquipmentAudit===true?JSON.parse(JSON.stringify(a.state().equip)):null;
   const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true}),nonArmorGearFingerprint=equipmentFingerprint(a,{excludeArmor:true});

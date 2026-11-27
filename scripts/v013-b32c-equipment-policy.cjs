@@ -5,6 +5,7 @@ const assert=require('node:assert/strict');
 require('../combat/v012-gear-stats.js');require('../combat/v012-combat-core.js');require('../combat/expedition-progression.js');
 const GS=globalThis.WandererV012GearStats,CORE=globalThis.WandererV012CombatCore;
 const num=x=>Number(x)||0,clamp=(x,l,h)=>Math.max(l,Math.min(h,x)),ratio=(x,y)=>Math.log(Math.max(.001,x)/Math.max(.001,y));
+const CA=require('./v013-b32d7-combat-aware-policy.cjs');
 const TWO=new Set(['Bow','Two-Handed','Staff']),HANDS=new Set(['weapon','offhand']);
 function ownedRanks(nodes){const ranks={};for(const id of nodes){const m=id.match(/^(.*)_rank(\d+)$/);const key=m?m[1]:id;ranks[key]=Math.max(ranks[key]||0,m?+m[2]:1);}return ranks;}
 function adaptiveFeatures({stats:s,adaptiveStats:extra,weapon:w,off:o,nodes,equipment},element='arcane',level=10){
@@ -67,7 +68,7 @@ function adaptiveScore(x,b,profile,weapon){
 }
 
 
-function transition(p){return ['b32d2-transition','b32d3-risk','b32d3-strategic','b32d5-ev'].includes(p?.equipmentIntelligence);}
+function transition(p){return ['b32d2-transition','b32d3-risk','b32d3-strategic','b32d5-ev','b32d7-combat-aware'].includes(p?.equipmentIntelligence);}
 function full(p){return ['b32d-full','b32d-attributes'].includes(p?.equipmentIntelligence)||transition(p);}
 function attributes(p){return p?.equipmentIntelligence==='b32d-attributes';}
 function stable(p){return p?.equipmentIntelligence==='b32c1-stable'||full(p);}
@@ -95,7 +96,7 @@ function utility(a,p,equip,level,override=null){
  const x=features(a,equip,level,override),ranks=ownedRanks(a.state().automaticTalents.nodes),w=equip.weapon.subtype,o=equip.offhand?.subtype;
  const specific=(w==='Bow'?(ranks.bow_pierce||0):w==='Two-Handed'?(ranks.cleave_mastery||0):w==='Daggers'?(ranks.fan_of_blades||0):w==='Sword'&&o==='Shield'?(ranks.sword_sweep||0):w==='Mace'?(ranks.mace_shockwave||0):0);
  const owned=a.state().automaticTalents.nodes.length,commit=Math.min(1,owned/30),preferred=p.weapons?.includes(w)?1:0;
- const score=.25*(.65*Math.log(x.single)+.35*Math.log(x.normalDurability))+.40*(.55*Math.log(x.group)+.45*Math.log(x.normalDurability))+.35*(.42*Math.log(x.single)+.58*Math.log(x.bossDurability));
+ const score=p.equipmentIntelligence==='b32d7-combat-aware'?CA.evaluate({stats:override||a.baseStats(equip),equip,talents:a.state().automaticTalents,level,legacy:x,core:CORE}).score:.25*(.65*Math.log(x.single)+.35*Math.log(x.normalDurability))+.40*(.55*Math.log(x.group)+.45*Math.log(x.normalDurability))+.35*(.42*Math.log(x.single)+.58*Math.log(x.bossDurability));
  // Actual acquired weapon-specialization nodes, not planned nodes. Small
  // extra value covers unknown downstream synergies; no hard weapon lock.
  const signature=full(p)?Object.values(equip).filter(x=>x?.rarity==='Legendary').length:(equip.weapon?.rarity==='Legendary'?1:0)+(equip.offhand?.rarity==='Legendary'?1:0);
