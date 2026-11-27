@@ -500,6 +500,16 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  // Native victory can grant 15–45 XP and must not overwrite fixture provenance.
  const entrantTalentProgress=a.state().automaticTalents;
  const combatEntryStats=a.baseStats();
+ let weaponUtilityAudit=null;
+ if(opts.stageB32D6UtilityAudit===true){
+  if(opts.earnedCheckpoint||!opts.controlledTalents||!opts.lockScenarioStreams||opts.stageB31ALoadout===undefined)throw Error('Invalid B3.2D.6 fixture');
+  const AI=require('./v013-b32c-equipment-policy.cjs'),eq=a.state().equip,t=a.state().automaticTalents,p={weapons:[build.weapon],equipmentIntelligence:'b32d2-transition'},s=combatEntryStats;
+  const before=JSON.stringify(a.state());
+  const features=AI.adaptiveFeatures({stats:s,adaptiveStats:{rawAttackSpeed:s.rawAttackSpeed,spdFlat:s.spdFlat,critDamage:s.critDamage||0,dotPower:s.dotPower||0},weapon:eq.weapon.subtype,off:eq.offhand?.subtype||null,nodes:[...t.nodes],equipment:eq},t.element||'arcane',level);
+  const score=AI.utility(a,p,eq,level,s),withoutPreference=AI.utility(a,{...p,weapons:[]},eq,level,s);
+  if(!Number.isFinite(score)||!Number.isFinite(withoutPreference)||JSON.stringify(a.state())!==before)throw Error('Invalid utility observation');
+  weaponUtilityAudit={score,withoutPreference,features,weaponBudget:eq.weapon.v013Budget,offhandBudget:eq.offhand?.v013Budget||0};
+ }
  const equipmentAudit=opts.stageB31EquipmentAudit===true?JSON.parse(JSON.stringify(a.state().equip)):null;
   const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true}),nonArmorGearFingerprint=equipmentFingerprint(a,{excludeArmor:true});
  const C=globalThis.WandererV013ExpeditionConditions;
@@ -579,6 +589,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
    'spellPower','attacksPerSec','crit','blockChance','blockReduction','evasionRating','mana','manaRegen','wardBonus','barrierPower','healingPower','manaCostReduction','power'].map(key=>[key,baseStats[key]??null])),
   ...(equipmentAudit?{equipmentAudit,weaponType:equipmentAudit.weapon?.subtype,adaptiveStats:Object.fromEntries(['rawAttackSpeed','spdFlat','critDamage','dotPower'].map(k=>[k,baseStats[k]??0]))}:{}),otherGearFingerprint,nonArmorGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   armorType:a.state().equip.armor?.armorType||null,
+  ...(weaponUtilityAudit?{weaponUtilityAudit}:{}),
   controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
   controlledTalentMode:opts.controlledTalents?(opts.controlledTalents.element||'arcane'):null,
   realm:card.name,affinity:card.family,risk:card.risk,nativeEncounter:kind,requestedGroupSize:count,groupSize:result.initialEnemies,unlocked:level,...result};
