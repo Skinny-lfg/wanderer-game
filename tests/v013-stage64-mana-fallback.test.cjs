@@ -40,7 +40,7 @@ test('Caster with depleted Mana cannot expend existing Infusion charges for free
   assert.equal(r.metrics?.infusionDamage||0,0);
  }
 });
-test('Insufficient Mana for the 12-Mana Infusion does not suppress an 8-Mana elemental cast',()=>{
+test('Insufficient Mana for the 18-Mana Fire Infusion does not suppress a 12-Mana elemental cast',()=>{
  require('../combat/talent-catalog.js');require('../combat/talent-graph-next.js');require('../combat/talent-graph-bridge.js');
  require('../combat/talent-graph-runtime.js');require('../combat/v012-combat-runtime.js');
  const T=globalThis.WandererAutomaticTalents,B=globalThis.WandererV012Buildcraft;
@@ -56,12 +56,12 @@ test('Insufficient Mana for the 12-Mana Infusion does not suppress an 8-Mana ele
  progress=T.selectElement(progress,'fire');assert(progress);
  const b=B.create();B.syncPermanent(b,progress);
  const e={hp:1000,maxhp:1000,def:0,baseDef:0,slowTime:0,dots:{burn:[]},v012Rot:[]};
- const player={hp:100,maxhp:100,mp:9,maxmp:30,enemy:e,phase1:true,status:'fight',stats:{caster:false,spellPower:100,main:{subtype:'Sword'}},phase1Plane:'test',enc:1};
+ const player={hp:100,maxhp:100,mp:13,maxmp:30,enemy:e,phase1:true,status:'fight',stats:{caster:false,spellPower:100,main:{subtype:'Sword'}},phase1Plane:'test',enc:1};
  const hits=[],events=[],ctx={enemy:e,player,now:20,power:100,base:50,funded:false,random:()=>.99,
   dot:(k,p)=>events.push([k,p]),damage:(p)=>events.push(['damage',p]),chill:n=>events.push(['chill',n]),mana:()=>{},log:()=>{}};
  const ports={phase1Build:b,isPhase1Run:()=>true,phase2Context:()=>ctx,phase6Metric:()=>{},
   state:{run:player,automaticTalents:{nodes:progress.nodes,element:'fire'},equip:{}},
-  combatEffect:()=>{},setDirectEnemyDamage:(_r,n)=>hits.push(n)};
+  combatEffect:()=>{},legendaryRuntime:()=>({}),legendaryHas:()=>false,gameRandom:()=>.99,setDirectEnemyDamage:(_r,n)=>hits.push(n)};
  const rt=WandererV012CombatRuntime.create(ports);
  rt.phase2MagicTick(player);
  assert.equal(hits.length,1);assert.equal(player.mp,1);

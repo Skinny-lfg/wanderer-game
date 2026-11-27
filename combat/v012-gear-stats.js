@@ -100,7 +100,9 @@ function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,ite
  // Orb Ward and Aegis Barrier use Spell Power with physical weapons, but neither
  // unlocks Mana or spellcasting in the absence of Arcane/Decay.
  if(magic||decay||aegis||off?.subtype==='Orb')s.spellPower=caster?s.spellPower:Math.round(3+s.int*1.9+s.spellFlat);
- if(s.mana){s.mana=Math.round(s.mana*(1+.4*clothFraction));s.spellPower=Math.round(s.spellPower*(1+.4*clothFraction));}
+ // Cloth amplifies active Spell Power independently of whether the build has Mana.
+ if(s.mana)s.mana=Math.round(s.mana*(1+.4*clothFraction));
+ if(s.spellPower)s.spellPower=Math.round(s.spellPower*(1+.4*clothFraction));
  if(magic)s.phase2Magic=true;
  if(decay)s.phase2Decay=true;
  if(aegis)s.phase2Aegis=true;

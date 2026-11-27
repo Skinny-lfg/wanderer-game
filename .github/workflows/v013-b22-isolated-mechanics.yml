@@ -1,0 +1,75 @@
+name: v0.13 B2.2 - SP separation and isolated Dagger Block experiments
+on:
+  push:
+    branches: [balance/b2.2-sp-dagger-block]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deterministic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/v013-b2-core-combat-mechanics.test.cjs tests/v013-b22-isolated-mechanics.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-stage64-mana-fallback.test.cjs tests/v013-offhand-stage2-gear.test.cjs tests/v013-gear-loot-daggers.test.cjs tests/v013-anchor-rune-combat.test.cjs tests/v013-stage647d9e-stat-identity.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-b12c-surrender.test.cjs
+  browser-parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/v013-runtime-parity.test.cjs tests/v013-s1-parity.test.cjs
+  screening:
+    needs: deterministic
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [0,1,2,3,4,5,6]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b22-isolated-mechanics.cjs ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b22-shard-${{ matrix.profile }}
+          path: reports/b22/shard-${{ matrix.profile }}.json
+  aggregate:
+    needs: screening
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b22-shard-*
+          merge-multiple: true
+          path: reports/b22
+      - run: node scripts/v013-b22-isolated-mechanics.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b22-summary
+          path: reports/b22/summary.json
