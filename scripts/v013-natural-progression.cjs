@@ -420,7 +420,23 @@ function equipEarned(a,profile,between=false){
  const items=[...source].filter(x=>x?.slot&&x.id).sort((x,y)=>gearScore(y,profile)-gearScore(x,profile));
  // The adaptive arm revisits visible hand items after each accepted change;
  // no transaction is made without a positive single-step gain.
- if(EQUIPMENT_AI.enabled(profile)){
+ if(EQUIPMENT_AI.stable(profile)&&a.state().equip.weapon){
+  const phase=between?'bag':'stash',handItems=()=> (between?a.bag.items().filter(x=>x.kind!=='valuable'):a.state().stash).filter(x=>x?.id&&['weapon','offhand'].includes(x.slot));
+  const choices=EQUIPMENT_AI.plans(a,profile,handItems(),between),best=choices.find(x=>x.gain>=x.minimum);
+  EQUIPMENT_AI.trace(profile,{phase,kind:'opportunities',candidates:choices.map(x=>({ids:x.steps.map(y=>y.item.id),subtypes:x.steps.map(y=>y.item.subtype),gain:x.gain,minimum:x.minimum}))});
+  if(best){
+   const start={...a.state().equip},before=EQUIPMENT_AI.key(start),level=Math.max(1,a.controller().state.unlocked||1);let completed=true;
+   for(const {item,slot:target} of best.steps){
+    const prior=a.state().equip[target],weaponAtDecision=a.state().equip.weapon?.subtype||null,oldKey=EQUIPMENT_AI.key(a.state().equip),ok=a.equip(item.id,target);
+    EQUIPMENT_AI.trace(profile,{phase,kind:'equip',id:item.id,subtype:item.subtype,slot:target,gain:best.gain,accepted:!!ok,weaponAtDecision,from:oldKey,to:EQUIPMENT_AI.key(a.state().equip),planSize:best.steps.length});
+    if(!ok){completed=false;break;}
+    actions.push({slot:target,item:item.name,rarity:item.rarity,previous:prior?.name||null,gain:round(best.gain),subtype:item.subtype,trait:item.v013Trait||null,previousSubtype:prior?.subtype||null});
+   }
+   const actual=EQUIPMENT_AI.utility(a,profile,a.state().equip,level)-best.scoreBefore,expectedKey=EQUIPMENT_AI.key(best.next),actualKey=EQUIPMENT_AI.key(a.state().equip);
+   EQUIPMENT_AI.trace(profile,{phase,kind:'plan',from:before,to:actualKey,expected:expectedKey,gain:best.gain,actualGain:actual,steps:best.steps.length,completed,minimum:best.minimum,projectionMatch:completed&&actualKey===expectedKey&&Math.abs(actual-best.gain)<1e-6});
+   if(decisionQuality(profile))refreshSynergyContext(a,profile);
+  }
+ }else if(EQUIPMENT_AI.enabled(profile)){
   const handItems=()=> (between?a.bag.items().filter(x=>x.kind!=='valuable'):a.state().stash).filter(x=>x?.id&&['weapon','offhand'].includes(x.slot));
   const used=new Set();
   for(let step=0;step<6;step++){
@@ -773,6 +789,7 @@ function consolidateStash(a,profile,reserve=4){
 function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  const actions={talents:[],attributes:[],resets:[],elementChoices:[],prepared:null,equipped:[],bought:[],crafted:[],refined:[],potions:[],runes:[],storage:[],soldTreasures:false,restocks:0,salvagedGrey:0,salvageFragments:0};
  const s=a.state();a.potions.inventory();refreshSynergyContext(a,profile);
+ if(typeof profile.equipmentTrace==='function')profile.equipmentTrace({phase:'camp',kind:'beforeCamp',level,weapon:s.equip.weapon?.subtype||null,offhand:s.equip.offhand?.subtype||null,hands:[s.equip.weapon,s.equip.offhand].filter(Boolean).map(x=>({id:x.id,subtype:x.subtype,rarity:x.rarity,atk:x.atk,spell:x.spell})),nodes:[...s.automaticTalents.nodes],stats:a.baseStats()});
  for(let i=0;i<3&&a.results().review;i++)a.exitResult();
  actions.soldTreasures=!!(s.valuables?.length&&a.treasures.sell());
  if(decisionModel!=='legacy')actions.storage.push(consolidateStash(a,profile));
@@ -782,7 +799,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  if(a.economyCanAct()){
   const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&
    !item.locked&&!item.recoveryStarter&&item.id&&
-   (EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot)?EQUIPMENT_AI.targets(item).every(slot=>{const gain=handGain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5));
+   (EQUIPMENT_AI.stable(profile)&&['weapon','offhand'].includes(item.slot)?false:EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot)?EQUIPMENT_AI.targets(item).every(slot=>{const gain=handGain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5));
   if(surplus.length){
    const ids=surplus.map(item=>item.id),expected=surplus.reduce((sum,item)=>sum+a.sale(item),0);
    const before=s.fragments;
@@ -894,6 +911,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.unspentFragments=s.fragments;
  actions.unspentEssence=s.crafting?.essence||0;
  actions.unspentReagents={...s.crafting?.cores};
+ if(typeof profile.equipmentTrace==='function')profile.equipmentTrace({phase:'camp',kind:'afterCamp',level,weapon:s.equip.weapon?.subtype||null,offhand:s.equip.offhand?.subtype||null,hands:[s.equip.weapon,s.equip.offhand].filter(Boolean).map(x=>({id:x.id,subtype:x.subtype,rarity:x.rarity,atk:x.atk,spell:x.spell})),nodes:[...s.automaticTalents.nodes],stats:a.baseStats(),crafts:actions.crafted,buys:actions.bought,equips:actions.equipped});
  return actions;
 }
 function capabilities(a){
