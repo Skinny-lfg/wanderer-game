@@ -13,6 +13,7 @@ const PLANNER=require('./v013-build-planner.cjs');
 const EQUIPMENT_AI=require('./v013-b32c-equipment-policy.cjs');
 const TRANSITION=require('./v013-b32d2-transition-policy.cjs');
 const ACQUISITION=require('./v013-b32d3-acquisition-policy.cjs');
+const FORGE_EV=require('./v013-b32d5-forge-ev.cjs');
 require('../combat/v012-gear-stats.js');
 const GEAR_STATS=globalThis.WandererV012GearStats;
 require('../online/v013-map-intelligence.js');
@@ -542,6 +543,16 @@ function gearInvestmentCandidates(a,profile,level){
   for(const {influence,progress} of variants){
    const example=forge.preview(recipe.id,level,influence);if(!example)continue;
    const targets=handTargets(example,profile)||(adaptiveCommitment(profile)?adaptiveTargets(example,profile):decisionQuality(profile)?gearDecisionTargets(example,profile):['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot]);
+   if(FORGE_EV.enabled(profile)){
+    // Preview supplies only legal item shape; its random affix values never score this decision.
+    if(!targets.some(slot=>investmentAllowed(example,profile,slot,s.equip)))continue;
+    const ev=FORGE_EV.forecast(a,profile,recipe,level,influence,(item,slot)=>investmentAllowed(item,profile,slot,s.equip));
+    if(!ev)continue;
+    const cost=progress.cost;
+    EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'offer',recipe:recipe.id,slot:ev.slot,subtype:example.subtype,rarity:recipe.rarity,influence,gain:ev.gain,pUpgrade:ev.pUpgrade,meanGain:ev.meanGain,expectedAttempts:ev.expectedAttempts,samples:ev.samples,eligible:ev.accepted,fragments:cost.fragments,essence:cost.essence,reagents:cost.reagents});
+    if(ev.accepted)options.push({recipe,target:{slot:ev.slot,gain:ev.gain,immediate:ev.meanGain},influence,gain:ev.gain,ev,acquisition,fragments:cost.fragments,essence:cost.essence,reagents:cost.reagents,efficiency:efficiency(ev.gain,cost.fragments,cost.essence,cost.reagents)});
+    continue;
+   }
    const target=targets.filter(slot=>investmentAllowed(example,profile,slot,s.equip)).map(slot=>({slot,...ACQUISITION.value(a,profile,example,slot,investmentGain(example,profile,slot,s.equip,a),acquisition,'forge')}))
     .sort((x,y)=>y.gain-x.gain)[0];
    if(target&&EQUIPMENT_AI.enabled(profile))EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'offer',recipe:recipe.id,slot:target.slot,subtype:example.subtype,gain:Number.isFinite(target.gain)?target.gain:null,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents});
@@ -565,7 +576,11 @@ function investEarnedGear(a,profile,level){
   if(s.fragments!==before.fragments-best.fragments||
      s.crafting.essence!==before.essence-best.essence||Object.keys(before.cores).some(f=>s.crafting.cores[f]!==before.cores[f]-(best.reagents[f]||0)))
    throw Error('Native Forge cost mismatch');
-  const actual=EQUIPMENT_AI.enabled(profile)?handGain(a,profile,item,best.target.slot):gearScore(item,profile,best.target.slot)-gearScore(s.equip[best.target.slot],profile,best.target.slot);
+  const evActual=best.ev?FORGE_EV.evaluate(a,profile,item,(it,slot)=>investmentAllowed(it,profile,slot,s.equip)):null;
+  if(best.ev&&!evActual)throw Error('Native EV craft has no legal projected target');
+  const actualSlot=evActual?.slot||best.target.slot;
+  const actual=evActual?evActual.gain:EQUIPMENT_AI.enabled(profile)?handGain(a,profile,item,actualSlot):gearScore(item,profile,actualSlot)-gearScore(s.equip[actualSlot],profile,actualSlot);
+  if(best.ev)EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'evForecast',recipe:best.recipe.id,id:item.id,rarity:item.rarity,slot:actualSlot,forecastSlot:best.target.slot,influence:best.influence,pUpgrade:best.ev.pUpgrade,meanGain:best.ev.meanGain,thresholdEV:best.ev.gain,expectedAttempts:best.ev.expectedAttempts,samples:best.ev.samples,actualGain:actual,minimum:evActual.minimum,upgrade:evActual.upgrade,fragments:best.fragments,essence:best.essence,reagents:best.reagents});
   const weaponAtDecision=s.equip.weapon?.subtype||null;
   const actualEvaluation=ACQUISITION.value(a,profile,item,best.target.slot,actual,best.acquisition,'forge');
   if(ACQUISITION.risk(profile)){
@@ -574,10 +589,11 @@ function investEarnedGear(a,profile,level){
   }
   const equipped=equipEarned(a,profile,false);
   if(ACQUISITION.strategic(profile))equipped.push(...TRANSITION.execute(a,profile));
-  EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'craft',id:item.id,recipe:best.recipe.id,slot:best.target.slot,subtype:item.subtype,gain:best.gain,actualGain:Number.isFinite(actual)?actual:null,accepted:true,equipped:Object.values(s.equip).some(x=>x?.id===item.id),fragments:best.fragments,essence:best.essence,reagents:best.reagents});
-  outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
+  EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'craft',id:item.id,recipe:best.recipe.id,slot:actualSlot,subtype:item.subtype,gain:best.gain,actualGain:Number.isFinite(actual)?actual:null,accepted:true,equipped:Object.values(s.equip).some(x=>x?.id===item.id),fragments:best.fragments,essence:best.essence,reagents:best.reagents});
+  outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:actualSlot,
    fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},influence:best.influence,
    estimatedGain:round(best.gain),actualRolledGain:round(actual),
+   ...(best.ev?{pUpgrade:best.ev.pUpgrade,expectedAttempts:best.ev.expectedAttempts,realizedUpgrade:evActual.upgrade,upgradeThreshold:evActual.minimum}:{}),
    ...(compatibilityGuard(profile)?{weaponAtDecision,subtype:item.subtype}:{}),
    equipped:EQUIPMENT_AI.enabled(profile)||decisionQuality(profile)||adaptiveCommitment(profile)?Object.values(s.equip).some(x=>x?.id===item.id):equipped.some(x=>x.item===item.name)});
  }

@@ -67,7 +67,7 @@ function adaptiveScore(x,b,profile,weapon){
 }
 
 
-function transition(p){return ['b32d2-transition','b32d3-risk','b32d3-strategic'].includes(p?.equipmentIntelligence);}
+function transition(p){return ['b32d2-transition','b32d3-risk','b32d3-strategic','b32d5-ev'].includes(p?.equipmentIntelligence);}
 function full(p){return ['b32d-full','b32d-attributes'].includes(p?.equipmentIntelligence)||transition(p);}
 function attributes(p){return p?.equipmentIntelligence==='b32d-attributes';}
 function stable(p){return p?.equipmentIntelligence==='b32c1-stable'||full(p);}
