@@ -1,6 +1,8 @@
 'use strict';
 // Native item rolls only. Do not tune items or derived stats here.
-const assert=require('node:assert/strict'),fs=require('node:fs'),create=require('../tests/v012-economy-harness.cjs'),S=require('./simulate-progression.cjs'),G=require('../economy/v013-gear-rolls.js');
+const assert=require('node:assert/strict'),fs=require('node:fs'),create=require('../tests/v012-economy-harness.cjs'),S=require('./simulate-progression.cjs');
+require('../economy/v013-gear-rolls.js');
+const G=globalThis.WandererV013GearRolls;assert(Array.isArray(G?.KEYS)&&G.COST,'Native gear module export not available');
 const N=100,TIERS=[1,10,50,100],RARITIES=['Common','Uncommon','Rare','Epic','Legendary'];
 const W=['Sword','Mace','Daggers','Bow','Two-Handed','Wand','Staff'],O=['Shield','Off-Hand Dagger','Orb','Tome','Charm'];
 const LOADOUTS=[['Sword+Shield','Sword','Shield'],['Sword+Dagger','Sword','Off-Hand Dagger'],['Mace+Shield','Mace','Shield'],['Mace+Dagger','Mace','Off-Hand Dagger'],['Dual Daggers','Daggers','Off-Hand Dagger'],['Bow','Bow',null],['Two-Handed','Two-Handed',null],['Wand+Orb','Wand','Orb'],['Wand+Tome','Wand','Tome'],['Staff','Staff',null]];
