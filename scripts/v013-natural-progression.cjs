@@ -1551,7 +1551,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
    try{
     const canPivot=!profile.fixedResearchBuild&&!profile.plan&&!!PIVOTS[id]&&!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
      acc.attempts.filter(x=>x.level===level&&!x.error&&x.status!=='error').length>=2;
-    const nextProfile=canPivot?pivotProfile(id):activeProfile;
+    const nextProfile=canPivot?{...pivotProfile(id),...(profile.offhandPolicy==='b23'?{synergyAudit:true,agentCompatibilityOnly:true,decisionIsolation:'hands',strictResearchIdentity:false,offhandPolicy:'b23'}:{})}:activeProfile;
     const camp=prepareCamp(a,nextProfile,level,decisionModel,
      {...(canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:profile.plan?{history:acc.attempts,priorResets:acc.attempts.reduce((n,t)=>n+(t.camp?.resets?.length||0),0)}:{}),equipEarnedRunes:simulationOptions.equipEarnedRunes!==false});
     if(canPivot){if(camp.resets.length!==1)throw Error('Expected one native profile reset');activeProfile=nextProfile;pivoted=true;}

@@ -200,7 +200,7 @@ function phase1StartWave(resetScroll=false){
  r.initialMobCount=group.length;r.totalMobCount=group.length;r.enemies=fieldCount>1?group.slice(0,fieldCount):undefined;r.groupReserve=group.slice(fieldCount);if(fieldCount===1)delete r.enemies;r.enemy=group[0];r.encounterLeader=last&&(g.selected.boss||g.selected.elite)?group[0]:null;
  if(!statOnly&&last&&g.selected.boss)globalThis.WandererV013BossInfrastructure?.attach(r,group[0]);
  r.phase6Bounty=false;if(!statOnly&&r.enemy.miniboss&&ports.phase6Run?.effects.bounty){r.phase6Bounty=true;ports.phase6Run.effects.bounty=false;r.enemy.hp=r.enemy.maxhp=Math.ceil(r.enemy.maxhp*1.25);r.enemy.atk=Math.ceil(r.enemy.atk*1.25);}
- r.tPlayer=r.tDot=0;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
+ r.tPlayer=r.tDot=0;r.offhandClock={tPlayer:0};r.offhandDue=false;r.tEnemy=r.enemy.groupClock;r.setTemp=null;r.boonRotboundTriggers=0;r.playerDebuffUntil=0;
  r.playerHealingDebuffUntil=0;r.nextCasterHexAt=0;ports.setRuntime(r);r.status='fight';
  if(!statOnly&&last&&g.selected.boss)globalThis.WandererV013BossAbilities?.attach(r);
  if(ports.phase1Build)for(const enemy of r.enemies||[r.enemy])WandererV012Buildcraft.resetWave(ports.phase1Build,enemy);
