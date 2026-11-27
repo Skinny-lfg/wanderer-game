@@ -214,7 +214,7 @@ function corruptionOverflow(b,c){
 function rotWeaponBase(c){
  const s=c.player?.stats||{},kind=s.main?.subtype,sp=Math.max(0,Number(s.spellPower??c.power)||0),ap=Math.max(0,Number(s.attack)||0);
  if(!kind)return Math.max(0,Number(c.base)||ap);
- return kind==='Wand'?sp*1.05:kind==='Staff'?sp*1.32:ap*({'Two-Handed':1.70,Mace:1.4,Bow:1.08,Daggers:.80,Sword:1.12}[kind]||1);
+ return kind==='Wand'?sp*1.05:kind==='Staff'?sp*1.32:ap*({'Two-Handed':2.10,Mace:1.4,Bow:1.40,Daggers:.80,Sword:1.12}[kind]||1);
 }
 function rotPotency(c){return .04*(rotWeaponBase(c)+Math.max(0,Number(c.player?.stats?.spellPower??c.power)||0));}
 // DoT Power snapshots once, when a new stack is created. Spread and refresh retain that potency.

@@ -545,13 +545,13 @@ function v013SecondaryWeaponStatus(r,e,base,real){
  if(!e.bleedStacks||!e.v012Rot?.length)e.carrionCharge=0;
  if(e.hp>0){
   const previous=r.enemy;
-  try{r.enemy=e;const ctx=phase2Context(r);ctx.base=base;ctx.metric=(key,n)=>ports.phase6Metric(r,key,n);WandererV012Buildcraft.onSecondaryWeaponStatus(ports.phase1Build,ctx,.5,.5);}
+  try{r.enemy=e;const ctx=phase2Context(r);ctx.base=base;ctx.metric=(key,n)=>ports.phase6Metric(r,key,n);WandererV012Buildcraft.onSecondaryWeaponStatus(ports.phase1Build,ctx,r.stats.main?.subtype==='Bow'?1:.5,r.stats.main?.subtype==='Bow'?1:.5);}
   finally{r.enemy=previous;}
   const s=r.stats,kind=s.main?.subtype;
   // Enemy-facing status affixes only; no self-heals, Barrier or recursive damage procs.
   const apply=(effect,chance,mult)=>{
-   if(!['bleed','burn','slow','sunder'].includes(effect)||ports.gameRandom()>=chance*.5)return;
-   ports.applyAffinity(effect,e,s,mult,real,.5);
+   if(!['bleed','burn','slow','sunder'].includes(effect)||ports.gameRandom()>=chance*(kind==='Bow'?1:.5))return;
+   ports.applyAffinity(effect,e,s,mult,real,kind==='Bow'?1:.5);
    const d=e.dots?.[effect]?.at(-1);if(d&&['bleed','burn'].includes(effect))d.secondaryOrigin='weapon';
    ports.phase6Metric(r,'secondaryEquipmentStatusApplied',1);
   };
@@ -565,7 +565,7 @@ function groupSecondaryDamage(r,base,factors,label,physical=false){
  const targets=r.enemies.filter(enemy=>enemy!==r.enemy&&enemy.hp>0).slice(0,factors.length);let hit=0;
  for(const [i,enemy] of targets.entries()){
   let amount=Math.max(1,Math.round((physical
-   ?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':1.70,Sword:1.12,Mace:1.4,Bow:1.08,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy))
+   ?Math.max(1,Math.round(r.stats.attack*({'Two-Handed':2.10,Sword:1.12,Mace:1.4,Bow:1.40,Daggers:.80}[r.stats.main?.subtype]||1))-WandererV012Buildcraft.enemyDefense(ports.phase1Build,enemy))
    :base)*factors[i]));
   if(enemy.baseDef>0&&enemy.def<enemy.baseDef)amount=Math.max(1,Math.round(amount*(1+(ports.phase1Build?.runtime?.talentBonuses?.sunderDamage||0))));
   const actual=v013SecondaryHit(r,enemy,amount);
@@ -655,7 +655,7 @@ function weaponAttack(r,offhandStrike=false){
   if(element&&ports.isMagicOffhand(off)&&off.magic===element)damage=Math.round(damage*1.30);
   ports.addLog((ports.ELEMENTS[element]?.icon||'✨')+' '+kind+' casts '+(ports.ELEMENTS[element]?.name||'Magic')+' ('+damage+' magic).','spell');
  }else{
-  const factor=kind==='Two-Handed'?1.70:kind==='Mace'?1.4:kind==='Bow'?1.08:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
+  const factor=kind==='Two-Handed'?2.10:kind==='Mace'?1.4:kind==='Bow'?1.40:kind==='Daggers'?.80:kind==='Sword'?1.12:caster?.55:1;
   damage=Math.max(1,Math.round(s.attack*factor)-Math.round(WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)*(armorReady?.8:1)));
   // Wand and Staff already auto-attack when Mana is insufficient.
   // Their weak physical fallback cannot cast, use Magic status, or gain Infusion.

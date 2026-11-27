@@ -110,3 +110,5 @@ function smoke(){
  console.log('B31C_SMOKE='+JSON.stringify({physical:physical.length,staff:staff.length,productionDrift:false,oneHandControls:true,manaObserverParity:true}));
 }
 if(require.main===module){const [cmd,kind,si,ci]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='study')run(kind,Number(si),Number(ci));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
+
+module.exports={manaRuntime,metrics,physical,staff,arms};
