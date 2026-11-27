@@ -1,0 +1,37 @@
+name: v0.13 B2 - core combat mechanics audit
+on:
+  push:
+    branches: [balance/b2-core-combat-mechanics-audit]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deterministic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Numeric native formula audit
+        run: node --test tests/v013-b2-core-combat-mechanics.test.cjs
+      - name: Existing current mechanical regression coverage
+        if: always()
+        run: node --test tests/v013-stat-consistency.test.cjs tests/v013-gear-loot-daggers.test.cjs tests/v013-offhand-stage2-gear.test.cjs tests/v013-anchor-rune-combat.test.cjs tests/v013-stage64-mana-fallback.test.cjs tests/v013-stage647d9e-stat-identity.test.cjs tests/v013-current-dungeon-and-talents.test.cjs tests/v013-b12c-surrender.test.cjs
+  browser-parity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/v013-runtime-parity.test.cjs tests/v013-s1-parity.test.cjs
