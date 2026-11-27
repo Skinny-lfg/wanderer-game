@@ -295,6 +295,19 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
    if(item.slot!=='weapon'||item.subtype!==opts.stageB31WeaponVariant)throw Error('Native B3.1 weapon roll rejected');
    a.state().equip.weapon=item;
   }
+  // B3.2D.1: same native roll pool for every alternative, then select five
+  // armor pieces. All hands, accessories, talents and scenario streams fixed.
+  if(opts.stageB32D1ArmorMix!==undefined){
+   const slots=['helm','armor','gloves','boots','belt'],types=['Cloth','Leather','Plate'],mix=opts.stageB32D1ArmorMix;
+   if(earned||!Array.isArray(mix)||mix.length!==slots.length||mix.some(x=>!types.includes(x))||opts.stageE10ArmorVariant!==undefined||opts.lockScenarioStreams!==true)throw Error('Invalid B3.2D.1 controlled armor fixture');
+   const pool={};
+   for(const slot of slots){pool[slot]={};for(const type of types){
+    const item=a.makeItem(gearE,slot,null,'loot',type,opts.rarity);
+    if(item.slot!==slot||item.armorType!==type||item.rarity!==opts.rarity||!Number.isFinite(item.v013Budget))throw Error('Native armor pool mismatch '+slot+'/'+type);
+    pool[slot][type]=item;
+   }}
+   for(const [i,slot] of slots.entries())a.state().equip[slot]=pool[slot][mix[i]];
+  }
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
   // Harness streams are deterministic test controls, not gameplay overrides.
