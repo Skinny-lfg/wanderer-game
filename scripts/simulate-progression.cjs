@@ -279,6 +279,13 @@ function prepare(level,build,seed,opts,desiredRisk=undefined,desiredFamily=undef
     a.state().equip[slot]=item;
    }
   }
+  // B3.1 diagnostic: same native starting gear and empty offhand; reroll only the primary slot.
+  if(opts.stageB31WeaponVariant!==undefined){
+   if(earned||opts.offhandType!==null||!['Sword','Mace','Daggers','Two-Handed','Bow','Wand','Staff'].includes(opts.stageB31WeaponVariant))throw Error('Invalid B3.1 weapon-only fixture');
+   const item=a.makeItem(gearE,'weapon',null,'loot',opts.stageB31WeaponVariant,opts.rarity);
+   if(item.slot!=='weapon'||item.subtype!==opts.stageB31WeaponVariant)throw Error('Native B3.1 weapon roll rejected');
+   a.state().equip.weapon=item;
+  }
   // Stage 9.2 only: hold native route, draft, control and combat RNG streams fixed
   // AFTER gear rolls. Gear rarity must not silently change the test encounter.
   // Harness streams are deterministic test controls, not gameplay overrides.
@@ -470,6 +477,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
  // Native victory can grant 15–45 XP and must not overwrite fixture provenance.
  const entrantTalentProgress=a.state().automaticTalents;
  const combatEntryStats=a.baseStats();
+ const equipmentAudit=opts.stageB31EquipmentAudit===true?JSON.parse(JSON.stringify(a.state().equip)):null;
   const gearFingerprint=equipmentFingerprint(a),otherGearFingerprint=equipmentFingerprint(a,{excludeOffhand:true}),nonArmorGearFingerprint=equipmentFingerprint(a,{excludeArmor:true});
  const C=globalThis.WandererV013ExpeditionConditions;
  const conditionPlan=C?.forDungeon(card,g.dungeon)||null;
@@ -546,7 +554,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   permanentAttributes:T.attributes(entrantTalentProgress),
   heroBaseStats:Object.fromEntries(['str','agi','int','end','cha','attack','defense','maxhp',
    'spellPower','attacksPerSec','crit','blockChance','blockReduction','evasionRating','mana','manaRegen','wardBonus','barrierPower','healingPower','manaCostReduction','power'].map(key=>[key,baseStats[key]??null])),
-  otherGearFingerprint,nonArmorGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
+  ...(equipmentAudit?{equipmentAudit,weaponType:equipmentAudit.weapon?.subtype}:{}),otherGearFingerprint,nonArmorGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   armorType:a.state().equip.armor?.armorType||null,
   controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
   controlledTalentMode:opts.controlledTalents?(opts.controlledTalents.element||'arcane'):null,

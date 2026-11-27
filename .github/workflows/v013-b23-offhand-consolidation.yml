@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -275,3 +275,85 @@ jobs:
         with:
           name: b23c-final-summary
           path: reports/b23c/final-summary.json
+
+  b31-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b31-audit]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-b12c-surrender.test.cjs
+      - run: node scripts/v013-b31-equipment-audit.cjs smoke
+
+  b31-equipment:
+    needs: b31-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        study: [0,1,2,3,4,5,6,7,8]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b31-equipment-audit.cjs study ${{ matrix.study }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31-study-${{ matrix.study }}
+          path: reports/b31/study-${{ matrix.study }}.json
+
+  b31-agents:
+    needs: b31-gate
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [0,1,2,3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b31-equipment-audit.cjs agent ${{ matrix.profile }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31-agent-${{ matrix.profile }}
+          path: reports/b31/agent-${{ matrix.profile }}.json
+
+  b31-summary:
+    needs: [b31-equipment, b31-agents]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b31-*
+          merge-multiple: true
+          path: reports/b31
+      - run: node scripts/v013-b31-equipment-audit.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b31-summary
+          path: reports/b31/summary.json
