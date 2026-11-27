@@ -57,6 +57,13 @@ function attackSpeed(weapon,agility=5,speedRating=0,intellect=5){
  const bonus=Math.max(-.5,agilityBonus+speedRating*.035+castBonus);
  return Math.min(4.2,(1+bonus)/(WEAPON_INTERVALS[weapon]||1.6));
 }
+// Shared native rate for combat and read-only equipment/agent projections.
+function offhandDaggerRate(s,haste=1){
+ if(!s?.main||!['Daggers','Off-Hand Dagger'].includes(s.off?.subtype)||['Two-Handed','Bow','Staff'].includes(s.main.subtype))return 0;
+ const nominal=attackSpeed('Daggers',s.agi,s.spdFlat,s.int);
+ const mainRaw=Math.max(.000001,Number(s.rawAttackSpeed)||Number(s.attacksPerSec)||1);
+ return .5*Math.min(4.2,nominal*(s.attacksPerSec/mainRaw)*haste);
+}
 function totalStats(equipment,ownedRunes,equippedRuneIds,{isTwoHanded,FIELDS,itemStatValue,RUNE_FAMILIES,runeValue,setCounts,setBonuses,state,PHASE1_PREVIEW,phase6Run,build=null}){
  const itemBuff=phase6Run?.effects?.item;
  if(itemBuff?.remaining>0){equipment={...equipment};for(const [slot,item]of Object.entries(equipment))if(item?.id===itemBuff.id){equipment[slot]={...item};for(const [,key]of FIELDS)if(Number.isFinite(item[key]))equipment[slot][key]=item[key]*1.10;}}
@@ -139,5 +146,5 @@ function breakdown(equipment,ownedRunes,equippedRuneIds,context,current=null){
  const rounded=n=>Math.round((Number(n)||0)*100)/100;
  return STAT_KEYS.map(key=>{const v=stages.map(s=>rounded(s[key]));return{key,base:v[0],equipment:rounded(v[1]-v[0]),runes:rounded(v[2]-v[1]),talents:rounded(v[3]-v[2]),temporary:rounded(v[4]-v[3]),total:v[4]};});
 }
-root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats,power,offhandEffect,breakdown,STAT_KEYS,attackSpeed,WEAPON_INTERVALS});
+root.WandererV012GearStats=Object.freeze({gearEvasionRating,itemStatValue,totalStats,power,offhandEffect,breakdown,STAT_KEYS,attackSpeed,offhandDaggerRate,WEAPON_INTERVALS});
 })(globalThis);

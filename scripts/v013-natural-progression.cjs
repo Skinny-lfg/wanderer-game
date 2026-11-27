@@ -10,6 +10,8 @@ const S=require('./simulate-progression.cjs');
 const CAPTURE=require('./v013-capture-assistance.cjs');
 const AGENT=require('./v013-agent-strategy.cjs');
 const PLANNER=require('./v013-build-planner.cjs');
+require('../combat/v012-gear-stats.js');
+const GEAR_STATS=globalThis.WandererV012GearStats;
 require('../online/v013-map-intelligence.js');
 const I=globalThis.WandererV013MapIntelligence;
 require('../economy/v012-loot-rules.js');
@@ -137,7 +139,7 @@ function refreshSynergyContext(a,profile){
 function gearScore(item,profile,targetSlot=item?.slot){
  if(!item)return -1;
  // Native gear accepts Daggers in either hand. Off-hand offensive stats
- // have 50% effect. Sword + Dagger has NO independent second strike.
+ // have 50% effect. B2.3 uses independent strikes; pair utility is evaluated separately.
  const slot=targetSlot||item.slot;
  const offDagger=slot==='offhand'&&['Daggers','Off-Hand Dagger'].includes(item.subtype);
  const daggerFactor=offDagger?.5:1;
@@ -238,11 +240,26 @@ function commitmentBonus(item,profile,slot,weapon=null){
 // Compare equipped hand pairs under the same owned nodes and score context.
 // No unowned future offhand is credited; displaced item is not destroyed.
 // Score is an agent heuristic, never damage or actual projected native stats.
+// B2.3: modest bounded heuristic; never add fictional stats or force a Dagger.
+// Estimate its own strike rate and relative damage contribution; credit only
+// owned status skills (not goals), and current Mana/recovery for paid Rot.
+function offhandPairUtility(weapon,off,profile){
+ if(profile?.offhandPolicy!=='b23'||!weapon||!['Daggers','Off-Hand Dagger'].includes(off?.subtype)||TWO_HAND_WEAPONS.has(weapon.subtype))return 0;
+ const stats=profile.synergyContext?.stats||{},nodes=new Set((profile.adaptiveNodes||profile.synergyContext?.nodes||[]).map(id=>id.replace(/_rank\d+$/,'')));
+ const raw=GEAR_STATS.attackSpeed(weapon.subtype,stats.agi,stats.spdFlat,stats.int),rate=GEAR_STATS.offhandDaggerRate({...stats,main:weapon,off,rawAttackSpeed:raw,attacksPerSec:raw});
+ const ap=Math.max(1,Number(stats.attack)||15),sp=Math.max(0,Number(stats.spellPower)||0);
+ const nominal=['Wand','Staff'].includes(weapon.subtype)&&stats.mana>0?Math.max(1,sp*1.05):ap*({Sword:1.12,Mace:1.4,Daggers:.8,Wand:.55}[weapon.subtype]||1);
+ const relative=(ap*.4*rate)/Math.max(1,nominal*raw);
+ let utility=Math.min(8,relative*12);
+ if(nodes.has('bleeding_edge'))utility+=Math.min(3,rate*.42*12);
+ if(nodes.has('corrupting_touch')&&stats.mana>0&&stats.manaRegen>0)utility+=Math.min(3,rate*.42*12,stats.manaRegen*1.5);
+ return round(Math.min(14,utility));
+}
 function handPairScore(equip,profile){
  const weapon=equip?.weapon||null,off=TWO_HAND_WEAPONS.has(weapon?.subtype)?null:equip?.offhand||null;
  const p={...profile,synergyContext:{...profile.synergyContext,weapon:weapon?.subtype,offhand:off?.subtype,nodes:profile.adaptiveNodes||[]}};
  return (weapon?gearScore(weapon,p,'weapon')+commitmentBonus(weapon,p,'weapon'):0)
-  +(off?gearScore(off,p,'offhand')+commitmentBonus(off,p,'offhand',weapon):0);
+  +(off?gearScore(off,p,'offhand')+commitmentBonus(off,p,'offhand',weapon):0)+offhandPairUtility(weapon,off,p);
 }
 function adaptiveGearGain(item,profile,slot,equip){
  if(!item)return -Infinity;
@@ -398,12 +415,12 @@ function equipEarned(a,profile,between=false){
  // Rank visible native items, re-checking after each actual equip.
  const items=[...source].filter(x=>x?.slot&&x.id).sort((x,y)=>gearScore(y,profile)-gearScore(x,profile));
  for(const item of items){
-  const offhandDagger=profile.offhands?.includes('Daggers')&&
+  const offhandDagger=(profile.offhandPolicy==='b23'||profile.offhands?.includes('Daggers'))&&
    ['Daggers','Off-Hand Dagger'].includes(item.subtype);
   // Daggers can be legally equipped in either hand. Compare both native
   // slots, rather than always consuming the item in main hand first.
   const targets=adaptiveCommitment(profile)?adaptiveTargets(item,profile):['ring1','ring2'].includes(item.slot)?['ring1','ring2']:
-   offhandDagger?(profile.strictResearchIdentity&&item.subtype==='Off-Hand Dagger'?['offhand']:['weapon','offhand']):[item.slot];
+   offhandDagger?((profile.offhandPolicy==='b23'||profile.strictResearchIdentity)&&item.subtype==='Off-Hand Dagger'?['offhand']:['weapon','offhand']):[item.slot];
   const options=targets.map(target=>{
    const prior=a.state().equip[target];
    return {target,prior,gain:adaptiveCommitment(profile)?adaptiveGearGain(item,profile,target,a.state().equip):isolatedAdaptive(profile)?isolatedGearGain(item,profile,target,a.state().equip):identityGain(item,prior,profile,target)};
@@ -1497,7 +1514,12 @@ function playDungeon(a,level,profile,opts,decisionModel='risk-aware',captureMode
 function simulateAccount(seed,id,opts,simulationOptions={}){
  // Stage 6.32: read-only research cohorts may pass an explicit, validated agent
  // profile. Native game rewards, talents, equipment and combat are unchanged.
- const sourceProfile=simulationOptions.researchProfiles?.[id]||PROFILES[id],profile=sourceProfile?.synergyAudit?{...sourceProfile}:sourceProfile,decisionModel=simulationOptions.decisionModel||'adaptive';
+ const sourceProfile=simulationOptions.researchProfiles?.[id]||PROFILES[id],decisionModel=simulationOptions.decisionModel||'adaptive';
+ // Current ordinary adaptive agents use approved H and B2.3 knowledge. Explicit
+ // research profiles keep their named experimental policy for reproducibility.
+ const profile=sourceProfile&&!simulationOptions.researchProfiles?.[id]&&decisionModel==='adaptive'
+  ?{...sourceProfile,synergyAudit:true,agentCompatibilityOnly:true,decisionIsolation:'hands',strictResearchIdentity:false,offhandPolicy:'b23'}
+  :sourceProfile?.synergyAudit?{...sourceProfile}:sourceProfile;
  if(!profile||!profile.name||!Array.isArray(profile.families)||!profile.families.length||
   !['Cloth','Leather','Plate'].includes(profile.armor)||!Array.isArray(profile.weapons)||!profile.weapons.length||
   (profile.plan&&!Object.hasOwn(PLANNER.BUILDS,profile.plan)))throw Error('Invalid earned research profile '+id);
@@ -1755,7 +1777,7 @@ function main(args=process.argv.slice(2)){
  if(report.coverage.errors)process.exitCode=1;
  return report;
 }
-module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,softIdentityEnabled,handPairEnabled,isolatedGearGain,merchantDecisionTargets,commitmentWeight,commitmentBonus,handPairScore,adaptiveGearGain,adaptiveTargets,gearDecisionTargets,investmentAllowed,investmentGain,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,craftEarnedPotions,recordAutomaticPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
+module.exports={PROFILES,PIVOTS,pivotProfile,DEFAULTS,parseArgs,softIdentityEnabled,handPairEnabled,isolatedGearGain,merchantDecisionTargets,commitmentWeight,commitmentBonus,handPairScore,offhandPairUtility,adaptiveGearGain,adaptiveTargets,gearDecisionTargets,investmentAllowed,investmentGain,synergyGearBonus,spendEarnedAttributes,gearScore,identityMatch,identityGain,identityPurchase,gearSnapshot,runeScore,manageEarnedRunes,potionScore,selectEarnedPotions,buyEarnedPotions,craftEarnedPotions,recordAutomaticPotions,refineEarnedReagents,selectThornAwareTarget,spendEarnedTalents,prepareEarnedAbility,equipEarned,
  prepareCamp,craftEarned,investEarnedGear,gearInvestmentCandidates,consolidateStash,policyFlags,capabilities,rankRealms,choiceRealm,pathLength,eliteOpportunity,selectRoom,evaluateRetreat,boonScore,chooseBoon,contractScore,chooseContract,contractExitDecision,eventOptions,potionSlots,usePotionKind,usePotionsBetween,rerollPoorBoonAtShrine,
  fightNatural,resolveEvent,clearResults,playDungeon,simulateAccount,analyze,run,markdown,main};
 if(require.main===module)main();

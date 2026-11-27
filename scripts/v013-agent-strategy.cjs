@@ -14,6 +14,8 @@ require('../combat/talent-graph-bridge.js');
 require('../combat/talent-graph-runtime.js');
 const LIVE=globalThis.WandererAutomaticTalents.NODES;
 const LIVE_IDS=new Set(LIVE.filter(n=>!n.pending).map(n=>n.id));
+require('../combat/v012-gear-stats.js');
+const GEAR_STATS=globalThis.WandererV012GearStats;
 const MIXED_SKILLS=new Set(LIVE.filter(n=>!n.pending&&n.kind==='mixed').map(n=>n.id));
 function classify({equipment={},talents={},stats={}}={}){
  talents=talents||{};
@@ -60,6 +62,12 @@ function classify({equipment={},talents={},stats={}}={}){
  if(has('executioner'))add('focus',1,'executioner');
  if(has('arcane_focus')&&magical)add('focus',.8,'arcane focus');
  if(main==='Daggers'||main==='Sword'||main==='Mace'||main==='Wand')add('focus',.6,'single-target primary weapon');
+ const daggerOffhand=['Daggers','Off-Hand Dagger'].includes(offhand)&&!!main&&!['Two-Handed','Bow','Staff'].includes(main);
+ const daggerRate=daggerOffhand?GEAR_STATS.offhandDaggerRate({...stats,main:equipment.weapon,off:equipment.offhand,attacksPerSec:stats.attacksPerSec||GEAR_STATS.attackSpeed(main,stats.agi,stats.spdFlat,stats.int)}):0;
+ const offhandBleed=daggerOffhand&&has('bleeding_edge'),offhandRot=daggerOffhand&&has('corrupting_touch')&&Number(stats.mana)>0;
+ if(daggerRate>0)add('focus',Math.min(.6,daggerRate*.8),'independent offhand strike');
+ if(offhandBleed)add('focus',.4,'offhand shares Bleeding Edge cooldown');
+ if(offhandRot)add('focus',.4,'offhand shares paid Corrupting Touch cooldown');
  if(armor==='Plate')add('defense',2,'plate armor');
  if(offhand==='Shield')add('defense',2,'shield');
  if(offhand==='Orb')add('defense',.8,'orb ward');
@@ -85,7 +93,7 @@ function classify({equipment={},talents={},stats={}}={}){
   affinities.length>=2?'dual-affinity-only':'not-yet';
  return {role,area:round(area),focus:round(focus),defense:round(defense),
   areaReady,focusReady,weapon:main,offhand,armor,element,earnedNodes:owned.size,
-  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blightburst'),rotContagion:has('contagious_touch')&&has('corrupting_touch')};
+  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,offhandDagger:{active:daggerOffhand,rate:round(daggerRate),bleed:offhandBleed,rot:offhandRot},rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blightburst'),rotContagion:has('contagious_touch')&&has('corrupting_touch')};
 }
 // Only uses card fields rendered by renderRealmCards: family, risk,
 // favoured gear, condition and *one* known omen. Remaining omens are hidden.

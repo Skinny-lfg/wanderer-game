@@ -324,6 +324,22 @@ function onSecondaryWeaponStatus(b,c,q=.5,p=.5){
   if(n>0){e.def-=n;e.furySunder=old+n;e.nextFurySunder=c.now+1;c.metric?.('secondarySunderApplied',1);}
  }
 }
+// Both hands share these primary status cooldowns and resource costs.
+function primaryBleed(b,c){
+ const base=Math.max(1,c.base||1);
+ if(rank(b,'bleeding_edge')&&(b.cooldowns.bleedEdge??-1e10)<=c.now&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&ready(b,'bleedEdge',c.now,.6)&&activated(b,'bleeding_edge')) c.dot('bleed',(c.bloodCritBase??base)*.16);
+}
+function primaryRot(b,c){
+ const e=c.enemy;
+ if(e.hp>0&&rank(b,'corrupting_touch')&&(b.cooldowns.corruptingTouch??-1e10)<=c.now&&c.random()<values('corrupting_touch',rank(b,'corrupting_touch')).chance&&spendDarkMana(c,4)&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_corrupting_touch'); }
+}
+function onOffhandStatus(b,c){
+ if(c.enemy.hp<=0)return;
+ const beforeBleed=b.runtime.passiveTelemetry?.bleeding_edge?.activations||0,beforeRot=b.runtime.passiveTelemetry?.corrupting_touch?.activations||0;
+ primaryBleed(b,c);primaryRot(b,c);
+ c.metric?.('secondaryEquipmentStatusOffhandBleedApplications',(b.runtime.passiveTelemetry?.bleeding_edge?.activations||0)-beforeBleed);
+ c.metric?.('secondaryEquipmentStatusOffhandRotApplications',(b.runtime.passiveTelemetry?.corrupting_touch?.activations||0)-beforeRot);
+}
 function onAttack(b,c){
  if(c.proc||c.extra||c.recursive)return;
  const e=c.enemy,base=Math.max(1,c.base||1),crit=!!c.critical;
@@ -342,7 +358,7 @@ function onAttack(b,c){
  if(['battle_tempo','sundering_assault','unchained_fury'].some(id=>specialized(b,id))){b.runtime.battleTempo=Math.min(5,(b.runtime.battleTempo||0)+1);if(specialized(b,'sundering_assault')&&e.furySunder>0&&ready(b,'sunderingAssault',c.now,3))c.damage(base*.20,'🗡 Sundering Assault');if(specialized(b,'unchained_fury')){b.runtime.furyHits=(b.runtime.furyHits||0)+1;if(b.runtime.furyHits%5===0)b.runtime.unchainedUntil=c.now+3;if(b.runtime.unchainedUntil>c.now)c.damage(base*.25,'🔥 Unchained Fury');}}
  if(e.bleedStacks>0&&specialized(b,'third_cut')){b.runtime.crimsonHits=(b.runtime.crimsonHits||0)+1;if(b.runtime.crimsonHits%3===0)c.damage(base*.45,'🫀 Third Cut');}
  if(e.bleedStacks>0&&c.player.hp<c.player.maxhp*.5&&specialized(b,'heart_of_carnage')&&ready(b,'heartCarnage',c.now,3))c.damage(base*(e.hp<e.maxhp*.5?.60:.40),'🩸 Heart of Carnage');
- if(rank(b,'bleeding_edge')&&(b.cooldowns.bleedEdge??-1e10)<=c.now&&c.random()<values('bleeding_edge',rank(b,'bleeding_edge')).chance&&ready(b,'bleedEdge',c.now,.6)&&activated(b,'bleeding_edge')) c.dot('bleed',(c.bloodCritBase??base)*.16);
+ primaryBleed(b,c);
  // Blood Pursuit retains the purchased node ID and stat paths.
  if(specialized(b,'sanguine_reserve')&&!c.magical&&!c.offhand&&e.hp>0&&b.runtime.pursuitWave===(c.waveKey??e)&&b.runtime.pursuitUntil>c.now&&b.runtime.pursuitCharges>0){b.runtime.pursuitCharges--;c.dot('bleed',(c.bloodCritBase??base)*.08);c.metric?.('bloodPursuitApplications',1);}
  if(rank(b,'sanguine_fury')&&crit&&ready(b,'sanguineFury',c.now,2.5)&&activated(b,'sanguine_fury')){
@@ -350,7 +366,7 @@ function onAttack(b,c){
  }
  if(rank(b,'executioner')&&e.hp>0&&e.bleedStacks>0&&e.hp<=e.maxhp*.30&&ready(b,'execute',c.now,4)&&activated(b,'executioner'))c.damage((e.dots?.bleed||[]).filter(d=>d.remaining>0).reduce((sum,d)=>sum+d.damage,0)*1.5,'🩸 Execute');
  if(rank(b,'blood_drinker')&&e.bleedStacks>0&&ready(b,'bloodHeal',c.now,4)&&activated(b,'blood_drinker'))heal(b,c,Math.min(c.player.maxhp*values('blood_drinker',rank(b,'blood_drinker')).hp,base*values('blood_drinker',rank(b,'blood_drinker')).base));
- if(e.hp>0&&rank(b,'corrupting_touch')&&(b.cooldowns.corruptingTouch??-1e10)<=c.now&&c.random()<values('corrupting_touch',rank(b,'corrupting_touch')).chance&&spendDarkMana(c,4)&&ready(b,'corruptingTouch',c.now,1.3)&&activated(b,'corrupting_touch')){const potency=rotPotency(c);applyRot(b,c,potency,'paid_primary_corrupting_touch'); }
+ primaryRot(b,c);
  corruptionOverflow(b,c);
  corruptionCycle(b,c);
  if(e.hp>0&&rank(b,'blightburst')&&(b.cooldowns.blightburst??-1e10)<=c.now&&spendDarkMana(c,8)&&ready(b,'blightburst',c.now,7)&&activated(b,'blightburst')){applyRot(b,c,rotPotency(c),'ability_blightburst');c.damage(Math.min(base*.38+Math.max(0,c.power||0)*.35,e.maxhp*.025),'☠ Blightburst');}
@@ -665,6 +681,6 @@ function onInfusionHit(b,c){
  return directAmount;
 }
 function clear(b){if(!b)return;b.picks.length=0;b.element=null;b.unlockedFamilies=[];b.families=[];b.cooldowns=Object.create(null);b.runtime={frenzyUntil:0,counterBarrier:0,magicHits:0,staticCharges:0,adrenalineUntil:0,lastStand:false,lastSpellAt:-999};}
-root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,dotPotency,applyRot,corruptionOverflow,rotguardRetaliate,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
+root.WandererV012Buildcraft=Object.freeze({CATALOG,FAMILIES,ELEMENTS:elements,barrierAmount,create,ownedRank,rank,values,bleedDamage,elementalPower,dotPotency,applyRot,corruptionOverflow,rotguardRetaliate,migrateEnemyDots,mods,onHeal,onSecondaryWeaponStatus,onOffhandStatus,onAttack,onCast,onSecond,tickRot,incoming,onDefend,onKill,survive,speed,enemyHealMultiplier,enemyDefense,nextCost,resetWave,canCast,magicMode,infusionConfig,infusionReady,activateInfusion,onInfusionActivation,onInfusionHit,validate,syncPermanent,clear});
 })(globalThis);
 

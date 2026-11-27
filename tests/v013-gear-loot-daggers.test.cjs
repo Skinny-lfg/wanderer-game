@@ -109,7 +109,7 @@ test('v0.13 loot rates are distinct from unchanged v0.12 live odds',()=>{
  assert.equal(L.v013DungeonWaveOdds(4).drop,.60);
  assert.equal(L.v013DungeonWaveOdds(5).drop,.85);
 });
-test('paired Daggers: only two physical strikes across two attacks, off-hand half damage and half frequency',()=>{
+test('paired Daggers: main attacks do not schedule off-hand; direct off-hand half damage',()=>{
  const a=create(6543,undefined,{}, {skipPersistence:true});
  a.setup(35,'Daggers','Rare');a.setUnlocked(35);a.start(35,true);
  const c=a.controller(),card=c.state.dungeon.cards[0];
@@ -121,7 +121,7 @@ test('paired Daggers: only two physical strikes across two attacks, off-hand hal
  const first=a.gear.weaponAttack(r);
  assert.equal(r.offhandStrikes||0,0,'offhand cannot hit on first main swing');
  const second=a.gear.weaponAttack(r);
- assert.equal(r.offhandStrikes,1,'one offhand strike after two main swings');
+ assert.equal(r.offhandStrikes||0,0,'independent clock, not recursive main strikes');
  assert.equal(first,second,'two main hits should be equivalent in controlled encounter');
  const logs=a.feedback().logs; // Inspect subsequent direct off-hand for exact isolated damage.
  const e=r.enemy;const before=e.hp;

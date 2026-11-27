@@ -129,12 +129,13 @@ for(const [kind,expected] of [['Wand',105],['Staff',132]]){
 test('B2.16 native physical critical uses base 1.5 plus Crit Damage',()=>{
  const {a,r}=fight('Sword');r.stats.crit=100;r.stats.critDamage=.25;assert.equal(a.gear.weaponAttack(r),179);
 });
-test('B2.17 native offhand Dagger cadence with Sword and with Daggers',()=>{
+test('B2.17 main attacks do not recursively invoke offhand; direct offhand damage preserved',()=>{
  for(const kind of ['Sword','Daggers']){
   const {a,r}=fight(kind);r.stats.off=item('offhand','Off-Hand Dagger');
   const hp=r.enemy.hp,first=a.gear.weaponAttack(r);assert.equal(r.offhandStrikes||0,0);
-  const second=a.gear.weaponAttack(r);assert.equal(r.offhandStrikes,1);
-  assert.equal(hp-r.enemy.hp,first+second+35);
+  const second=a.gear.weaponAttack(r);assert.equal(r.offhandStrikes||0,0);
+  const off=a.gear.weaponAttack(r,true);assert.equal(off,35);
+  assert.equal(hp-r.enemy.hp,first+second+off);
  }
 });
 test('B2.18: root and Pages native formula modules byte-identical',()=>{

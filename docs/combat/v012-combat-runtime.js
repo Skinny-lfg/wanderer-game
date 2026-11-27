@@ -637,6 +637,7 @@ function prepared(id){return ports.state.automaticTalents?.prepared===id&&learne
 function triggered(r,id){r.outerUses??={};r.outerUses[id]=(r.outerUses[id]||0)+1;ports.phase6Proc(r,id);}
 function focusedWeaponDamage(r,damage,physical){return physical&&learned('single_target_mastery')&&!r.groupReserve?.length&&(!r.enemies||r.enemies.filter(enemy=>enemy.hp>0).length===1)?Math.max(1,Math.round(damage*1.15)):damage;}
 function weaponAttack(r,offhandStrike=false){
+ ports.phase6Metric(r,offhandStrike?'secondaryEquipmentStatusOffhandStrikes':'secondaryEquipmentStatusMainStrikes',1);
  const s=r.stats,e=r.enemy,weapon=offhandStrike?s.off:s.main,off=s.off,caster=!offhandStrike&&s.caster,now=ports.setNow(r),temp=ports.setRuntime(r);
  if(!e.bleedStacks||!e.v012Rot?.length)e.carrionCharge=0;
  const lt=ports.legendaryRuntime(r),focus=!!lt.focusReady,armorReady=!!lt.armorReady;lt.focusReady=false;lt.armorReady=false;
@@ -662,7 +663,7 @@ function weaponAttack(r,offhandStrike=false){
    if(!r.manaFallbackLogged){ports.addLog('No Mana: '+kind+' uses a weak physical attack.','spell');r.manaFallbackLogged=true;}
   }
  }
- if(offhandStrike)damage=Math.max(1,Math.round(damage*.50));
+ if(offhandStrike){damage=Math.max(1,Math.round(damage*.50));ports.phase6Metric(r,'secondaryEquipmentStatusOffhandRawDamage',damage);}
  damage=focusedWeaponDamage(r,damage,!caster&&!cast);
  const specialized=ports.state.automaticTalents?.nodes||[];
  if(specialized.includes('blood_focus'))damage=Math.max(1,Math.round(damage*.9));
@@ -706,6 +707,7 @@ function weaponAttack(r,offhandStrike=false){
  ports.animateStrike(kind,cast);
  if(e.barrier>0){const absorbed=Math.min(e.barrier,damage);e.barrier-=absorbed;damage-=absorbed;if(absorbed)ports.addLog('🛡 '+e.name+' absorbs '+absorbed+' damage','spell');if(root.WandererV013BossAbilities?.barrierChanged(r,e,barrierBefore,e.barrier))ports.addLog('⛨ Ward shattered · Vulnerable for 3s!','good');}
  const real=Math.max(0,Math.min(e.hp,damage));
+ if(offhandStrike)ports.phase6Metric(r,'secondaryEquipmentStatusOffhandDamage',real);
  ports.phase6Metric(r,'damageDealt',Math.min(Math.max(0,e.hp),damage));e.hp-=damage;ports.floatText(damage,'enemy',critical,'',e);
  if(reflectPrimaryDamage(r,e,real))return;
  if(!offhandStrike)offhandOnMainHit(r,real);
@@ -745,8 +747,14 @@ function weaponAttack(r,offhandStrike=false){
    // Keep the purchased Fury Double Strike useful on the first main swing, but
    // never proc it on an offhand hit or the main swing that triggers the offhand.
    const dual=['Daggers','Off-Hand Dagger'].includes(off?.subtype);
-   ports.phase2WeaponAttack(r,base,critical,cast,dual&&(r.offhandCadence||0)===1);
+   ports.phase2WeaponAttack(r,base,critical,cast,dual&&!!r.offhandDue);
   }
+ // A damaging offhand strike can apply the two primary DoTs only.
+ // Never re-run full onAttack, AoE, Double Strike or Infusion.
+ if(offhandStrike&&real>0&&e.hp>0&&ports.isPhase1Run()&&ports.phase1Build){
+  const ctx=ports.phase2Context(r);ctx.base=base;ctx.bloodCritBase=r.bloodCritBase;ctx.offhand=true;
+  WandererV012Buildcraft.onOffhandStatus(ports.phase1Build,ctx);
+ }
  if(!cast)v013CarrionDetonation(r,e,real);
  if(!offhandStrike&&kind==='Two-Handed'){const factor=ports.state.automaticTalents?.nodes?.includes('cleave_mastery')?.6:.4;groupSecondaryDamage(r,base,[factor,factor],'⚔ Cleave',true);}
  if(!offhandStrike&&kind==='Daggers'&&ports.state.automaticTalents?.nodes?.includes('fan_of_blades'))groupSecondaryDamage(r,base,[.22,.22],'🗡 Fan of Blades',true);
@@ -760,11 +768,7 @@ function weaponAttack(r,offhandStrike=false){
   const bonus=(!caster||cast)?WandererV012Buildcraft.onInfusionHit(ports.phase1Build,ctx):0;
   if(bonus>0){ports.phase6Metric(r,'infusionHits',1);ports.phase6Metric(r,'infusionDamage',bonus);}
  }
- if(!offhandStrike&&['Daggers','Off-Hand Dagger'].includes(off?.subtype)){
-  // Any one-handed main weapon can trigger a Dagger off-hand strike after every two main attacks. Its damage remains 50%.
-  r.offhandCadence=((r.offhandCadence||0)+1)%2;
-  if(r.offhandCadence===0&&e.hp>0){r.offhandStrikes=(r.offhandStrikes||0)+1;weaponAttack(r,true);}
- }
+ // Offhand strikes are scheduled by their own clock in updateFight.
  return damage;
 }
 
@@ -912,7 +916,17 @@ function updateFight(){
  if(r.hp<=0)return;
  if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
  const lt=ports.legendaryRuntime(r),haste=(ports.isPhase1Run()&&ports.phase1Build?WandererV012Buildcraft.speed(ports.phase1Build,ports.phase1Clock+r.combatSeconds):1)*(s.bonus.bleedHaste?1+Math.min(3,t.haste.length)*.05:1)*(1+((lt.natureHasteUntil||0)>ports.setNow(r)?.10:0)+((lt.thunderHasteUntil||0)>ports.setNow(r)?.12:0))*(root.WandererV013ExpeditionBoons?.speedFactor(r)||1);
+ // Independent Dagger clock, half its own rate, with the same global haste.
+ r.offhandDue=false;
+ const offhandRate=root.WandererV012GearStats.offhandDaggerRate(s,haste);
+ if(offhandRate>0){
+  r.offhandClock??={tPlayer:0};r.offhandDue=advancePlayerAttackClock(r.offhandClock,dt,offhandRate);
+ }
  if(advancePlayerAttackClock(r,dt,s.attacksPerSec*haste)){r.autoUses=(r.autoUses||0)+1;ports.weaponAttack(r);if(r.hp<=0)return;if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}}
+ if(r.offhandDue&&r.enemy?.hp>0&&r.hp>0&&r.status==='fight'){
+  r.offhandStrikes=(r.offhandStrikes||0)+1;weaponAttack(r,true);r.offhandDue=false;
+  if(r.hp<=0)return;if(e.hp<=0||hasUnsettledGroupDeaths(r)){ports.winEncounter(true);return;}
+ }
  if(r.bastionUntil&&ports.setNow(r)>=r.bastionUntil){r.barrier=Math.max(0,r.barrier-Math.max(0,r.bastionSize-(r.bastionAbsorbed||0)));ports.setHeal(r,Math.min(r.bastionSize,r.bastionAbsorbed||0)*.5,true);r.bastionUntil=0;}
  if(r.tDot>=1){if(r.pulses>0){r.pulses--;ports.setHeal(r,r.maxhp*.01*learned('second_pulse'));}
 
@@ -978,7 +992,7 @@ function updateFight(){
   const blockChance=barrierGuard?Math.min(65,(s.blockChance||0)+15):(s.blockChance||0);
   const block=blockChance&&ports.gameRandom()<blockChance/100;
   if(block){
-   damageBlocked=Math.max(1,Math.round(raw*(barrierGuard?(s.blockReduction||.35):s.blockReduction)));raw-=damageBlocked;
+   damageBlocked=Math.min(raw,Math.max(1,Math.round(raw*(barrierGuard?(s.blockReduction||.35):s.blockReduction))));raw-=damageBlocked;
    ports.addLog('🛡 BLOCK! Prevented '+damageBlocked+' damage','good');ports.animateDefense();
    if(s.bonus.shieldRiposte&&ports.setNow(r)>=t.shieldCounterUntil&&ports.setReady(r,'shieldRiposte',3)){t.shieldCounter=damageBlocked*.25;t.shieldCounterUntil=ports.setNow(r)+4;}
    if(s.off?.subtype==='Shield'&&ports.legendaryHas('oathwall')&&ports.legendaryProc(r,'oathwall')){const baseFactor=s.main?.subtype==='Mace'?1.4:1;const base=Math.max(1,Math.round(s.attack*baseFactor-WandererV012Buildcraft.enemyDefense(ports.phase1Build,e)));ports.setDirectEnemyDamage(r,base*(ports.legendaryEmpowered(r,'oathwall')?(s.main?.subtype==='Mace'?1.25:1.20):.90),'🛡 Oathwall Counterattack');if(e.hp<=0){ports.winEncounter();return;}}
