@@ -40,7 +40,7 @@ test('independent Dagger cadence stays equal across Sword, Mace and Daggers at e
    const interval={Sword:1.6,Mace:2.2,Daggers:1.15}[w];Object.assign(r.stats,{agi:5,int:5,spdFlat:0,rawAttackSpeed:1/interval,attacksPerSec:1/interval});
    for(let i=0;i<400;i++)a.tick();
    const n=r.metrics.secondaryEquipmentStatusB2OffhandStrikes||0,m=r.metrics.secondaryEquipmentStatusB2MainStrikes||0;
-   assert.equal(r.metrics.secondaryEquipmentStatusB2OffhandDamage,n*40);assert(n>0&&m>0);
+   assert.equal(r.metrics.secondaryEquipmentStatusB2OffhandRawDamage,n*40,'pre-modifier Dagger damage');assert(r.metrics.secondaryEquipmentStatusB2OffhandDamage>0);assert(n>0&&m>0);
    if(!mode)assert.equal(n,Math.floor(m/2));
    observed[w].push({n,m});
   }
@@ -70,4 +70,21 @@ test('native positive incoming damage: mitigation, Block, Barrier, then Health; 
   results.push({hp:r.hp,shield:r.metrics.shield,absorbed:r.metrics.absorbed,taken:r.metrics.damageTaken});
  }
  assert.deepEqual(results[0],results[1]);console.log('B22_BLOCK_POSITIVE='+JSON.stringify(results[0]));
+});
+
+test('experimental offhand status reuses primary Bleed and persistent paid Rot with shared cooldown and Mana',()=>{
+ const root={WandererAutomaticTalents:require('./v013-current-talent-helper.cjs').T};
+ new Function('globalThis',L.statusSource())(root);
+ const B=root.WandererV012Buildcraft;
+ for(const affinity of ['blood','decay']){
+  const b=B.create();B.syncPermanent(b,buy([affinity==='blood'?'bleeding_edge':'corrupting_touch']));
+  const e={hp:10000,maxhp:10000,dots:{bleed:[],burn:[]},v012Rot:[]},player={hp:100,maxhp:100,mp:20,maxmp:20,stats:{attack:100,spellPower:50,main:{subtype:'Mace'}}},m={};
+  const ctx={enemy:e,player,base:40,bloodCritBase:40,power:50,offhand:true,now:10,random:()=>0,log(){},dot(k,p){e.dots[k].push({damage:p,remaining:4});},metric(k,n){m[k]=(m[k]||0)+n;},dotDamage(n){e.hp-=n;}};
+  B.b22OffhandDot(b,ctx);
+  if(affinity==='blood'){assert.equal(e.dots.bleed.length,1);assert(Math.abs(e.dots.bleed[0].damage-6.4)<1e-8);assert.equal(m.secondaryEquipmentStatusB2OffhandBleedApplications,1);}
+  else{assert.equal(player.mp,16);assert.equal(e.v012Rot.length,1);assert.equal(e.v012Rot[0].primaryPaid,true);assert.equal(m.secondaryEquipmentStatusB2OffhandRotApplications,1);}
+  B.b22OffhandDot(b,ctx);
+  assert.equal(affinity==='blood'?e.dots.bleed.length:e.v012Rot.length,1,'same shared cooldown');
+  if(affinity==='decay'){ctx.now=12;player.mp=0;B.b22OffhandDot(b,ctx);assert.equal(e.v012Rot.length,1);assert.equal(player.mp,0);}
+ }
 });
