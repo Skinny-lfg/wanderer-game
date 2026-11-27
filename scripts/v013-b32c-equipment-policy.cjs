@@ -67,7 +67,8 @@ function adaptiveScore(x,b,profile,weapon){
 }
 
 
-function full(p){return ['b32d-full','b32d-attributes'].includes(p?.equipmentIntelligence);}
+function transition(p){return p?.equipmentIntelligence==='b32d2-transition';}
+function full(p){return ['b32d-full','b32d-attributes'].includes(p?.equipmentIntelligence)||transition(p);}
 function attributes(p){return p?.equipmentIntelligence==='b32d-attributes';}
 function stable(p){return p?.equipmentIntelligence==='b32c1-stable'||full(p);}
 function enabled(p){return p?.equipmentIntelligence==='b32c-soft'||stable(p);}
@@ -164,4 +165,4 @@ function gain(a,p,item,slot,equip=a.state().equip){
  assert(Number.isFinite(score),'Non-finite adaptive hand gain');return score;
 }
 function trace(p,entry){if(typeof p.equipmentTrace==='function')p.equipmentTrace(entry);}
-module.exports={enabled,stable,full,attributes,targets,gearTargets,projectGear,attributeChoices,projected,gain,trace,adaptiveFeatures,adaptiveScore,utility,stableGain,key,plans,threshold};
+module.exports={enabled,stable,full,attributes,transition,targets,gearTargets,projectGear,attributeChoices,projected,gain,trace,adaptiveFeatures,adaptiveScore,utility,stableGain,key,plans,threshold};

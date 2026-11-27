@@ -11,6 +11,7 @@ const CAPTURE=require('./v013-capture-assistance.cjs');
 const AGENT=require('./v013-agent-strategy.cjs');
 const PLANNER=require('./v013-build-planner.cjs');
 const EQUIPMENT_AI=require('./v013-b32c-equipment-policy.cjs');
+const TRANSITION=require('./v013-b32d2-transition-policy.cjs');
 require('../combat/v012-gear-stats.js');
 const GEAR_STATS=globalThis.WandererV012GearStats;
 require('../online/v013-map-intelligence.js');
@@ -774,13 +775,14 @@ function consolidateStash(a,profile,reserve=4){
  const keepSpace=Math.min(Math.max(1,Math.floor(capacity/4)),Math.max(2,reserve));
  const excess=Math.max(0,occupied+overflow-(capacity-keepSpace));
  if(excess>0){
+  const reserved=TRANSITION.retain(a,profile,'storage-pressure');
   const candidate=s.stash.filter(item=>item?.id&&!item.locked&&
    !item.startingGear&&!item.recoveryStarter).sort((left,right)=>{
    function priority(item){
     const equipped=s.equip[item.slot];
     const hand=handTargets(item,profile),gains=hand?.map(slot=>handGain(a,profile,item,slot)).filter(Number.isFinite)||[];
     const weakRelative=gains.length?Math.max(...gains):identityGain(item,equipped,profile,item.slot);
-    return weakRelative-(item.recoveryStarter?200:0)-(item.rarity==='Common'?10:0);
+    return (reserved.has(item.id)?1000000:0)+weakRelative-(item.recoveryStarter?200:0)-(item.rarity==='Common'?10:0);
    }
    return priority(left)-priority(right);
   });
@@ -788,6 +790,7 @@ function consolidateStash(a,profile,reserve=4){
   if(selected.length){
    const before=s.fragments,ids=selected.map(item=>item.id);
    const expected=selected.reduce((n,item)=>n+a.sale(item),0);
+   if(EQUIPMENT_AI.transition(profile))EQUIPMENT_AI.trace(profile,{phase:'transition',kind:'pressureSalvage',ids,reservedLost:ids.filter(id=>reserved.has(id))});
    a.salvage(ids);
    const found=ids.filter(id=>s.stash.some(item=>item.id===id));
    if(found.length||s.fragments-before!==expected)
@@ -811,7 +814,8 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  // Native Camp decision: obsolete Expedition Grey gear funds the Forge.
  // Never sell starter, equipped or locked items or create resources artificially.
  if(a.economyCanAct()){
-  const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&
+  const reserved=TRANSITION.retain(a,profile,'grey-salvage');
+  const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&!reserved.has(item.id)&&
    !item.locked&&!item.recoveryStarter&&item.id&&
    (EQUIPMENT_AI.stable(profile)&&['weapon','offhand'].includes(item.slot)?false:EQUIPMENT_AI.full(profile)?EQUIPMENT_AI.gearTargets(item).every(slot=>{const gain=EQUIPMENT_AI.gain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot)?EQUIPMENT_AI.targets(item).every(slot=>{const gain=handGain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5));
   if(surplus.length){
@@ -875,6 +879,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  actions.attributes.push(...spendEarnedAttributes(a,profile).chosen);
  actions.prepared=prepareEarnedAbility(a,profile);refreshSynergyContext(a,profile);refreshAdaptiveNodes(a,profile);
  if(EQUIPMENT_AI.enabled(profile))actions.equipped.push(...equipEarned(a,profile,false));
+ if(EQUIPMENT_AI.transition(profile)){actions.equipped.push(...TRANSITION.execute(a,profile));refreshSynergyContext(a,profile);}
  if(decisionModel!=='legacy'){
   actions.refined.push(...refineEarnedReagents(a,profile,level));
   const investment=investEarnedGear(a,profile,level);
@@ -921,11 +926,12 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   actions.equipped.push(...equipEarned(a,profile,false));
  }
  if(decisionModel!=='legacy')actions.runes.push(...manageEarnedRunes(a,profile,{equip:options.equipEarnedRunes!==false}));
+ if(EQUIPMENT_AI.transition(profile)){actions.equipped.push(...TRANSITION.execute(a,profile));refreshSynergyContext(a,profile);}
  actions.unspentGold=s.gold;
  actions.unspentFragments=s.fragments;
  actions.unspentEssence=s.crafting?.essence||0;
  actions.unspentReagents={...s.crafting?.cores};
- if(typeof profile.equipmentTrace==='function')profile.equipmentTrace({phase:'camp',kind:'afterCamp',level,weapon:s.equip.weapon?.subtype||null,offhand:s.equip.offhand?.subtype||null,hands:[s.equip.weapon,s.equip.offhand].filter(Boolean).map(x=>({id:x.id,subtype:x.subtype,rarity:x.rarity,atk:x.atk,spell:x.spell})),nodes:[...s.automaticTalents.nodes],stats:a.baseStats(),crafts:actions.crafted,buys:actions.bought,equips:actions.equipped});
+ if(typeof profile.equipmentTrace==='function')profile.equipmentTrace({phase:'camp',kind:'afterCamp',level,weapon:s.equip.weapon?.subtype||null,offhand:s.equip.offhand?.subtype||null,hands:[s.equip.weapon,s.equip.offhand].filter(Boolean).map(x=>({id:x.id,subtype:x.subtype,rarity:x.rarity,atk:x.atk,spell:x.spell})),nodes:[...s.automaticTalents.nodes],stats:a.baseStats(),armor:gearSnapshot(a).items.filter(x=>['helm','armor','gloves','boots','belt'].includes(x.slot)),preferredWeapons:[...profile.weapons],crafts:actions.crafted,buys:actions.bought,equips:actions.equipped});
  return actions;
 }
 function capabilities(a){
