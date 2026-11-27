@@ -10,6 +10,7 @@ const S=require('./simulate-progression.cjs');
 const CAPTURE=require('./v013-capture-assistance.cjs');
 const AGENT=require('./v013-agent-strategy.cjs');
 const PLANNER=require('./v013-build-planner.cjs');
+const EQUIPMENT_AI=require('./v013-b32c-equipment-policy.cjs');
 require('../combat/v012-gear-stats.js');
 const GEAR_STATS=globalThis.WandererV012GearStats;
 require('../online/v013-map-intelligence.js');
@@ -308,8 +309,9 @@ function investmentAllowed(item,profile,slot,equip){
    (profile.weapons?.length&&profile.weapons.every(w=>TWO_HAND_WEAPONS.has(w)))))return false;
  return true;
 }
-function investmentGain(item,profile,slot,equip){
+function investmentGain(item,profile,slot,equip,a=null){
  if(!investmentAllowed(item,profile,slot,equip))return -Infinity;
+ if(a){const g=EQUIPMENT_AI.gain(a,profile,item,slot,equip);if(g!==null)return g;}
  if(adaptiveCommitment(profile))return adaptiveGearGain(item,profile,slot,equip);
  if(isolatedAdaptive(profile))return isolatedGearGain(item,profile,slot,equip);
  const prior=equip?.[slot],gain=identityGain(item,prior,profile,slot);
@@ -407,6 +409,8 @@ function prepareEarnedAbility(a,profile){
  if(a.state().automaticTalents.prepared!==chosen)throw Error('Native prepared ability did not persist');
  return chosen;
 }
+function handGain(a,profile,item,slot){const equip=a.state().equip,prior=equip[slot];const g=EQUIPMENT_AI.gain(a,profile,item,slot,equip);return g!==null?g:adaptiveCommitment(profile)?adaptiveGearGain(item,profile,slot,equip):isolatedAdaptive(profile)?isolatedGearGain(item,profile,slot,equip):identityGain(item,prior,profile,slot);}
+function handTargets(item,profile){return EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item?.slot)?EQUIPMENT_AI.targets(item):null;}
 function equipEarned(a,profile,between=false){
  const actions=[];
  if(decisionQuality(profile))refreshSynergyContext(a,profile);
@@ -414,7 +418,24 @@ function equipEarned(a,profile,between=false){
  const source=between?a.bag.items().filter(x=>x.kind!=='valuable'):[...a.state().stash];
  // Rank visible native items, re-checking after each actual equip.
  const items=[...source].filter(x=>x?.slot&&x.id).sort((x,y)=>gearScore(y,profile)-gearScore(x,profile));
+ // The adaptive arm revisits visible hand items after each accepted change;
+ // no transaction is made without a positive single-step gain.
+ if(EQUIPMENT_AI.enabled(profile)){
+  const handItems=()=> (between?a.bag.items().filter(x=>x.kind!=='valuable'):a.state().stash).filter(x=>x?.id&&['weapon','offhand'].includes(x.slot));
+  const used=new Set();
+  for(let step=0;step<6;step++){
+   const choices=handItems().filter(x=>!used.has(x.id)).flatMap(item=>EQUIPMENT_AI.targets(item).map(target=>({item,target,gain:handGain(a,profile,item,target)}))).filter(x=>Number.isFinite(x.gain)).sort((x,y)=>y.gain-x.gain||String(x.item.id).localeCompare(String(y.item.id))||x.target.localeCompare(y.target));
+   EQUIPMENT_AI.trace(profile,{phase:between?'bag':'stash',kind:'opportunities',candidates:choices.map(x=>({id:x.item.id,subtype:x.item.subtype,slot:x.target,gain:x.gain}))});
+   const best=choices.find(x=>x.gain>=2.5);if(!best)break;
+   const {item,target,gain}=best,prior=a.state().equip[target],before=a.state().equip.weapon?.subtype||null;used.add(item.id);
+   const ok=a.equip(item.id,target);
+   EQUIPMENT_AI.trace(profile,{phase:between?'bag':'stash',kind:'equip',id:item.id,subtype:item.subtype,slot:target,gain,accepted:!!ok,weaponAtDecision:before});
+   if(ok){actions.push({slot:target,item:item.name,rarity:item.rarity,previous:prior?.name||null,gain:round(gain),subtype:item.subtype,trait:item.v013Trait||null,previousSubtype:prior?.subtype||null});if(decisionQuality(profile))refreshSynergyContext(a,profile);}
+  }
+ }
+
  for(const item of items){
+  if(EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot))continue;
   const offhandDagger=(profile.offhandPolicy==='b23'||profile.offhands?.includes('Daggers'))&&
    ['Daggers','Off-Hand Dagger'].includes(item.subtype);
   // Daggers can be legally equipped in either hand. Compare both native
@@ -487,9 +508,10 @@ function gearInvestmentCandidates(a,profile,level){
   }
   for(const {influence,progress} of variants){
    const example=forge.preview(recipe.id,level,influence);if(!example)continue;
-   const targets=adaptiveCommitment(profile)?adaptiveTargets(example,profile):decisionQuality(profile)?gearDecisionTargets(example,profile):['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot];
-   const target=targets.filter(slot=>investmentAllowed(example,profile,slot,s.equip)).map(slot=>({slot,gain:investmentGain(example,profile,slot,s.equip)}))
+   const targets=handTargets(example,profile)||(adaptiveCommitment(profile)?adaptiveTargets(example,profile):decisionQuality(profile)?gearDecisionTargets(example,profile):['ring1','ring2'].includes(recipe.slot)?['ring1','ring2']:[recipe.slot]);
+   const target=targets.filter(slot=>investmentAllowed(example,profile,slot,s.equip)).map(slot=>({slot,gain:investmentGain(example,profile,slot,s.equip,a)}))
     .sort((x,y)=>y.gain-x.gain)[0];
+   if(target&&EQUIPMENT_AI.enabled(profile))EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'offer',recipe:recipe.id,slot:target.slot,subtype:example.subtype,gain:Number.isFinite(target.gain)?target.gain:null,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents});
    if(!target||target.gain<5)continue;
    options.push({recipe,target,influence,gain:target.gain,fragments:progress.cost.fragments,essence:progress.cost.essence,reagents:progress.cost.reagents,efficiency:efficiency(target.gain,progress.cost.fragments,progress.cost.essence,progress.cost.reagents)});
   }
@@ -510,14 +532,15 @@ function investEarnedGear(a,profile,level){
   if(s.fragments!==before.fragments-best.fragments||
      s.crafting.essence!==before.essence-best.essence||Object.keys(before.cores).some(f=>s.crafting.cores[f]!==before.cores[f]-(best.reagents[f]||0)))
    throw Error('Native Forge cost mismatch');
-  const actual=gearScore(item,profile,best.target.slot)-gearScore(s.equip[best.target.slot],profile,best.target.slot);
+  const actual=EQUIPMENT_AI.enabled(profile)?handGain(a,profile,item,best.target.slot):gearScore(item,profile,best.target.slot)-gearScore(s.equip[best.target.slot],profile,best.target.slot);
   const weaponAtDecision=s.equip.weapon?.subtype||null;
   const equipped=equipEarned(a,profile,false);
+  EQUIPMENT_AI.trace(profile,{phase:'forge',kind:'craft',id:item.id,recipe:best.recipe.id,slot:best.target.slot,subtype:item.subtype,gain:best.gain,actualGain:Number.isFinite(actual)?actual:null,accepted:true,equipped:Object.values(s.equip).some(x=>x?.id===item.id),fragments:best.fragments,essence:best.essence,reagents:best.reagents});
   outcome.crafted.push({recipe:best.recipe.id,item:item.name,slot:best.target.slot,
    fragmentsSpent:best.fragments,essenceSpent:best.essence,reagentsSpent:{...best.reagents},influence:best.influence,
    estimatedGain:round(best.gain),actualRolledGain:round(actual),
    ...(compatibilityGuard(profile)?{weaponAtDecision,subtype:item.subtype}:{}),
-   equipped:decisionQuality(profile)||adaptiveCommitment(profile)?Object.values(s.equip).some(x=>x?.id===item.id):equipped.some(x=>x.item===item.name)});
+   equipped:EQUIPMENT_AI.enabled(profile)||decisionQuality(profile)||adaptiveCommitment(profile)?Object.values(s.equip).some(x=>x?.id===item.id):equipped.some(x=>x.item===item.name)});
  }
  return outcome;
 }
@@ -725,7 +748,8 @@ function consolidateStash(a,profile,reserve=4){
    !item.startingGear&&!item.recoveryStarter).sort((left,right)=>{
    function priority(item){
     const equipped=s.equip[item.slot];
-    const weakRelative=identityGain(item,equipped,profile,item.slot);
+    const hand=handTargets(item,profile),gains=hand?.map(slot=>handGain(a,profile,item,slot)).filter(Number.isFinite)||[];
+    const weakRelative=gains.length?Math.max(...gains):identityGain(item,equipped,profile,item.slot);
     return weakRelative-(item.recoveryStarter?200:0)-(item.rarity==='Common'?10:0);
    }
    return priority(left)-priority(right);
@@ -758,7 +782,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  if(a.economyCanAct()){
   const surplus=s.stash.filter(item=>item.source==='loot'&&item.rarity==='Common'&&
    !item.locked&&!item.recoveryStarter&&item.id&&
-   identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5);
+   (EQUIPMENT_AI.enabled(profile)&&['weapon','offhand'].includes(item.slot)?EQUIPMENT_AI.targets(item).every(slot=>{const gain=handGain(a,profile,item,slot);return Number.isFinite(gain)&&gain<=-2.5;}):identityGain(item,s.equip[item.slot],profile,item.slot)<=-2.5));
   if(surplus.length){
    const ids=surplus.map(item=>item.id),expected=surplus.reduce((sum,item)=>sum+a.sale(item),0);
    const before=s.fragments;
@@ -819,6 +843,7 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
  }
  actions.attributes.push(...spendEarnedAttributes(a,profile).chosen);
  actions.prepared=prepareEarnedAbility(a,profile);refreshSynergyContext(a,profile);refreshAdaptiveNodes(a,profile);
+ if(EQUIPMENT_AI.enabled(profile))actions.equipped.push(...equipEarned(a,profile,false));
  if(decisionModel!=='legacy'){
   actions.refined.push(...refineEarnedReagents(a,profile,level));
   const investment=investEarnedGear(a,profile,level);
@@ -837,8 +862,9 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
   const reserve=decisionModel==='legacy'?(owns('health')?0:14):
    owns('health')||!healthOffer?0:healthOffer.price;
   const candidates=(s.merchant?.stock||[]).map((item,index)=>{
-   const slots=merchantDecisionTargets(item,profile);
-   const best=slots.map(slot=>({slot,gain:investmentGain(item,profile,slot,s.equip)})).sort((a,b)=>b.gain-a.gain)[0];
+   const slots=handTargets(item,profile)||merchantDecisionTargets(item,profile);
+   const best=slots.map(slot=>({slot,gain:investmentGain(item,profile,slot,s.equip,a)})).sort((a,b)=>b.gain-a.gain)[0];
+   if(EQUIPMENT_AI.enabled(profile))EQUIPMENT_AI.trace(profile,{phase:'merchant',kind:'offer',id:item.id,subtype:item.subtype,slot:best?.slot,gain:Number.isFinite(best?.gain)?best.gain:null,cost:item.goldPrice,affordable:item.goldPrice<=s.gold-reserve});
    return {item,index,...best};
   }).filter(x=>Number.isFinite(x.gain)&&x.item?.goldPrice<=s.gold-reserve&&x.gain>(decisionModel==='legacy'?8:5))
    .sort((x,y)=>y.gain-x.gain||x.item.goldPrice-y.item.goldPrice);
@@ -848,8 +874,11 @@ function prepareCamp(a,profile,level,decisionModel='risk-aware',options={}){
    if(adaptiveCommitment(profile)&&!adaptiveTargets(item,profile).some(slot=>investmentGain(item,profile,slot,s.equip)>5))continue;
    if(compatibilityGuard(profile)&&!decisionQuality(profile)&&item.slot==='offhand'&&!investmentAllowed(item,profile,item.slot,s.equip))continue;
    const weaponAtDecision=s.equip.weapon?.subtype||null;
+   const adaptiveBest=EQUIPMENT_AI.enabled(profile)?(handTargets(item,profile)||merchantDecisionTargets(item,profile)).map(slot=>({slot,gain:investmentGain(item,profile,slot,s.equip,a)})).sort((x,y)=>y.gain-x.gain)[0]:null;
+   if(EQUIPMENT_AI.enabled(profile)&&!(adaptiveBest?.gain>5))continue;
    if(a.purchaseNative(index)){
-    actions.bought.push({name:item.name,cost:item.goldPrice,gain:round(gearScore(item,profile)-gearScore(s.equip[item.slot],profile)),...(compatibilityGuard(profile)?{slot:item.slot,subtype:item.subtype,weaponAtDecision}:{})});
+    if(adaptiveBest)EQUIPMENT_AI.trace(profile,{phase:'merchant',kind:'buy',id:item.id,subtype:item.subtype,slot:adaptiveBest.slot,gain:adaptiveBest.gain,cost:item.goldPrice,accepted:true});
+    actions.bought.push({name:item.name,cost:item.goldPrice,gain:round(adaptiveBest?adaptiveBest.gain:gearScore(item,profile)-gearScore(s.equip[item.slot],profile)),...(compatibilityGuard(profile)?{slot:adaptiveBest?.slot||item.slot,subtype:item.subtype,weaponAtDecision}:{})});
     actions.equipped.push(...equipEarned(a,profile,false));
    }
   }
@@ -1551,7 +1580,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
    try{
     const canPivot=!profile.fixedResearchBuild&&!profile.plan&&!!PIVOTS[id]&&!pivoted&&attempt>=3&&a.state().automaticTalents.nodes.length>=4&&
      acc.attempts.filter(x=>x.level===level&&!x.error&&x.status!=='error').length>=2;
-    const nextProfile=canPivot?{...pivotProfile(id),...(profile.offhandPolicy==='b23'?{synergyAudit:true,agentCompatibilityOnly:true,decisionIsolation:'hands',strictResearchIdentity:false,offhandPolicy:'b23'}:{})}:activeProfile;
+    const nextProfile=canPivot?{...pivotProfile(id),...(profile.offhandPolicy==='b23'?{synergyAudit:true,agentCompatibilityOnly:true,decisionIsolation:'hands',strictResearchIdentity:false,offhandPolicy:'b23'}:{}),...(EQUIPMENT_AI.enabled(profile)?{equipmentIntelligence:profile.equipmentIntelligence,equipmentTrace:profile.equipmentTrace}:{})}:activeProfile;
     const camp=prepareCamp(a,nextProfile,level,decisionModel,
      {...(canPivot?{resetReason:'two_undefeated_attempts_at_E'+level}:profile.plan?{history:acc.attempts,priorResets:acc.attempts.reduce((n,t)=>n+(t.camp?.resets?.length||0),0)}:{}),equipEarnedRunes:simulationOptions.equipEarnedRunes!==false});
     if(canPivot){if(camp.resets.length!==1)throw Error('Expected one native profile reset');activeProfile=nextProfile;pivoted=true;}
