@@ -48,9 +48,10 @@ function cell(p,h,sc,i,variant){
  const [id,weapon,offhand]=h,seed=SEED+p.level*100003+i*131, family=FAMILIES[(i+SC.indexOf(sc))%FAMILIES.length];
  const t=variant==='no-talents'?T.reset(p.t):p.t;assert(T.valid(t));assert.equal(T.earned(t),p.points);
  const build={id:p.id,weapon:p.weapon,families:p.families,skills:[],...(p.t.element?{element:p.t.element}:{})};
- const source=sources[variant];
- const opts={mode:'encounter',points:p.points,gear:'current',rarity:p.rarity,runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:13000,lockScenarioStreams:true,controlledTalents:t,armorType:p.armorType,offhandType:offhand,stageB31ALoadout:weapon,stageB31EquipmentAudit:true,...(source?{stage619BaselineRuntime:source}:{}),...(sc.elite?{stage619EliteType:sc.elite}:{})};
+ const source=sources[variant];let observedRuntime=null;
+ const opts={mode:'encounter',points:p.points,gear:'current',rarity:p.rarity,runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:13000,lockScenarioStreams:true,controlledTalents:t,armorType:p.armorType,offhandType:offhand,stageB31ALoadout:weapon,stageB31EquipmentAudit:true,...(source?{stageArmorRuntimeSource:source}:{}),recordModules:entries=>{observedRuntime=entries.find(e=>e.file==='combat/v012-combat-runtime.js');},...(sc.elite?{stage619EliteType:sc.elite}:{})};
  const x=S.encounter(p.level,build,seed,sc.kind,opts,undefined,undefined,family,1,sc.size);
+ assert(observedRuntime,'Missing native runtime manifest');assert.equal(observedRuntime.overridden,!!source,'Unexpected runtime substitution');assert.equal(observedRuntime.sha256,crypto.createHash('sha256').update(source||original).digest('hex'),'Runtime source mismatch');
  assert.equal(x.level,p.level);assert.equal(x.pointsSpent,t.nodes.length);assert.equal(x.talentXp,t.xp);assert.deepEqual(x.controlledTalentNodes,t.nodes);
  assert.equal(x.affinity,family);assert.equal(x.weaponType,weapon);assert.equal(x.offhandType,offhand);assert.equal(x.armorType,p.armorType);assert.equal(Number(x.won)+Number(x.died)+Number(x.timedOut),1);
  if(sc.elite)assert.equal(x.eliteType,sc.elite);if(sc.kind==='boss')assert.equal(x.bossAffinity,family);if(sc.size)assert.equal(x.requestedGroupSize,sc.size);
