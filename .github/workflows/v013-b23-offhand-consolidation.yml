@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]') && !contains(github.event.head_commit.message, '[b32a-context]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]') && !contains(github.event.head_commit.message, '[b32a-context]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -1169,3 +1169,66 @@ jobs:
         with:
           name: b31g-summary
           path: reports/b31g/summary.json
+
+  b32a-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b32a-context]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/v013-b32a-context-evaluation.cjs smoke
+
+  b32a-study:
+    needs: b32a-gate
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        study: [0,1,2,3,4,5,6,7,8,9,10,11]
+        scenario: [0,1,2]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b32a-context-evaluation.cjs study ${{ matrix.study }} ${{ matrix.scenario }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b32a-study-${{ matrix.study }}-${{ matrix.scenario }}
+          path: reports/b32a/study-${{ matrix.study }}-${{ matrix.scenario }}.json
+
+  b32a-summary:
+    needs: b32a-study
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b32a-study-*-*
+          merge-multiple: true
+          path: reports/b32a
+      - run: node scripts/v013-b32a-context-evaluation.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b32a-summary
+          path: reports/b32a/summary.json
