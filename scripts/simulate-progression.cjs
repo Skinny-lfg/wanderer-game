@@ -346,7 +346,7 @@ function combatSnapshot(a,c){
   stage:g.stage,run:r,results:a.results()
  }));
 }
-function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false){
+function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false,stalemateAudit=null){
  const r=a.state().run;
  if(!r||r.status!=='fight')throw Error('Expected native combat encounter');
  const initialStateSha256=crypto.createHash('sha256').update(JSON.stringify(combatSnapshot(a,c))).digest('hex');
@@ -371,6 +371,8 @@ function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false)
  let underfilledSeconds=0,peakPrincipals=initialPrincipals,principalSeconds=0,threePrincipalSeconds=0,minionOnlySeconds=0,firstPrincipalKill=null,firstMinionKill=null;
  const agentCapabilities=targetPolicy==='adaptive'?AGENT.classify({
   equipment:a.state().equip,talents:a.state().automaticTalents,build:a.build(),stats:a.baseStats()}):null;
+ let surrenderDecision=null;
+ if(stalemateAudit)stalemateAudit.observe(r,0,c.state.stage);
  while(r.status==='fight'&&c.state.stage==='combat'&&r.hp>0&&ticks<limit){
   // For controlled policy comparisons, isolate agent clicks. All scenarios
   // still run the identical native combat engine, enemy AI and damage rules.
@@ -388,7 +390,9 @@ function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false)
   a.tick();ticks++;
   if(audit){const dt=Math.max(0,(r.combatSeconds||0)-beforeTime);if(r.mp>=r.maxmp-1e-8)audit.atCapSeconds+=dt;if(r.mp<1)audit.belowOneSeconds+=dt;}
   if(measure){const dt=Math.max(0,(r.combatSeconds||0)-beforeTime);principalSeconds+=principalBefore*dt;if(activeBefore.length<4&&activeBefore.length>0&&r.groupReserve?.length)underfilledSeconds+=dt;if(principalBefore>=3)threePrincipalSeconds+=dt;if(activeBefore.length&&principalBefore===0)minionOnlySeconds+=dt;peakPrincipals=Math.max(peakPrincipals,active().filter(principal).length);if(firstPrincipalKill===null&&sourceActors.some(e=>['tank','skirmisher','caster'].includes(e.role)&&e.hp<=0))firstPrincipalKill=(r.combatSeconds||0)-startedAt;if(firstMinionKill===null&&sourceActors.some(e=>e.role==='minion'&&e.hp<=0))firstMinionKill=(r.combatSeconds||0)-startedAt;}
-  if(firstKillSeconds===null&&sourceActors.some(e=>e.hp<=0))firstKillSeconds=(r.combatSeconds||0)-startedAt;for(const mob of r.enemies||[])unseenReserve.delete(mob);minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));peakLiving=Math.max(peakLiving,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length+(r.groupReserve||[]).filter(e=>e?.hp>0).length);peakVisible=Math.max(peakVisible,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length);}
+  if(firstKillSeconds===null&&sourceActors.some(e=>e.hp<=0))firstKillSeconds=(r.combatSeconds||0)-startedAt;for(const mob of r.enemies||[])unseenReserve.delete(mob);minimumHp=Math.min(minimumHp,Math.max(0,r.hp)/(r.maxhp||1));peakLiving=Math.max(peakLiving,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length+(r.groupReserve||[]).filter(e=>e?.hp>0).length);peakVisible=Math.max(peakVisible,(r.enemies||[r.enemy]).filter(e=>e?.hp>0).length);
+  if(stalemateAudit){surrenderDecision=stalemateAudit.observe(r,ticks,c.state.stage);if(surrenderDecision)break;}
+ }
  if(audit)Object.defineProperty(r,'mp',{value:mpValue,writable:true,enumerable:true,configurable:true});
  const metrics=r.metrics||{},died=c.state.stage==='failed'||r.hp<=0,timedOut=!died&&r.status==='fight'&&ticks>=limit;
  const row={magicAdaptiveMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>/^(arcane_nova|mana_convergence|frost_resonance|glacial_echo|controlled_burn|cinder_focus|static_focus|storm_conductor)/.test(k))),decayTalentMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>/^(decayPrimaryPaid|contagiousTouch|corruptionNova|corruptionOverflow|soulDrain|corruptionCycle|rotguard)/.test(k))),defensiveTalentMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>/^(vital_pulse|living_force|livingForce|grasping_roots|ward_echo|storedForce)/.test(k))),graveBloomMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>k.startsWith('graveBloom'))),weaponStatusMetrics:Object.fromEntries(Object.entries(metrics).filter(([k])=>/^(carrion|secondary(Bleed|Rot|Sunder|EquipmentStatus))/.test(k))),firstKillSeconds:firstKillSeconds,initialStateSha256,vanguardEncounter,targetPolicy,tier:startedTier,type:leader?.boss?'boss':leader?.miniboss?'elite':'combat',bossId:profile?.id||null,bossAffinity:profile?Object.keys(A.PROFILES).find(f=>A.PROFILES[f]===profile):null,bossName:profile?.name||null,bossStyle:leader?.bossStyle||null,eliteType:leader?.eliteType||null,initialRoles,roster,initialVisible,initialReserve,peakLivingEnemies:peakLiving,peakVisibleEnemies:peakVisible,targetPolicy,targetSwitches,traitId:r.encounterTraitId||null,traitRegrowthHealing:Math.round(metrics.traitRegrowthHealing||0),traitDeathPulse:Math.round(metrics.traitDeathPulse||0),bossModifierIds:[...(r.bossModifierIds||[])],bossPulseTriggers:Math.round(metrics.bossPulseTriggers||0),bossFrenzyTriggers:Math.round(metrics.bossFrenzyTriggers||0),bossPreparation:r.bossPreparation?JSON.parse(JSON.stringify(r.bossPreparation)):null,status:died?'died':timedOut?'timeout':r.status,timedOut,died,won:!died&&r.status==='cleared',seconds:+((r.combatSeconds||0)-startedAt).toFixed(6),updateCalls:ticks,ticks,hpStart:+startHp.toFixed(2),hpEnd:+Math.max(0,r.hp).toFixed(2),hpMax:r.maxhp,mpStart:+startMp.toFixed(2),mpEnd:+Math.max(0,r.mp).toFixed(2),mpMax:r.maxmp,minHpPct:+(minimumHp*100).toFixed(1),conditionId:r.conditionId||null,conditionMarked:!!r.conditionMarked,conditionBarrierGranted:Math.round(r.conditionBarrierGranted||0),conditionRiteTriggers:Math.round(metrics.conditionRiteTriggers||0),damageDealt:Math.round(metrics.damageDealt||0),secondaryTargetDamage:Math.round(metrics.secondaryTargetDamage||0),secondaryDotDamage:Math.round(metrics.secondaryDotDamage||0),secondaryTargetHits:Math.round(metrics.secondaryTargetHits||0),damageTaken:Math.round(metrics.damageTaken||0),absorbed:Math.round(metrics.absorbed||0),manaSpent:Math.round(metrics.manaSpent||0),infusionActivations:Math.round(metrics.infusionActivations||0),infusionHits:Math.round(metrics.infusionHits||0),infusionDamage:Math.round(metrics.infusionDamage||0),fundedCasts:Math.round(metrics.fundedCasts||0),unfundedCasterAttacks:Math.round(metrics.unfundedCasterAttacks||0),initialEnemies,enemies:r.totalMobCount||initialEnemies,reinforcementsSpawned:initialReserve-unseenReserve.size,bossSummons:Math.round(metrics.bossSummons||0),bossHealing:Math.round(metrics.bossHealing||0),bossMinionDeaths:Math.round(metrics.bossMinionDeaths||0),bossWards:Math.round(metrics.bossWards||0),bossArcanePulses:Math.round(metrics.bossArcanePulses||0),bossCastInterruptions:Math.round(metrics.bossCastInterruptions||0),bossNodeDestroyed:Math.round(metrics.bossNodeDestroyed||0),enemyAbilityCasts:Math.round(metrics.enemyAbilityCasts||0),solarRebukeHits:metrics.solarRebukeHits||0,solarRebukeDamage:metrics.solarRebukeDamage||0,eliteSummons:Math.round(metrics.eliteSummons||0),plagueSpreadTransfers:Math.round(metrics.plagueSpreadTransfers||0),bossCastPreparations:Math.round(metrics.bossCastPreparations||0)};
@@ -429,6 +433,7 @@ function fight(a,c,limit,targetPolicy='focus',measure=false,resourceAudit=false)
   };
   if(Object.values(row.affinityMetrics).some(x=>typeof x==='number'&&!Number.isFinite(x)))throw Error('Non-finite affinity diagnostic');
  }
+ if(surrenderDecision){if(!a.surrender(r)||c.state.stage!=='failed')throw Error('Native surrender settlement failed');row.won=false;row.died=false;row.timedOut=false;row.surrendered=true;row.status='surrendered';row.surrenderDecision=surrenderDecision;row.surrenderSettlement={stage:c.state.stage,outcome:a.results().summary.outcome};}
  return row;
 }
 function shortestRoute(card){
@@ -521,7 +526,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   throw Error('Native forced Elite spawn differs from requested subtype');
  if(run.tier!==level)throw Error('Incorrect encounter tier '+run.tier+' vs '+level);
  if(kind==='boss'&&run.encounterLeader?.bossStyle!==A.profileFor(card.family).style)throw Error('Native Boss mismatch for '+card.family);
- const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true,opts.stage648ManaAudit===true);
+ const result=fight(a,c,opts.tickLimit,opts.targetPolicy,opts.measure===true,opts.stage648ManaAudit===true,opts.stalemateAudit);
  if(opts.anchorSpreadResearch===true)result.anchorSpreadMetrics=Object.fromEntries(Object.entries(run.metrics||{}).filter(([k])=>k.startsWith('anchorSpread')));
  const baseStats=combatEntryStats;
  const mode=forcedBossMod!==undefined?'bossmods':forcedTrait!==undefined?'traits':opts.mode==='bosses'?'bosses':['enemies','roles'].includes(opts.mode)?opts.mode:opts.mode==='elites'?'elites':'encounter';
