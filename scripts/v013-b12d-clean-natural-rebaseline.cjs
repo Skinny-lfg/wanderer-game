@@ -128,4 +128,4 @@ function aggregate(){
  if(!clean)process.exitCode=1;
 }
 if(require.main===module){const [cmd,id,b]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='batch')batch(id,Number(b));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
-module.exports={approvedProfile,seed,PER,BATCH,BATCHES,CONFIG,counts,outcomes,clusterCI,compatibilityIssues,accountRecord};
+module.exports={approvedProfile,seed,PER,BATCH,BATCHES,CONFIG,counts,outcomes,clusterCI,compatibilityIssues,accountRecord,account};

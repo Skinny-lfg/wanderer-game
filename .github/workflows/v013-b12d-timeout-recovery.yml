@@ -1,0 +1,39 @@
+name: v0.13 B1.2D - isolated timeout recovery
+on:
+  push:
+    branches: [balance/b1.2d-timeout-recovery]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: b12d-summary
+          github-token: ${{ github.token }}
+          run-id: 45912095509
+          path: baseline
+      - uses: actions/download-artifact@v4
+        with:
+          name: b12d-natural-smart-radiance-pure-1
+          github-token: ${{ github.token }}
+          run-id: 45912095509
+          path: raw
+      - run: node --test tests/v013-b12d-clean-natural-rebaseline.test.cjs tests/v013-b12c-surrender.test.cjs
+      - run: node scripts/v013-b12d-timeout-recovery.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b12d-timeout-recovery
+          path: reports/b12d-recovery
+          if-no-files-found: warn
