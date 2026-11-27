@@ -7,6 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[b23a-recovery]')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -24,6 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[b23a-recovery]')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -104,3 +106,36 @@ jobs:
         with:
           name: b23-summary
           path: reports/b23/summary.json
+
+  recovery:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b23a-recovery]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Targeted mechanical and probe regressions
+        run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-natural-progression.test.cjs
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45983097723
+          pattern: b23-*
+          merge-multiple: true
+          path: reports/b23
+      - name: Recover original evidence and replay only affected seeds
+        run: node scripts/v013-b23-offhand-confirmation.cjs recovery
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b23a-recovery
+          path: reports/b23a

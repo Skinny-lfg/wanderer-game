@@ -22,12 +22,13 @@ function rotSource(factor){
 }
 function sources(){return {oldRuntime:baselineRuntime(),oldBuild:old(OLD,BC),oldGear:old(PRE_SP,GS),ownFull:rotSource(.8),ownHalf:rotSource(.4)};}
 function compact(x){const m=x.weaponStatusMetrics||{};return {won:x.won,died:x.died,timedOut:x.timedOut,seconds:x.seconds,damage:x.damageDealt,taken:x.damageTaken,firstKill:x.firstKillSeconds,hpEnd:x.hpEnd,mpEnd:x.mpEnd,manaSpent:x.manaSpent,stats:x.heroBaseStats,healing:x.affinityMetrics?.healingActual,barrier:x.affinityMetrics?.barrierGenerated,absorbed:x.affinityMetrics?.barrierAbsorbed,dot:x.affinityMetrics?.dotDamageActual,offHits:m.secondaryEquipmentStatusOffhandStrikes||0,offDamage:m.secondaryEquipmentStatusOffhandDamage||0,offBleed:m.secondaryEquipmentStatusOffhandBleedApplications||0,offRot:m.secondaryEquipmentStatusOffhandRotApplications||0,mainHits:m.secondaryEquipmentStatusMainStrikes||0,abilities:x.decayTalentMetrics,passives:x.affinityMetrics?.passiveActivations};}
-function controlled(pi,si,src=sources()){
+function controlled(pi,si,src=sources(),replay=null){
  const spec=specs[pi],sc=scenarios[si];assert(spec&&sc);const p=G.profile(spec.id);
  const build={id:p.id,weapon:spec.weapon||p.weapon,families:p.families,skills:[],element:p.element};
  const opts={...S.DEFAULTS,mode:'encounter',points:p.t.nodes.length,gear:'current',rarity:'Rare',runes:false,contracts:'none',boons:'none',targetPolicy:'mechanics',measure:true,tickLimit:13000,lockScenarioStreams:true,controlledTalents:p.t,armorType:spec.cloth?'Cloth':p.armorType,offhandType:spec.cloth?(spec.orb?'Orb':p.offhandType):'Off-Hand Dagger'};
  const arms={old:{stageArmorRuntimeSource:src.oldRuntime,stage648c1BuildcraftSource:src.oldBuild,stage648c2cGearStatsSource:src.oldGear},approved:{},...(spec.rot?{ownFull:{stage648c1BuildcraftSource:src.ownFull},ownHalf:{stage648c1BuildcraftSource:src.ownHalf}}:{})};
- const rows=Array.from({length:NSEEDS},(_,i)=>{
+ const indices=replay?.indices??Array.from({length:NSEEDS},(_,i)=>i),diagnostics=[];
+ const rows=indices.map(i=>{
   const seed=100300001+i*103,family=F[i%F.length];const variants=Object.fromEntries(Object.entries(arms).map(([id,opt])=>[id,S.encounter(10,build,seed,sc.kind,{...opts,...opt},undefined,undefined,family,1,sc.size)]));
   const baseline=variants.old;
   for(const [id,x] of Object.entries(variants)){
@@ -35,18 +36,20 @@ function controlled(pi,si,src=sources()){
    assert.equal([x.won,x.died,x.timedOut].filter(Boolean).length,1);
    if(id.startsWith('own'))assert.deepEqual(x.heroBaseStats,variants.approved.heroBaseStats);
   }
+  if(replay)diagnostics.push({i,seed,arms:Object.fromEntries(Object.entries(variants).map(([k,x])=>[k,{...compact(x),roster:x.roster,realm:x.realm,affinity:x.affinity,trait:x.traitId,traitRegrowthHealing:x.traitRegrowthHealing,condition:x.conditionId,conditionMarked:x.conditionMarked,enemyAbilityCasts:x.enemyAbilityCasts,targetSwitches:x.targetSwitches,remainingActors:x.groupPressure?.remainingActors,barrierAtExit:x.affinityMetrics?.barrierAtExit}]))});
   return {i,seed,gearHash:baseline.gearFingerprint,rosterHash:sha(json(baseline.roster)),arms:Object.fromEntries(Object.entries(variants).map(([k,x])=>[k,compact(x)]))};
  });
- const source={...Object.fromEntries(Object.entries(src).map(([k,v])=>[k,sha(v)])),native:S.sourceFingerprint().sha256};write(OUT+'/controlled-'+pi+'-'+si+'.json',{pi,si,spec,sc,source,commit:process.env.GITHUB_SHA||null,rows});
+ const source={...Object.fromEntries(Object.entries(src).map(([k,v])=>[k,sha(v)])),native:S.sourceFingerprint().sha256};const payload={pi,si,spec,sc,source,commit:process.env.GITHUB_SHA||null,rows,...(replay?{diagnostics}:{})};write((replay?.out||OUT)+'/controlled-'+pi+'-'+si+'.json',payload);return payload;
 }
-function agent(pi){
+function nativeCampProbe(a){return {legal:a.talents.valid(a.state().automaticTalents),stats:{...a.baseStats()}};}
+function agent(pi,replay=null){
  const id=agentIds[pi];assert(id);const rows=[];
- for(let i=0;i<5;i++){
+ for(const i of replay?.indices??[0,1,2,3,4]){
   const seed=100400001+i*107,variants={};
   for(const arm of ['H','H23']){
    const p={...D.approvedProfile(id),...(arm==='H23'?{offhandPolicy:'b23'}:{})},observations=[];
    const acc=N.simulateAccount(seed,id,{...N.DEFAULTS,...D.CONFIG,tickLimit:13000},{researchProfiles:{[id]:p},decisionModel:'adaptive',equipEarnedRunes:true,onCamp:({a,level,attempt})=>{
-    const cap=N.capabilities(a);observations.push({level,attempt,points:a.state().automaticTalents.nodes.length,weapon:cap.weapon,offhand:cap.offhand,dagger:cap.offhandDagger,mana:a.baseStats().mana,stats:{attack:a.baseStats().attack,spellPower:a.baseStats().spellPower}});return null;
+    const cap=N.capabilities(a);observations.push({level,attempt,points:a.state().automaticTalents.nodes.length,weapon:cap.weapon,offhand:cap.offhand,dagger:cap.offhandDagger,mana:a.baseStats().mana,stats:{attack:a.baseStats().attack,spellPower:a.baseStats().spellPower}});return nativeCampProbe(a);
    }});
    const audit=A.audit(id,[acc]),issues=[...audit.issues];
    for(const t of acc.attempts)for(const m of D.compatibilityIssues(t,p))issues.push({level:t.level,attempt:t.attempt,message:m});
@@ -54,7 +57,7 @@ function agent(pi){
   }
   rows.push({i,seed,variants});
  }
- write(OUT+'/agent-'+pi+'.json',{pi,id,commit:process.env.GITHUB_SHA||null,native:S.sourceFingerprint().sha256,rows});
+ const payload={pi,id,commit:process.env.GITHUB_SHA||null,native:S.sourceFingerprint().sha256,rows};write((replay?.out||OUT)+'/agent-'+pi+'.json',payload);return payload;
 }
 const mean=(x,f)=>{const a=x.map(f).filter(Number.isFinite);return a.length?+(a.reduce((n,v)=>n+v,0)/a.length).toFixed(3):null;};
 function metrics(x){const valid=x.filter(r=>!r.timedOut);return {n:x.length,resolved:valid.length,wins:valid.filter(r=>r.won).length,losses:valid.filter(r=>r.died).length,timeouts:x.filter(r=>r.timedOut).length,winPct:mean(valid,r=>100*Number(r.won)),DPS:mean(valid,r=>r.seconds>0?r.damage/r.seconds:null),seconds:mean(valid,r=>r.seconds),offhandRate:mean(valid,r=>r.seconds>0?r.offHits/r.seconds:null),offhandDamage:mean(valid,r=>r.offDamage),offhandBleed:mean(valid,r=>r.offBleed),offhandRot:mean(valid,r=>r.offRot),dot:mean(valid,r=>r.dot),mana:mean(valid,r=>r.manaSpent),barrier:mean(valid,r=>r.barrier),SP:mean(valid,r=>r.stats?.spellPower)};}
@@ -79,5 +82,51 @@ function aggregate(){
  write(OUT+'/summary.json',{overview,control,agents});for(const x of control)console.log('B23_CONTROL='+json(x));for(const x of agents)console.log('B23_AGENT='+json(x));console.log('B23_OVERVIEW='+json(overview));
  if(fights!==6600||overview.agentAccounts!==80||timeouts||errors||missing.length)process.exitCode=1;
 }
-if(require.main===module){const [cmd,p,s]=process.argv.slice(2);if(cmd==='controlled')controlled(Number(p),Number(s));else if(cmd==='agent')agent(Number(p));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
-module.exports={rotSource,specs,scenarios,agentIds};
+
+const RECOVERY_BASE='807ea48da38b837586eb288a3a9430b8801ea14b',RECOVERY_OUT='reports/b23a';
+function recovery(){
+ const read=name=>JSON.parse(fs.readFileSync(OUT+'/'+name+'.json','utf8')),native=S.sourceFingerprint().sha256,src=sources(),expectedSources={...Object.fromEntries(Object.entries(src).map(([k,v])=>[k,sha(v)])),native};
+ const controls=[],accounts=[],histIssues={},timeoutSeeds=[];
+ let fights=0,agentAccounts=0,issues=0,runtimeErrors=0;
+ for(let pi=0;pi<specs.length;pi++)for(let si=0;si<scenarios.length;si++){
+  const x=read('controlled-'+pi+'-'+si);
+  assert.equal(x.commit,RECOVERY_BASE);assert.deepEqual(x.source,expectedSources);assert.equal(x.pi,pi);assert.equal(x.si,si);assert.deepEqual(x.spec,specs[pi]);assert.deepEqual(x.sc,scenarios[si]);assert.equal(x.rows.length,NSEEDS);
+  const keys=x.spec.rot?['old','approved','ownFull','ownHalf']:['old','approved'];
+  x.rows.forEach((r,i)=>{assert.equal(r.i,i);assert.equal(r.seed,100300001+i*103);assert.deepEqual(Object.keys(r.arms),keys);
+   for(const [arm,v] of Object.entries(r.arms)){assert.equal([v.won,v.died,v.timedOut].filter(Boolean).length,1);fights++;if(v.timedOut)timeoutSeeds.push({pi,si,i,seed:r.seed,arm});}});
+  controls.push(x);
+ }
+ for(let pi=0;pi<agentIds.length;pi++){
+  const x=read('agent-'+pi);assert.equal(x.commit,RECOVERY_BASE);assert.equal(x.native,native);assert.equal(x.id,agentIds[pi]);assert.equal(x.pi,pi);assert.equal(x.rows.length,5);
+  x.rows.forEach((r,i)=>{assert.equal(r.i,i);assert.equal(r.seed,100400001+i*107);assert.deepEqual(Object.keys(r.variants),['H','H23']);for(const [arm,v] of Object.entries(r.variants)){
+   agentAccounts++;runtimeErrors+=v.errors.length;
+   for(const q of v.issues){issues++;const k=arm+': '+q.message;histIssues[k]=(histIssues[k]||0)+1;}
+  }});accounts.push(x);
+ }
+ const oldSummary=read('summary');assert.equal(fights,6600);assert.equal(agentAccounts,80);assert.equal(issues,2310);assert.equal(runtimeErrors,0);assert.equal(timeoutSeeds.length,6);
+ assert.deepEqual(histIssues,{'H: native talent validity not confirmed':1140,'H23: native talent validity not confirmed':1170});
+ assert.equal(oldSummary.overview.fights,fights);assert.equal(oldSummary.overview.errors,issues);assert.equal(oldSummary.overview.timeouts,timeoutSeeds.length);assert.equal(oldSummary.overview.agentAccounts,agentAccounts);assert.deepEqual(oldSummary.overview.missing,[]);
+ assert.deepEqual(timeoutSeeds.map(x=>[x.pi,x.si,x.i,x.arm]),[21,45,69].flatMap(i=>['old','approved'].map(a=>[5,0,i,a])));
+ // Only the three affected matched seeds; do not extend the combat budget or alter mechanics.
+ const timeoutReplay=controlled(5,0,src,{indices:[21,45,69],out:RECOVERY_OUT}),historic=controls.find(x=>x.pi===5&&x.si===0);
+ for(const r of timeoutReplay.rows)assert.deepEqual(r,historic.rows[r.i],'Timeout replay drift');
+ for(const d of timeoutReplay.diagnostics)console.log('B23A_TIMEOUT='+json(d));
+ // One account per profile/policy (hybrid seed 1 has developed dagger coverage).
+ const checks=[];
+ for(let pi=0;pi<agentIds.length;pi++){
+  const i=pi===7?1:0,run=agent(pi,{indices:[i],out:RECOVERY_OUT}),before=accounts[pi].rows[i],after=run.rows[0];
+  assert.equal(after.seed,before.seed);
+  for(const arm of ['H','H23']){
+   const {issues:oldIssues,...prior}=before.variants[arm],{issues:newIssues,...now}=after.variants[arm];
+   assert(oldIssues.every(q=>q.message==='native talent validity not confirmed'));assert.deepEqual(newIssues,[],'Unresolved replay audit issue');assert.deepEqual(now.errors,[]);assert.deepEqual(now,prior,'Agent replay drift');
+   checks.push({id:run.id,seed:after.seed,arm,oldIssues:oldIssues.length,newIssues:newIssues.length,attempts:now.attempts,unchanged:true});
+  }
+ }
+ const summary={sourceRun:45983097723,sourceCommit:RECOVERY_BASE,recoveryCommit:process.env.GITHUB_SHA||null,native,
+  historical:{fights,agentAccounts,issues:histIssues,runtimeErrors,timeoutSeeds},replayed:{fights:6,agentAccounts:checks.length,checks,timeouts:timeoutReplay.diagnostics},
+  verdict:'RECOVERY_VALIDATED_NOT_BALANCE_APPROVAL',remaining:['Six unresolved controlled outcomes (three matched seeds); diagnose encounter mechanics before any tuning.','H23 natural developed dagger coverage insufficient; no global natural baseline.','Historical agent artifacts preserved: missing probe evidence is not retroactively replaced.']};
+ write(RECOVERY_OUT+'/summary.json',summary);console.log('B23A_OVERVIEW='+json({...summary,replayed:{...summary.replayed,timeouts:timeoutSeeds}}));
+}
+
+if(require.main===module){const [cmd,p,s]=process.argv.slice(2);if(cmd==='controlled')controlled(Number(p),Number(s));else if(cmd==='agent')agent(Number(p));else if(cmd==='aggregate')aggregate();else if(cmd==='recovery')recovery();else throw Error('Unknown command');}
+module.exports={rotSource,specs,scenarios,agentIds,nativeCampProbe};

@@ -60,3 +60,14 @@ test('agent values owned DoT, not mere affinity goals, checks Mana and two-hande
  assert.equal(A.classify({equipment:{weapon:item('weapon','Staff'),offhand:dagger},talents:buy(['corrupting_touch']),stats}).offhandDagger.active,false);
 });
 test('current modules exactly mirror Pages',()=>{for(const f of ['combat/v012-buildcraft.js','combat/v012-gear-stats.js','combat/v012-combat-runtime.js','online/v012-expedition-runtime.js'])assert.equal(fs.readFileSync(f,'utf8'),fs.readFileSync('docs/'+f,'utf8'));});
+
+test('B2.3A: Camp probe records actual native talent validity, never a hard-coded PASS',()=>{
+ const {nativeCampProbe}=require('../scripts/v013-b23-offhand-confirmation.cjs');
+ const progress={nodes:['fixture']},stats={attack:5};
+ for(const legal of [true,false]){
+  const a={state:()=>({automaticTalents:progress}),talents:{valid:p=>{assert.equal(p,progress);return legal;}},baseStats:()=>stats};
+  const probe=nativeCampProbe(a);assert.equal(probe.legal,legal);assert.deepEqual(probe.stats,stats);assert.notEqual(probe.stats,stats);
+ }
+ const a=create(28023,undefined,{}, {skipPersistence:true,now:1720000000000});
+ assert.equal(nativeCampProbe(a).legal,true);
+});
