@@ -23,8 +23,8 @@ function sources(st,a){
  const gear=a.atk===1?GEAR:replace(GEAR,'s[dest]+=itemStatValue(item,key)*factor;', "s[dest]+=itemStatValue(item,key)*factor*(slot==='weapon'&&['Bow','Two-Handed'].includes(item.subtype)&&key==='atk'?"+a.atk+":1);");
  return {...src,gearSource:gear};
 }
-function cell(st,sc,i,a){
- const src=sources(st,a),row=A.cell(st,sc,i,a.loadout,null,{id:a.id,seedBase:SEED,...src});
+function cell(st,sc,i,a,seedBase=SEED){
+ const src=sources(st,a),row=A.cell(st,sc,i,a.loadout,null,{id:a.id,seedBase,...src});
  assert.equal(row.weapon,a.loadout[1]);assert.equal(row.off,a.loadout[2]);assert.equal([row.won,row.died,row.timeout,row.surrendered].filter(Boolean).length,1);assert(row.directActual<=row.directRaw+1e-6&&row.directActual<=row.damage+1e-6);
  return {...row,legacy:!!a.legacy,atk:a.atk,reference:!!a.reference,runtimeHash:hash(src.runtime),buildcraftHash:hash(src.buildcraft),gearSourceHash:hash(src.gearSource)};
 }
@@ -61,3 +61,5 @@ function aggregate(){
  assert.equal(all.length,4320);const summary={commit:process.env.GITHUB_SHA,native:xs[0].native,fights:all.length,timeouts:all.filter(x=>x.timeout).length,surrenders:all.filter(x=>x.surrendered).length,results,scope:'20-seed screening; 12 fixed legal E10 Rare panels. Approved physical coefficients remain baseline. Old multiplier arm retains approved Bow full secondary status to isolate hit coefficient. Item ATK-only test VM; no production tuning or natural balance claim.'};write('summary',summary);console.log('B31D_STACK_OVERVIEW='+JSON.stringify({...summary,results:undefined}));if(summary.timeouts)process.exitCode=1;
 }
 if(require.main===module){const [cmd,si,ci]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='study')run(Number(si),Number(ci));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
+
+module.exports={cell,arms,specs,otherStats};

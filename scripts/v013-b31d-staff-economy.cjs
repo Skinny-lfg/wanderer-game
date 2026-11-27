@@ -17,9 +17,9 @@ function gearSource(factor){
  // armor, runes, mana or defense. Test-only derived contribution; raw items unchanged.
  return GEAR.replace(anchor,'s[dest]+=itemStatValue(item,key)*factor*(slot===\'weapon\'&&item.subtype===\'Staff\'&&key===\'spell\'?'+factor+':1);');
 }
-function cell(st,sc,i,a,seedBase=SEED,audit=true,forceGear=null){
+function cell(st,sc,i,a,seedBase=SEED,audit=true,forceGear=null,recordAbilityMetrics=false){
  const src=B.sources('Staff',a),runtime=audit?C.manaRuntime(src.runtime,a.cost):src.runtime,gear=gearSource(forceGear??a.spell);
- const r=A.cell(st,sc,i,a.loadout,null,{id:a.id,seedBase,runtime,buildcraft:src.buildcraft,gearSource:gear,manaAudit:audit,recordWeaponSpell:true});
+ const r=A.cell(st,sc,i,a.loadout,null,{id:a.id,seedBase,runtime,buildcraft:src.buildcraft,gearSource:gear,manaAudit:audit,recordWeaponSpell:true,recordAbilityMetrics});
  assert(r.directActual<=r.directRaw+1e-6&&r.directActual<=r.damage+1e-6);
  if(audit){
   const l=r.manaLedger;assert(l);assert(Math.abs(l.residual)<1e-6);assert(l.regenWasted>=-1e-6&&l.refundWasted>=-1e-6);
@@ -90,3 +90,5 @@ function smoke(){
  console.log('B31D_SMOKE='+JSON.stringify({studies:specs.length,physicalOnlyProductionDiff:true,staffOverridesOnly:true,wandControl:true,manaObserverParity:true}));
 }
 if(require.main===module){const [cmd,si,ci]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='parity')physicalParity();else if(cmd==='study')run(Number(si),Number(ci));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');}
+
+module.exports={cell,metrics,specs,ARMS,otherStats};
