@@ -5,6 +5,26 @@ const fs=require('node:fs'),zlib=require('node:zlib'),assert=require('node:asser
 const D=require('./v013-b12d-clean-natural-rebaseline.cjs'),S=require('./simulate-progression.cjs'),Balance=require('./v013-balance-criteria.cjs');
 const id='smart-radiance-pure',index=99,seed=98210000,originalCommit='8941150e278f5f12676358cedbeb2a21f92941d7',out='reports/b12d-recovery';
 const sum=(a,f)=>a.reduce((n,x)=>n+f(x),0),keys=['normal','elite','boss'];
+// Stored artifacts are JSON, so compare the same persisted representation,
+// not a live JS object with undefined properties or non-JSON values.
+const persisted=x=>JSON.parse(JSON.stringify(x));
+function compare(actual,expected,label){
+ const a=persisted(actual),b=persisted(expected),diff=[];
+ function walk(x,y,path){
+  if(diff.length>=30||Object.is(x,y))return;
+  if(x===null||y===null||typeof x!=='object'||typeof y!=='object'||Array.isArray(x)!==Array.isArray(y)){
+   diff.push({path,actual:x===undefined?'[missing]':x,expected:y===undefined?'[missing]':y});return;
+  }
+  for(const k of new Set([...Object.keys(x),...Object.keys(y)]))walk(x[k],y[k],path+'/'+k);
+ }
+ walk(a,b,'');
+ if(diff.length){
+  fs.mkdirSync(out,{recursive:true});
+  fs.writeFileSync(out+'/replay-mismatch.json',JSON.stringify({label,diff},null,2));
+  console.log('B12D_REPLAY_DIFF='+JSON.stringify({label,diff}).slice(0,20000));
+  throw Error(label+' — persisted data differ at '+diff[0].path);
+ }
+}
 const original=JSON.parse(fs.readFileSync('baseline/summary.json','utf8')),batch=JSON.parse(zlib.gunzipSync(fs.readFileSync('raw/batch-19.json.gz')));
 assert.equal(original.fingerprint.commit,originalCommit);assert.deepEqual(batch.fingerprint,original.fingerprint);
 assert.equal(S.sourceFingerprint().sha256,original.fingerprint.native);assert.equal(original.coverage.accounts,2800);assert.equal(original.coverage.naturalErrors,1);assert.equal(original.coverage.timeouts,1);assert.equal(original.coverage.issues,0);
@@ -14,11 +34,11 @@ assert.deepEqual(D.accountRecord(old),originalRecord);
 const errors=old.attempts.filter(t=>t.error);assert.equal(errors.length,1);assert.equal(errors[0].error,'Native combat timeout');assert.equal(errors[0].level,6);assert.equal(errors[0].attempt,1);
 const oldRoom=errors[0].rooms.find(r=>r.timedOut);assert(oldRoom);assert.equal(oldRoom.timeoutDiagnostic.trace.at(-1).active[0].name,'Breakwater Sentinel');
 const oldReplayed=D.account(id,index);
-assert.deepEqual(oldReplayed,old,'original 6500-tick trajectory failed exact replay');
+compare(oldReplayed,old,'original 6500-tick trajectory failed exact replay');
 const extended=D.account(id,index,{...D.CONFIG,tickLimit:13000});
-assert.deepEqual(extended.attempts.slice(0,old.attempts.length-1),old.attempts.slice(0,-1),'trajectory before censored attempt changed');
+compare(extended.attempts.slice(0,old.attempts.length-1),old.attempts.slice(0,-1),'trajectory before censored attempt changed');
 const t=extended.attempts[old.attempts.length-1];assert.equal(t.level,6);assert.equal(t.attempt,1);
-assert.deepEqual(t.camp,errors[0].camp,'Camp decisions before censored fight changed');
+compare(t.camp,errors[0].camp,'Camp decisions before censored fight changed');
 const recovered=t.rooms.find(r=>r.room===oldRoom.room&&r.roomType===oldRoom.roomType);
 assert(recovered,'original encounter missing');assert.deepEqual(recovered.stats,oldRoom.stats);assert.equal(recovered.hpStart,oldRoom.hpStart);assert.equal(recovered.initialEnemies,oldRoom.initialEnemies);
 const newRecord=D.accountRecord(extended),records=original.accounts.map(a=>a===originalRecord?newRecord:a);
