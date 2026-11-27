@@ -611,6 +611,11 @@ jobs:
       - run: npm ci
       - run: node --test tests/v013-b23-offhand-consolidation.test.cjs tests/v013-stat-consistency.test.cjs tests/v013-b12c-surrender.test.cjs tests/v013-stage64-mana-fallback.test.cjs
       - run: npm test
+      - run: node scripts/v013-b31d-gear-budget-audit.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b31d-gear-budget
+          path: reports/b31d/gear-budget.json
       - run: node scripts/v013-b31d-staff-economy.cjs smoke
       - uses: actions/download-artifact@v4
         with:

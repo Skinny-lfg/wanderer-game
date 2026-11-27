@@ -84,7 +84,7 @@ test('real v15 Decay Corrupting Touch scales Rot with hit and Spell Power; costs
  assert.deepEqual(damage,[4,8,12],'4% of the nominal base weapon hit plus Spell Power, without early rounding');
 });
 test('Rot uses nominal weapon coefficients and retains fractional primary stack potency',()=>{
- const cases=[['Daggers',40,25,2.28],['Two-Handed',40,25,3.72],['Wand',40,25,2.05],['Staff',40,25,2.32]];
+ const cases=[['Daggers',40,25,2.28],['Bow',40,25,3.24],['Two-Handed',40,25,4.36],['Wand',40,25,2.05],['Staff',40,25,2.32]];
  for(const [subtype,attack,spellPower,expected] of cases){
   const b=build(['affinity_decay']),x=context({power:spellPower,mp:10,base:999});
   Object.assign(x.player.stats,{attack,spellPower,main:{subtype}});
