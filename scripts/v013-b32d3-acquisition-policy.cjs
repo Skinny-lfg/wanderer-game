@@ -11,7 +11,7 @@ function context(a,p){
 }
 function category(item,slot){return item.rarity+'|'+(ARMOR.includes(slot)?'armor':['ring1','ring2','amulet'].includes(slot)?'accessory':slot);}
 function history(a){if(!memory.has(a))memory.set(a,new Map());return memory.get(a);}
-function penalty(a,item,slot){const v=history(a).get(category(item,slot))||{n:0,sum:0};return Math.max(0,Math.min(15,(8+v.sum)/(4+v.n))));}
+function penalty(a,item,slot){const v=history(a).get(category(item,slot))||{n:0,sum:0};return Math.max(0,Math.min(15,(8+v.sum)/(4+v.n)));}
 function learn(a,item,slot,predicted,actual){
  if(!Number.isFinite(predicted)||!Number.isFinite(actual))return;
  const k=category(item,slot),h=history(a),v=h.get(k)||{n:0,sum:0};v.n++;v.sum+=Math.max(-20,Math.min(20,predicted-actual));h.set(k,v);
