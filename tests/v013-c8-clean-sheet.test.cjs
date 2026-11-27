@@ -101,7 +101,7 @@ test('C8 native Boss victory fills the reserved last Rune Bag slot without losin
  assert.equal(new Set(s.runes.map(r=>r.id)).size,300);
  assert(s.runeSlots.every(id=>id===null));
 });
-test('C8 dual Daggers produce one offhand strike per two primary strikes, without recursion',()=>{
+test('C8 dual Daggers preserve independent offhand scheduling and nonrecursive direct strikes',()=>{
  const a=create(90804,undefined,{}, {skipPersistence:true}),s=a.state();
  a.setup(5,'Sword','Rare');s.equip.weapon=a.makeItem(5,'weapon',null,'loot','Daggers','Rare');
  const off=a.makeItem(5,'weapon',null,'loot','Daggers','Rare');s.stash.push(off);
@@ -111,10 +111,12 @@ test('C8 dual Daggers produce one offhand strike per two primary strikes, withou
  assert(['Daggers','Off-Hand Dagger'].includes(r.stats.off?.subtype));
  r.enemy.hp=r.enemy.maxhp=1000000;r.enemy.barrier=0;r.stats.crit=0;r.stats.bonus={};
  a.rng(1);const feedback=a.feedback();
- a.gear.weaponAttack(r);assert.equal(r.offhandStrikes||0,0);
- a.gear.weaponAttack(r);assert.equal(r.offhandStrikes,1);
- a.gear.weaponAttack(r);assert.equal(r.offhandStrikes,1);
- assert.equal(feedback.floats.filter(x=>x.target==='enemy'&&typeof x.value==='number').length,4);
+ for(let i=0;i<3;i++){a.gear.weaponAttack(r);assert.equal(r.offhandStrikes||0,0,'main attacks must not schedule an offhand strike');}
+ assert.equal(feedback.floats.filter(x=>x.target==='enemy'&&typeof x.value==='number').length,3);
+ const before=r.enemy.hp,hit=a.gear.weaponAttack(r,true);
+ assert(hit>0);assert.equal(before-r.enemy.hp,hit);
+ assert.equal(feedback.floats.filter(x=>x.target==='enemy'&&typeof x.value==='number').length,4,'explicit offhand hit must not recurse');
+ // Exact independent cadence through native ticks is covered in the B2.3 clock fixture.
  assert(!feedback.logs.some(x=>/Double Strike/i.test(x.text)));
 });
 test('C8 Wand+Orb Barrier: six-second cooldown, same formula and no cap',()=>{
