@@ -1385,7 +1385,7 @@ function fightNatural(a,profile,tickLimit,context={}){
   initialMinions,initialNormals,initialRoleCounts,
   aoePotential,aoeTalentIds:aoePrepared,actualWeapon,actualOffhand,actualElement,actualTalentNodes:actualNodes,stats:fightStats,
   passiveActivations:Object.fromEntries(Object.entries(a.build()?.runtime?.passiveTelemetry||{}).map(([id,x])=>[id,Math.max(0,(Number(x.activations)||0)-(activationBefore[id]||0))]).filter(([,n])=>n>0)),
-  abilityMetrics:Object.fromEntries(Object.entries(r.metrics||{}).filter(([k,v])=>Number.isFinite(v)&&/^(arcane_nova|mana_convergence|frost_resonance|glacial_echo|controlled_burn|cinder_focus|static_focus|storm_conductor|decayPrimaryPaid|contagiousTouch|corruptionNova|corruptionOverflow|soulDrain|corruptionCycle|rotguard|vital_pulse|living_force|livingForce|grasping_roots|ward_echo|storedForce|graveBloom|secondaryBleed|secondaryRot|secondarySunder|bossHealing|bossSummons|bossNodeDestroyed|bossMinionDeaths|eliteSummons|solarRebuke|periodicDamage|offhandOrbBarrier|offhandTomeMana|offhandCharmHealing)/.test(k)).map(([k,v])=>[k,Math.max(0,v-(metricBefore[k]||0))])),
+  abilityMetrics:Object.fromEntries(Object.entries(r.metrics||{}).filter(([k,v])=>Number.isFinite(v)&&/^(arcane_nova|mana_convergence|frost_resonance|glacial_echo|controlled_burn|cinder_focus|static_focus|storm_conductor|decayPrimaryPaid|contagiousTouch|corruptionNova|corruptionOverflow|soulDrain|corruptionCycle|rotguard|vital_pulse|living_force|livingForce|grasping_roots|ward_echo|storedForce|graveBloom|secondaryBleed|secondaryRot|secondarySunder|bossHealing|bossSummons|bossNodeDestroyed|bossMinionDeaths|eliteSummons|solarRebuke|periodicDamage|offhandOrbBarrier|offhandTomeMana|offhandCharmHealing|secondaryEquipmentStatus|b32d9a|parries|maceStuns|shield$)/.test(k)).map(([k,v])=>[k,Math.max(0,v-(metricBefore[k]||0))])),
 
   decayMetrics:Object.fromEntries(decayKeys.map(k=>[k,Math.max(0,(Number(r.metrics?.[k])||0)-decayBefore[k])])),
   secondaryTargetDamage:Math.round(measured('secondaryTargetDamage')),
@@ -1622,7 +1622,7 @@ function simulateAccount(seed,id,opts,simulationOptions={}){
  const capturePolicy=CAPTURE.policy(simulationOptions.captureMode||'natural');
  const stopAtCamp=simulationOptions.stopAtCampLevel;
  if(stopAtCamp!==undefined&&(!Number.isInteger(stopAtCamp)||stopAtCamp<1||stopAtCamp>opts.maxLevel||typeof simulationOptions.onCamp!=='function'))throw Error('Capture stop requires valid Camp callback');
- const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed});
+ const a=create(seed,undefined,simulationOptions.moduleOverrides||{}, {skipPersistence:true,now:1720000000000+seed,recordModules:simulationOptions.recordModules});
  const initialGear=gearSnapshot(a);
  if(a.talents.earned(a.state().automaticTalents)!==0||
     !initialGear.items.length||initialGear.items.some(x=>!x.startingGear))

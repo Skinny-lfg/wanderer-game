@@ -735,7 +735,7 @@ function weaponAttack(r,offhandStrike=false){
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
  if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&!['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
-  ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Strike!');
+  ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Attack!');
  }
 
  if(ports.isPhase1Run()){
