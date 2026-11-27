@@ -564,7 +564,7 @@ function encounter(level,build,seed,kind,opts,forcedTrait=undefined,forcedBossMo
   permanentAttributes:T.attributes(entrantTalentProgress),
   heroBaseStats:Object.fromEntries(['str','agi','int','end','cha','attack','defense','maxhp',
    'spellPower','attacksPerSec','crit','blockChance','blockReduction','evasionRating','mana','manaRegen','wardBonus','barrierPower','healingPower','manaCostReduction','power'].map(key=>[key,baseStats[key]??null])),
-  ...(equipmentAudit?{equipmentAudit,weaponType:equipmentAudit.weapon?.subtype}:{}),otherGearFingerprint,nonArmorGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
+  ...(equipmentAudit?{equipmentAudit,weaponType:equipmentAudit.weapon?.subtype,adaptiveStats:Object.fromEntries(['rawAttackSpeed','spdFlat','critDamage','dotPower'].map(k=>[k,baseStats[k]??0]))}:{}),otherGearFingerprint,nonArmorGearFingerprint,offhandType:a.state().equip.offhand?.subtype||null,offhandTrait:a.state().equip.offhand?.v013Trait||null,
   armorType:a.state().equip.armor?.armorType||null,
   controlledTalentNodes:opts.controlledTalents?[...opts.controlledTalents.nodes]:null,
   controlledTalentMode:opts.controlledTalents?(opts.controlledTalents.element||'arcane'):null,
