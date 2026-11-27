@@ -15,10 +15,10 @@ function profile(pi,li){
  const intended=HANDS.find(h=>h[1]===p.weapon&&h[2]===p.offhandType);assert(intended,p.id+' missing package');
  return {...p,level,points,t,intended:intended[0],rarity:li?'Rare':'Uncommon'};
 }
-function cell(p,h,sc,i){
+function cell(p,h,sc,i,observer=null){
  const [id,weapon,offhand]=h,seed=SEED+p.level*100003+i*131,family=sc.family||FAMILIES[i%FAMILIES.length];
  const build={id:p.id,weapon:p.weapon,families:p.families,skills:[],...(p.t.element?{element:p.t.element}:{})};
- const opts={mode:'encounter',points:p.points,gear:'current',rarity:p.rarity,runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:13000,lockScenarioStreams:true,controlledTalents:p.t,armorType:p.armorType,offhandType:offhand,stageB31ALoadout:weapon,stageB31EquipmentAudit:true,stageB32D6UtilityAudit:true,...(sc.elite?{stage619EliteType:sc.elite}:{})};
+ const opts={mode:'encounter',points:p.points,gear:'current',rarity:p.rarity,runes:false,contracts:'none',targetPolicy:'mechanics',measure:true,tickLimit:13000,lockScenarioStreams:true,controlledTalents:p.t,armorType:p.armorType,offhandType:offhand,stageB31ALoadout:weapon,stageB31EquipmentAudit:true,stageB32D6UtilityAudit:true,...(observer?{stalemateAudit:observer}:{}),...(sc.elite?{stage619EliteType:sc.elite}:{})};
  const x=S.encounter(p.level,build,seed,sc.kind,opts,undefined,undefined,family,1,sc.size);
  assert.equal(x.level,p.level);assert.equal(x.pointsSpent,p.points);assert.deepEqual(x.controlledTalentNodes,p.t.nodes);
  assert.equal(x.affinity,family);assert.equal(x.weaponType,weapon);assert.equal(x.offhandType,offhand);assert.equal(x.armorType,p.armorType);
@@ -79,4 +79,32 @@ function smoke(){
  const p=profile(7,1);checkPairs(HANDS.map(h=>cell(p,h,SC.at(-1),0)));
  console.log('B32D6_SMOKE='+JSON.stringify({profiles:IDS.length,levels:LEVELS,packages:HANDS.length,paired:true,nativeDrift:false}));
 }
-const [cmd,pi,li]=process.argv.slice(2);if(cmd==='smoke')smoke();else if(cmd==='study')run(Number(pi),Number(li));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');
+function replay(){
+ // Read-only reproduction of the four observed timeouts, alongside all five
+ // physical controls. Do not surrender, extend the cap, or alter combat.
+ const p=profile(5,1),sc=SC.find(x=>x.id==='normal-1'),trial=3,rows=[];
+ assert.equal(p.id,'radiance-mace');
+ for(const h of HANDS){
+  const snapshots=[];
+  const observer={observe(r,ticks,stage){
+   if(ticks===0||ticks===1||ticks%500===0||stage!=='combat'){
+    const e=r.enemy||r.encounterLeader||null,m=r.metrics||{};
+    snapshots.push({ticks,seconds:r.combatSeconds,stage,heroHp:r.hp,heroMaxHp:r.maxhp,mp:r.mp,maxmp:r.maxmp,barrier:r.barrier,
+     enemy:e?{name:e.name,role:e.role,hp:e.hp,maxhp:e.maxhp,def:e.def,atk:e.atk,stage81:e.stage81?.name||null}:null,
+     damageDealt:m.damageDealt||0,damageTaken:m.damageTaken||0,manaSpent:m.manaSpent||0,
+     metrics:Object.fromEntries(Object.entries(m).filter(([k,v])=>typeof v==='number'&&/heal|regen|ward|damage|funded|mana|block/i.test(k)))});
+   }
+   return null;
+  }};
+  const result=cell(p,h,sc,trial,observer);assert.equal(result.seed,109100424);
+  rows.push({...result,snapshots});
+ }
+ checkPairs(rows);
+ const expected=['Wand/Tome','Wand/Orb','Wand/Charm','Staff'];
+ const actual=rows.filter(r=>r.timeout).map(r=>r.package);
+ const report={baseline:'7f061788a07586830cd39fafef4e8ff305965f9d',commit:process.env.GITHUB_SHA,native:S.sourceFingerprint().sha256,profile:p.id,level:p.level,scenario:sc.id,trial,seed:109100424,expected,actual,reproduced:JSON.stringify(actual)===JSON.stringify(expected)&&rows.filter(r=>!expected.includes(r.package)).every(r=>r.won),rows};
+ write('timeout-replay',report);
+ console.log('B32D6_TIMEOUT_REPLAY='+JSON.stringify({seed:report.seed,reproduced:report.reproduced,expected,actual,rows:rows.map(r=>({package:r.package,won:r.won,timeout:r.timeout,seconds:r.seconds,damage:r.damage,taken:r.taken,healed:r.healed,first:r.snapshots[0],last:r.snapshots.at(-1),enemyHpRange:r.snapshots.filter(s=>s.enemy).map(s=>s.enemy.hp)}))}));
+ assert(report.reproduced,'Original timeout pattern not reproduced; investigate before interpreting');
+}
+const [cmd,pi,li]=process.argv.slice(2);if(cmd==='replay')replay();else if(cmd==='smoke')smoke();else if(cmd==='study')run(Number(pi),Number(li));else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');
