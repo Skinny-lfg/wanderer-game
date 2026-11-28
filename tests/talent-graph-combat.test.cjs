@@ -40,7 +40,7 @@ test('Radiance focused nodes heal and convert healing to barrier',()=>{
  {const b=build(['heart_of_the_wild']),{c,events}=context();C.onSecond(b,c);assert(events.some(e=>e[0]==='heal'));}
 });
 test('Decay focused nodes amplify six-stack Rot, consume paid primary stacks and amplify funded ticks',()=>{
- {const b=build(['lingering_rot']),{c,events}=context();c.enemy.v012Rot=[];C.applyRot(b,c,10);assert.equal(c.enemy.v012Rot[0].remaining,4);c.enemy.v012Rot=Array.from({length:6},()=>({damage:10,remaining:4}));C.tickRot(b,c);assert.equal(events.find(e=>e[0]==='dotDamage')[1],69);}
+ {const b=build(['lingering_rot']),{c,events}=context();c.enemy.v012Rot=[];C.applyRot(b,c,10);assert.equal(c.enemy.v012Rot[0].remaining,4);c.enemy.v012Rot=Array.from({length:6},()=>({damage:10,remaining:4}));C.tickRot(b,c);assert.equal(events.find(e=>e[0]==='dotDamage')[1],71);}
  {const b=build(['corruption_cycle']),{c,events}=context();c.enemy.v012Rot=Array.from({length:3},()=>({damage:10,remaining:4,primaryPaid:true}));C.onAttack(b,c);assert(events.some(e=>e[0]==='damage'&&e[1].includes('Corruption Cycle')));}
  {const b=build(['plagueheart']),{c,events}=context();c.player.mp=100;for(let i=0;i<3;i++){c.now=i;C.tickRot(b,c);}const ticks=events.filter(e=>e[0]==='dotDamage').map(e=>e[1]);assert(ticks[0]>=30);assert(c.player.mp<100);}
 });

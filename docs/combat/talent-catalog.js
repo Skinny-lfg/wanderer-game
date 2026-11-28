@@ -36,7 +36,7 @@ const NODES=Object.freeze([
  {"id":"living_recovery","icon":"💚","name":"Living Recovery","description":"Below half Health, restore 0.5% maximum Health each second."},
  {"id":"overflowing_life","icon":"🌿","name":"Overflowing Life","description":"Effective healing grants Barrier equal to 15% of Health restored, up to 10% maximum Health."},
  {"id":"heart_of_the_wild","icon":"🌳","name":"Heart of the Wild","description":"Below 30% Health, restore 12% maximum Health once per encounter."},
- {"id":"lingering_rot","icon":"☠️","name":"Terminal Decay","description":"Enemies with six active Rot stacks take 15% more Rot tick damage. Does not extend, consume or apply stacks."},
+ {"id":"lingering_rot","icon":"☠️","name":"Terminal Decay","description":"Each active Rot stack on an enemy increases its Rot tick damage by 3%, up to 18% at six stacks. Does not extend, consume or apply stacks."},
  {"id":"corruption_cycle","icon":"🦠","name":"Corruption Cycle","description":"Paid Corrupting Touch applies two primary stacks. Consume three for a funded burst with Attack Speed-scaled cooldown."},
  {"id":"plagueheart","icon":"🕷️","name":"Plagueheart","description":"Pure Decay only. Each Rot tick has a 30% chance to spend 2 + 2 Mana per stack for 200% extra base tick damage; one activation per global tick, preserving 15% Max Mana. Other affinities refund this talent."},
  {"id":"combustion","icon":"💥","name":"Combustion","description":"Fire casts against burning enemies deal 20% Spell Power bonus damage every 4 seconds."},

@@ -23,7 +23,7 @@ const P=[
  ['aegis','iron_skin','Iron Skin','Increase Defense by 12% per rank.'],
  ['aegis','fortified','Fortified','Reduce incoming damage by 6% per rank.'],
  ['aegis','guarded_block','Guarded Block','Increase Guard Chance with diminishing returns, even without a Shield.'],
- ['aegis','barrier_pulse','Barrier Mastery','Increase the initial Aegis Barrier by 20% per rank. Scales with Max HP, Spell Power and Barrier Power; grants no periodic Barrier.'],
+ ['aegis','barrier_pulse','Barrier Mastery','Increase the initial Aegis Barrier by 30% per rank. Scales with Max HP, Spell Power and Barrier Power; grants no periodic Barrier.'],
  ['aegis','retaliation','Retaliation','Absorbed Barrier empowers the next hit by 30% base damage (4s cooldown).'],
  ['fury','quick_hands','Quick Hands','Increase attack speed by 8% per rank.'],
  ['fury','precision','Precision','Increase Critical Chance with diminishing returns per rank (100% total cap).'],
@@ -36,7 +36,7 @@ const P=[
  ['arcane','elemental_echo','Elemental Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
  ['arcane','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
  ['arcane','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
- ['arcane','deep_winter','Deep Winter','Paid Frost casts apply Frost and Chill. Deep Winter improves attack interval increase from 22% at rank 1 to 38% at rank 5, and normal Chill duration from 3.5s to 4.5s. Five Frost stacks Freeze; bosses instead have their next attack delayed.',[],'frost'],
+ ['arcane','deep_winter','Deep Winter','Paid Frost casts apply Frost and Chill. Deep Winter improves attack interval increase from 30% at rank 1 to 46% at rank 5, and normal Chill duration from 3.5s to 4.5s. Five Frost stacks Freeze; bosses instead have their next attack delayed.',[],'frost'],
  ['arcane','overcharge','Overcharge','Paid Lightning casts bounce up to five times. Rank 1 uses 60% of the full chain factors; each additional rank adds 10 percentage points, reaching 100% at rank 5. Forked Lightning adds Static Marks.',[],'lightning'],
  ['blood','crimson_onslaught','Crimson Onslaught','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','arcane']],
@@ -69,7 +69,7 @@ const descriptions={
  iron_skin:'Defense +12% at Rank 1; smaller gains at higher ranks.',
  fortified:'Reduce incoming damage by 4% per rank, within the combined 28% cap.',
  guarded_block:'Raises Guard Chance, even without a shield. Total Guard Chance cannot exceed 65%; a successful Guard reduces damage according to equipment.',
- barrier_pulse:'Increase the initial Aegis Barrier by 20% per rank. Scales with Max HP, Spell Power and Barrier Power; grants no periodic Barrier.',
+ barrier_pulse:'Increase the initial Aegis Barrier by 30% per rank. Scales with Max HP, Spell Power and Barrier Power; grants no periodic Barrier.',
  retaliation:'When Barrier absorbs damage, your next hit deals 30% more base hit damage (4s cooldown).',
  quick_hands:'Attack speed increases by 8% per rank.',
  precision:'Gain Critical Chance with diminishing returns: approximately +5 percentage points at rank 1, up to +19 points asymptotically. Total Critical Chance cannot exceed 100%.',
@@ -82,7 +82,7 @@ const descriptions={
  elemental_echo:'Every fourth funded Magic or Arcane Infusion hit echoes for 25% Spell Power (+5 percentage points per rank; no recursive effects).',
  elemental_force:'Funded Magic casts and Arcane Infusion gain 12% power per rank.',
  kindling:'Funded Fire casts apply Burn.',
- deep_winter:'Paid Frost casts apply Frost and Chill. Deep Winter improves attack interval increase from 22% at rank 1 to 38% at rank 5, and normal Chill duration from 3.5s to 4.5s. Five Frost stacks Freeze; bosses instead have their next attack delayed.',
+ deep_winter:'Paid Frost casts apply Frost and Chill. Deep Winter improves attack interval increase from 30% at rank 1 to 46% at rank 5, and normal Chill duration from 3.5s to 4.5s. Five Frost stacks Freeze; bosses instead have their next attack delayed.',
  overcharge:'Paid Lightning casts bounce up to five times. Rank 1 uses 60% of the full chain factors; each additional rank adds 10 percentage points, reaching 100% at rank 5. Forked Lightning adds Static Marks.'
 };
 const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description}));
@@ -107,7 +107,7 @@ function barrierAmount(maxHealth,spellPower,healthFraction,spellFraction=0){
 function barrierSpellPower(c){return Math.max(0,Number(c?.power??c?.player?.stats?.spellPower)||0);}
 
 // B4.1: one shared display pool, bounded independently by source.
-function aegisBarrier(b,hp,sp){return barrierAmount(hp,sp,.05,.08)*(1+.20*rank(b,'barrier_pulse'));}
+function aegisBarrier(b,hp,sp){return barrierAmount(hp,sp,.10,.16)*(1+.30*rank(b,'barrier_pulse'));}
 function reconcileBarrierPools(r){
  const total=Math.max(0,Number(r.barrier)||0),pools=r.barrierPools??={};
  let tracked=Object.values(pools).reduce((sum,n)=>sum+Math.max(0,Number(n)||0),0);
@@ -192,9 +192,9 @@ function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  bleeding_edge:{chance:.42+.04*t,bleed:.16,icd:.6},deep_cuts:{bleedBonus:.15*r},executioner:{burst:1.5,threshold:.30,icd:4},blood_drinker:{hp:.008+.0025*t,base:.10+.025*t,icd:4},sanguine_fury:{bleed:.14,burst:.08+.02*t,icd:2.5},
  corrupting_touch:{chance:.42+.04*t,rot:.065,icd:1.3},virulent_rot:{rotBonus:.15*r},wasting_curse:{reduction:.04*r},wither:{healingReduction:.20+.10*t,reduction:.02*r},blightburst:{burst:.38,enemyCap:.025,icd:7},
  strong_heart:{maxhp:.10*sqrt},renewal:{heal:Math.min(.0125,.0055*sqrt)},last_stand:{hp:.06,uses:1},second_breath:{heal:.015+.004*t},life_bloom:{heal:Math.min(.006,.0025*sqrt),mana:Math.min(3.4,1.5*sqrt)},
- iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{initialMultiplier:1+.20*r},retaliation:{burst:.30,icd:4},
+ iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{initialMultiplier:1+.30*r},retaliation:{burst:.30,icd:4},
  quick_hands:{speed:.08*r},precision:{crit:Math.round(19*(1-Math.exp(-r/3)))},brutal_crit:{burst:Math.min(.65,.12*sqrt)},double_strike:{chance:Math.min(.60,.10*sqrt),burst:.30},adrenaline:{speed:.10+.025*t,duration:3,icd:3},
- arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},elemental_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{interval:.22+.04*t,duration:3.5+.25*t},overcharge:{chainScale:.60+.10*t}
+ arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},elemental_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{interval:.30+.04*t,duration:3.5+.25*t},overcharge:{chainScale:.60+.10*t}
  })[id]||{};}
 function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0));}
@@ -545,7 +545,7 @@ function tickRot(b,c){
     const before=c.player.mp;if(spendDarkMana(c,cost)){state.plagueheartTick=c.now;bonus=2*baseRot;activated(b,'plagueheart');c.metric?.('decayPrimaryPaidPlagueheartActivations',1);c.metric?.('decayPrimaryPaidPlagueheartMana',Math.max(0,before-c.player.mp));}
    }
   }
-  const terminal=specialized(b,'lingering_rot')&&rot.length>=6?1.15:1;
+  const terminal=specialized(b,'lingering_rot')?1+.03*Math.min(6,rot.length):1;
   if(terminal>1){activated(b,'lingering_rot');c.metric?.('terminalDecayTicks',1);}
   const damage=Math.round((baseRot*(e.incubationTicks%3===0?1+.12*incubationRank:1)+bonus)*terminal);
   c.metric?.('decayPrimaryPaidRotTicks',1);c.metric?.('decayPrimaryPaidRotStackSum',rot.length);

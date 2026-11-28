@@ -37,7 +37,7 @@ test('Native Barrier is bounded and Ward Strength is applied once',()=>{
 test('Barrier Mastery scales initial Barrier; Runic Shield retains its funded cooldown',()=>{
  for(const power of [0,100]){
   const b=build(['barrier_pulse']),{events,c}=combatContext(power);
-  assert(Math.abs(B.aegisBarrier(b,200,power)-(10+power*.08)*1.2)<1e-8);
+  assert(Math.abs(B.aegisBarrier(b,200,power)-(20+power*.16)*1.3)<1e-8);assert(Math.abs(B.aegisBarrier(B.create(),200,power)-(20+power*.16))<1e-8);
   for(const now of [0,1,6,12]){c.now=now;B.onSecond(b,c);}
   assert.equal(events.filter(x=>x[0]==='barrier').length,0);
   const r=build(['runic_shield']),x=combatContext(power);
@@ -81,7 +81,7 @@ test('Stage 2 Arcane Bastion and Prismatic Rebound retain their defensive trigge
 test('Stage 2 current Talent Tree tooltips describe HP plus Spell Power, not the retired HP-only rule',()=>{
  const nodes=T.NODES;
  const aegis=nodes.find(n=>n.id==='affinity_aegis'),bastion=nodes.find(n=>n.id==='arcane_bastion');
- assert(aegis?.description?.includes('8% Spell Power'),'Aegis selection description must be accurate');
+ assert(aegis?.description?.includes('16% Spell Power'),'Aegis selection description must be accurate');
  assert(!aegis.description.includes('stacks freely'),'Aegis tooltip must not describe uncapped Barrier');
  assert(bastion?.description?.includes('30%'),'Arcane Bastion description must reflect mana discount');
 });
@@ -91,7 +91,7 @@ test('Stage 2 generated Pages mirrors and current tree descriptions have no stal
   assert.equal(fs.readFileSync('docs/'+file,'utf8'),fs.readFileSync(file,'utf8'),'Generated Pages mirror drift: '+file);
  }
  const graph=fs.readFileSync('docs/combat/talent-graph-next.js','utf8');
- assert(graph.includes('5% Max HP + 8% Spell Power'));
+ assert(graph.includes('10% Max HP + 16% Spell Power'));
  assert(!graph.includes('3% Max HP + 6% Spell Power'));
  assert(!graph.includes('grant 3% maximum Health as Barrier'));
  assert(!graph.includes('total Barrier limit'));

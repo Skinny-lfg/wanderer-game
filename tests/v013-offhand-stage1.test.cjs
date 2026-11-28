@@ -48,7 +48,7 @@ test('Aegis entrance Barrier and Sword + Orb Ward have separate bounded capaciti
  c.chooseRealm(card.id);assert(c.visitRoom(1));assert(a.enter());
  const r=a.state().run;
  assert.equal(r.stats.off?.subtype,'Orb');
- assert(r.barrier>=r.maxhp*.05,'fresh Aegis Barrier granted at encounter entry');
+ assert(r.barrier>=r.maxhp*.10,'fresh Aegis Barrier granted at encounter entry');
  r.enemy.hp=r.enemy.maxhp=1e8;r.enemy.def=r.enemy.baseDef=r.enemy.barrier=0;r.stats.crit=0;r.stats.wardBonus=0;
  const before=r.barrier,expected=r.maxhp*.02+(r.stats.spellPower||0)*.05;
  a.rng(.5);a.gear.weaponAttack(r);
