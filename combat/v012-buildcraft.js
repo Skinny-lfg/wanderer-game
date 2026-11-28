@@ -148,7 +148,7 @@ function redGuillotineBonus(b,c){
  if(b?.runtime?.prepared!=='red_guillotine'||!specialized(b,'red_guillotine')||!c.critical||c.magical||c.offhand||c.proc||c.extra||c.recursive||!(c.enemy?.hp>0))return 0;
  const stacks=(c.enemy.dots?.bleed||[]).filter(d=>(d.remainingTicks??d.remaining)>0&&d.damage>0).length;
  if(!stacks||!(c.base>0)||!ready(b,'redGuillotine',c.now,5))return 0;
- activated(b,'red_guillotine');return Math.round(c.base*Math.min(.80,.08*stacks));
+ activated(b,'red_guillotine');return Math.round(c.base*Math.min(.80,.16*stacks));
 }
 // Frost accumulation belongs to each enemy. All funded Frost casts apply
 // one stack; Deep Winter enhances Chill, not damage. Freeze cannot chain-lock.
