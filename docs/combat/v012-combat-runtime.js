@@ -489,9 +489,9 @@ function armBastionFromImpact(r,absorbed){const b=ports.phase1Build;if(absorbed>
 function v013FundedCost(baseCost,r=ports.state.run){if(baseCost<=0)return 0;const adjusted=Math.max(1,Math.ceil(baseCost*(root.WandererV013ExpeditionBoons?.costFactor(r)||1))),cost=v013Traits().includes('efficient')?Math.max(1,adjusted-Math.max(1,Math.floor(adjusted*.1))):adjusted;return WandererV012Buildcraft.bastionCost(ports.phase1Build,talentManaCost(cost,r),setNow(r));}
 function v013LightningChain(r){return ports.isPhase1Run()&&ports.phase1Build?.element==='lightning'&&(WandererV012Buildcraft.rank(ports.phase1Build,'overcharge')>0||ports.state.automaticTalents?.nodes?.includes('forked_lightning'));}
 function v013LightningChainFactors(){
- const fork=learned('forked_lightning')>0,rank=Math.max(1,WandererV012Buildcraft.rank(ports.phase1Build,'overcharge'));
- const scale=WandererV012Buildcraft.values('overcharge',rank).chainScale;
- return (fork?[.68,.53,.40,.29,.21,.15]:[.60,.45,.33,.23,.16]).map(n=>n*scale);
+ const fork=learned('forked_lightning')>0,rank=WandererV012Buildcraft.rank(ports.phase1Build,'overcharge');
+ const scale=rank>0?WandererV012Buildcraft.values('overcharge',rank).chainScale:fork?.30:0;
+ return (fork?[.60,.45,.33,.23,.16,.15]:[.60,.45,.33,.23,.16]).map(n=>n*scale);
 }
 function v013SecondaryHit(r,enemy,amount){
  if(!enemy||enemy.hp<=0)return 0;
@@ -601,7 +601,8 @@ function v013LightningChainDamage(r,base){
   // A mark can detonate only on a later CHAIN. Multiple jumps in one cast
   // cannot recursively explode their own freshly applied marks.
   if(mark&&mark.expiresAt>now&&mark.serial!==serial){
-   const burst=Math.max(1,Math.round(base*.42));
+   const overchargeRank=WandererV012Buildcraft.rank(ports.phase1Build,'overcharge'),markScale=overchargeRank>0?WandererV012Buildcraft.values('overcharge',overchargeRank).chainScale:.30;
+   const burst=Math.max(1,Math.round(base*.42*markScale));
    const applied=v013SecondaryHit(r,target,concentrate(target,target.boss?Math.min(burst,target.maxhp*.025):burst));
    let splash=0;
    for(const other of r.enemies.filter(e=>e!==target&&e.hp>0).slice(0,2)){

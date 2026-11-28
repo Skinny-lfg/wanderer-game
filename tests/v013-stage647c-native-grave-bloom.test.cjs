@@ -17,14 +17,14 @@ function harness(){
   dotDamage(n,label,fraction){hits.push({label,real:n,fraction});}};
  return {B,b,c,enemies,reserve,hits,metrics,src};
 }
-test('Paid Infusion seeds Rot first, bursts on total active stack damage, then spreads to exactly two living targets',()=>{
+test('Paid Infusion seeds one Rot first, bursts for 75% of total active stack damage, then spreads to exactly two living targets',()=>{
  const h=harness();h.enemies[0].v012Rot=[{damage:30,remaining:3},{damage:20,remaining:3}];
  h.B.onInfusionHit(h.b,h.c);
  assert.equal(h.b.runtime.infusionCharges,1);
- assert.equal(h.enemies[0].v012Rot.length,4);
- assert.equal(h.metrics.graveBloomSeeds,2);
+ assert.equal(h.enemies[0].v012Rot.length,3);
+ assert.equal(h.metrics.graveBloomSeeds,1);
  const total=h.enemies[0].v012Rot.reduce((n,d)=>n+d.damage,0);
- assert.equal(h.hits.find(x=>x.label.includes('Grave Bloom')).real,total);
+ assert.equal(h.hits.find(x=>x.label.includes('Grave Bloom')).real,Math.round(total*.75));
  assert.equal(h.enemies[1].v012Rot.length,2);assert.equal(h.enemies[2].v012Rot.length,2);
  assert.equal(h.enemies[3].v012Rot.length,0);assert.equal(h.reserve.v012Rot.length,0);
  assert.equal(h.metrics.graveBloomActivations,1);assert.equal(h.metrics.graveBloomSpread,4);
@@ -48,7 +48,7 @@ test('Spread stacks reach native tickRot and have secondary attribution',()=>{
  const h=harness();h.B.onInfusionHit(h.b,h.c);h.c.enemy=h.enemies[1];
  h.B.tickRot(h.b,h.c);
  const hit=h.hits.find(x=>x.label==='☠ Rot');
- assert(hit.real>0);assert.equal(hit.fraction,1);assert.equal(h.metrics.graveBloomRotTicks,2);
+ assert(hit.real>0);assert.equal(hit.fraction,1);assert.equal(h.metrics.graveBloomRotTicks,1);
  assert(h.metrics.graveBloomRotRawTickDamage>0);
 });
 test('Old cast-triggered Bloom removed; Spell Echo remains',()=>{

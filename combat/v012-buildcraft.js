@@ -35,9 +35,9 @@ const P=[
  ['arcane','efficient_cast','Efficient Casting','Reduce elemental cast cost by 12% per rank.'],
  ['arcane','elemental_echo','Elemental Echo','Every fourth elemental hit echoes for 25% Spell Power (no recursion).'],
  ['arcane','elemental_force','Elemental Force','Increase Magic status potency by 15% per rank.'],
- ['arcane','kindling','Kindling','Fire Burn gains 20% potency per rank.',[],'fire'],
+ ['arcane','kindling','Kindling','Funded Fire casts apply Burn equal to 12% effective Spell Power per tick, multiplied by (1 + 15% per Kindling rank).',[],'fire'],
  ['arcane','deep_winter','Deep Winter','Paid Frost casts apply Frost and Chill. Deep Winter improves attack interval increase from 30% at rank 1 to 46% at rank 5, and normal Chill duration from 3.5s to 4.5s. Five Frost stacks Freeze; bosses instead have their next attack delayed.',[],'frost'],
- ['arcane','overcharge','Overcharge','Paid Lightning casts bounce up to five times. Rank 1 uses 60% of the full chain factors; each additional rank adds 10 percentage points, reaching 100% at rank 5. Forked Lightning adds Static Marks.',[],'lightning'],
+ ['arcane','overcharge','Overcharge','Paid Lightning casts bounce up to five times. Rank 1 uses 60% of the full chain factors; each additional rank adds 10 percentage points, reaching 100% at rank 5. Forked Lightning adds Static Marks; without Overcharge it uses a weak 30% chain scale.',[],'lightning'],
  ['blood','crimson_onslaught','Crimson Onslaught','Critical strikes against bleeding foes deal 15% bonus damage.',['blood','fury']],
  ['decay','hex_bolt','Hex Bolt','Funded spells or Arcane Infusion hits against Rot deal 25% Spell Power plus one Rot tick (3s cooldown).',['decay','arcane']],
  ['radiance','sanctuary','Sanctuary','Recovering Health grants Barrier equal to 20% of the heal.',['radiance','aegis']],
@@ -81,9 +81,9 @@ const descriptions={
  efficient_cast:'Magic casts cost 1 less Mana per rank, down to a minimum of 3.',
  elemental_echo:'Every fourth funded Magic or Arcane Infusion hit echoes for 25% Spell Power (+5 percentage points per rank; no recursive effects).',
  elemental_force:'Funded Magic casts and Arcane Infusion gain 12% power per rank.',
- kindling:'Funded Fire casts apply Burn.',
+ kindling:'Funded Fire casts apply Burn equal to 12% effective Spell Power per tick, multiplied by (1 + 15% per Kindling rank).',
  deep_winter:'Paid Frost casts apply Frost and Chill. Deep Winter improves attack interval increase from 30% at rank 1 to 46% at rank 5, and normal Chill duration from 3.5s to 4.5s. Five Frost stacks Freeze; bosses instead have their next attack delayed.',
- overcharge:'Paid Lightning casts bounce up to five times. Rank 1 uses 60% of the full chain factors; each additional rank adds 10 percentage points, reaching 100% at rank 5. Forked Lightning adds Static Marks.'
+ overcharge:'Paid Lightning casts bounce up to five times. Rank 1 uses 60% of the full chain factors; each additional rank adds 10 percentage points, reaching 100% at rank 5. Forked Lightning adds Static Marks; without Overcharge it uses a weak 30% chain scale.'
 };
 const CATALOG=P.map(p=>Object.freeze({...p,description:descriptions[p.id]||p.description}));
 const BY_ID=Object.fromEntries(CATALOG.map(p=>[p.id,p]));
@@ -194,7 +194,7 @@ function values(id,r){const t=Math.max(0,r-1),sqrt=Math.sqrt(r);return ({
  strong_heart:{maxhp:.10*sqrt},renewal:{heal:Math.min(.0125,.0055*sqrt)},last_stand:{hp:.06,uses:1},second_breath:{heal:.015+.004*t},life_bloom:{heal:Math.min(.006,.0025*sqrt),mana:Math.min(3.4,1.5*sqrt)},
  iron_skin:{defense:.12*sqrt},fortified:{reduction:.04*r},guarded_block:{block:Math.round(24*(1-Math.exp(-r/4)))},barrier_pulse:{initialMultiplier:1+.30*r},retaliation:{burst:.30,icd:4},
  quick_hands:{speed:.08*r},precision:{crit:Math.round(19*(1-Math.exp(-r/3)))},brutal_crit:{burst:Math.min(.65,.12*sqrt)},double_strike:{chance:Math.min(.60,.10*sqrt),burst:.30},adrenaline:{speed:.10+.025*t,duration:3,icd:3},
- arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},elemental_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.15*(1+.15*r)},deep_winter:{interval:.30+.04*t,duration:3.5+.25*t},overcharge:{chainScale:.60+.10*t}
+ arcane_focus:{power:.15*sqrt},mana_spring:{regen:.12*sqrt},efficient_cast:{cost:8-r},elemental_echo:{power:.25+.05*t,hits:4},elemental_force:{power:.12*r},kindling:{burn:.12*(1+.15*r)},deep_winter:{interval:.30+.04*t,duration:3.5+.25*t},overcharge:{chainScale:.60+.10*t}
  })[id]||{};}
 function specialized(b,id){return b?.runtime?.specializations?.includes(id);}
 function bleedDamage(b,amount){return amount*(1+.15*rank(b,'deep_cuts')+(b?.runtime?.talentBonuses?.bleedBonus||0));}
@@ -539,7 +539,7 @@ function tickRot(b,c){
   const nodes=b.runtime.specializations||[],incubationRank=nodes.filter(id=>id==='incubation'||id.startsWith('incubation_rank')).length;
   e.incubationTicks=(e.incubationTicks||0)+1;
   let bonus=0;
-  if(specialized(b,'plagueheart')&&b.families?.length===1&&hasFamily(b,'decay')&&c.player.hp>0&&e.hp>0&&baseRot>0&&c.random()<.30){
+  if(specialized(b,'plagueheart')&&b.families?.length===1&&hasFamily(b,'decay')&&c.player.hp>0&&e.hp>0&&baseRot>0&&c.random()<.45){
    const state=decayState(c),cost=2+2*rot.length;
    if(state.plagueheartTick!==c.now&&c.player.mp-cost>=.15*c.player.maxmp){
     const before=c.player.mp;if(spendDarkMana(c,cost)){state.plagueheartTick=c.now;bonus=2*baseRot;activated(b,'plagueheart');c.metric?.('decayPrimaryPaidPlagueheartActivations',1);c.metric?.('decayPrimaryPaidPlagueheartMana',Math.max(0,before-c.player.mp));}
@@ -665,7 +665,7 @@ function infusionConfig(b,weaponSubtype=null){
  const base=INFUSION_POWER[weaponSubtype]??INFUSION_POWER.physical;
  return {duration:INFUSION_RULE.duration,cooldown:INFUSION_RULE.cooldown,
   charges:INFUSION_RULE.charges,cost:({fire:18,lightning:20,arcane:10,frost:12})[mode]??INFUSION_RULE.cost,
-  power:base+(mode==='arcane'?INFUSION_POWER.arcaneBonus:0)};
+  power:(base+(mode==='arcane'?INFUSION_POWER.arcaneBonus:0))*(mode==='lightning'?.80:1)};
 }
 function infusionReady(b,now){
  const r=b?.runtime,cfg=infusionConfig(b);
@@ -690,11 +690,11 @@ function graveBloomInfusion(b,c){
  if(b?.runtime?.prepared!=='grave_bloom'||!specialized(b,'grave_bloom')||c.proc||c.extra||c.recursive||c.offhand)return 0;
  const e=c.enemy,power=Math.max(0,Number(c.power)||0);if(!e||e.hp<=0||!(power>0))return 0;
  const cap=6;
- for(let i=0;i<2;i++){applyRot(b,c,power*.16);c.metric?.("graveBloomSeeds",1);}
+ applyRot(b,c,power*.16);c.metric?.('graveBloomSeeds',1);
  const rot=(e.v012Rot||[]).filter(d=>d.remaining>0&&d.damage>0);
  if(!rot.length)return 0;
  const total=rot.reduce((n,d)=>n+d.damage,0),limit=e.maxhp*(e.boss?.035:e.miniboss?.07:.22);
- const amount=Math.max(1,Math.round(Math.min(limit,total*1)));
+ const amount=Math.max(1,Math.round(Math.min(limit,total*.75)));
  activated(b,'grave_bloom');c.trigger?.('grave_bloom');c.metric?.('graveBloomActivations',1);c.metric?.('graveBloomStackCount',rot.length);
  const before=e.hp;c.damage(amount,"☠ Grave Bloom");
  c.metric?.('graveBloomBurstDamage',Math.max(0,before-Math.max(0,e.hp)));
