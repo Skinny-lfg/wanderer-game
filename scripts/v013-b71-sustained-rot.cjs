@@ -90,7 +90,7 @@ function paired(a,b,f){
 function contrast(a,b){return {winPP:paired(a,b,r=>100*Number(r.won)),dps:paired(a,b,r=>r.seconds>0?r.damage/r.seconds:null),dotDps:paired(a,b,r=>r.seconds>0?r.dot/r.seconds:null),hpPP:paired(a,b,r=>100*r.hp/Math.max(1,r.maxHp)),manaPP:paired(a,b,r=>r.maxMp>0?100*r.mp/r.maxMp:null),jointWinTimeDelta:mean(a.map((r,i)=>[r,b[i]]).filter(([x,y])=>x.won&&y.won&&!x.timeout&&!y.timeout).map(([x,y])=>y.seconds-x.seconds))};}
 function verify(x,count,scenarios){
  const base=x.arms.current;
- assert.equal(x.commit,git(ROOT,'rev-parse','HEAD'));assert.equal(x.baseline,FROZEN);assert.deepEqual(x.p,JSON.parse(JSON.stringify(G.profile(x.id))));
+ assert.equal(x.commit,git(ROOT,'rev-parse','HEAD'));assert.equal(x.baseline,FROZEN);assert.deepEqual(JSON.parse(JSON.stringify(x.p)),JSON.parse(JSON.stringify(G.profile(x.id))));
  for(const arm of C.ARMS){
   const a=x.arms[arm],overrides=C.sources(ROOT,arm);assert.equal(a.revision,x.commit);assert.equal(a.arm,arm);assert.equal(a.observer,base.observer);
   assert.deepEqual(a.moduleGraph,base.moduleGraph.map(m=>Object.hasOwn(overrides,m.file)?{...m,overridden:true,sha256:sha(overrides[m.file])}:m));
@@ -129,7 +129,7 @@ const [cmd,a]=process.argv.slice(2);
 if(cmd==='worker')worker(a,process.argv[4],process.argv[5]);else{
  frozen();
  if(cmd==='plan'){const profiles=G.IDS.map(G.profile);write('plan',{profiles,scenarios:G.SC,arms:C.ARMS});console.log('B71_PLAN='+profiles.length);}
- else if(cmd==='smoke'){const xs=G.IDS.map(id=>runProfile(id,1,[G.SC[2]]));for(const x of xs){verify(x,1,[G.SC[2]]);assert(C.ARMS.every(a=>x.arms[a].rows.every(r=>!r.timeout)));}write('smoke',xs);console.log('B71_SMOKE='+xs.length*C.ARMS.length);}
+ else if(cmd==='smoke'){const xs=G.IDS.map(id=>runProfile(id,1,[G.SC[2]]));write('smoke',xs);for(const x of xs){verify(x,1,[G.SC[2]]);assert(C.ARMS.every(a=>x.arms[a].rows.every(r=>!r.timeout)));}const byId=new Map(xs.map(x=>[x.id,x]));for(const [a,b] of G.ARMOR_PAIRS){for(const arm of C.ARMS){const p=byId.get(a).arms[arm].rows[0],q=byId.get(b).arms[arm].rows[0];for(const k of ['sc','trial','seed','family','scenario','nonArmorGear'])assert.equal(p[k],q[k],'Smoke armor pair mismatch '+a+'/'+b+'/'+arm+'/'+k);}}console.log('B71_SMOKE='+xs.length*C.ARMS.length);}
  else if(cmd==='run'){assert(G.IDS.includes(a));const x=runProfile(a,G.N,G.SC);verify(x,G.N,G.SC);write(a,x);console.log('B71_SHARD='+a);}
  else if(cmd==='aggregate')aggregate();else throw Error('Unknown command');
 }
