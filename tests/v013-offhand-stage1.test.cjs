@@ -25,8 +25,8 @@ test('Wand + Orb grants 2% Max HP + 5% Spell Power once per six seconds',()=>{
  r.combatSeconds+=1;a.gear.weaponAttack(r);
  assert.equal(r.barrier,first,'same cooldown stops repeated attacks');
  r.combatSeconds+=6;a.gear.weaponAttack(r);
- assert(Math.abs(r.barrier-first*2)<.001);
- assert.equal(r.metrics?.procs?.['Off-Hand: Orb Ward'],2);
+ assert(Math.abs(r.barrier-first)<.001);
+ assert.equal(r.metrics?.procs?.['Off-Hand: Orb Ward'],1);
 });
 test('Sword + Orb uses same formula without requiring Magic or Decay',()=>{
  const {a,r}=fight('Sword','Orb');
@@ -35,10 +35,10 @@ test('Sword + Orb uses same formula without requiring Magic or Decay',()=>{
  const first=r.barrier;
  r.combatSeconds+=1;a.gear.weaponAttack(r);assert.equal(r.barrier,first);
  r.combatSeconds+=6;r.stats.spellPower=80;a.gear.weaponAttack(r);
- assert(Math.abs(r.barrier-first-(r.maxhp*.02+4))<.001);
+ assert(Math.abs(r.barrier-first-4)<.001);
  assert.equal(r.metrics?.procs?.['Off-Hand: Orb Ward'],2);
 });
-test('Aegis entrance Barrier and Sword + Orb Ward stack above 200% Max HP',()=>{
+test('Aegis entrance Barrier and Sword + Orb Ward have separate bounded capacities',()=>{
  const a=create(44201,undefined,{}, {skipPersistence:true});
  a.setup(35,'Sword','Rare');
  a.state().equip.offhand=a.makeItem(35,'offhand',null,'loot','Orb','Rare');
@@ -53,9 +53,9 @@ test('Aegis entrance Barrier and Sword + Orb Ward stack above 200% Max HP',()=>{
  const before=r.barrier,expected=r.maxhp*.02+(r.stats.spellPower||0)*.05;
  a.rng(.5);a.gear.weaponAttack(r);
  assert(Math.abs(r.barrier-before-expected)<.001,'independent grants accumulate');
- r.combatSeconds=7;r.barrier=r.maxhp*2;
+ const full=r.barrier;r.combatSeconds=7;
  a.gear.weaponAttack(r);
- assert(r.barrier>r.maxhp*2,'no max Barrier cap even at 200% HP');
+ assert(Math.abs(r.barrier-full)<.001,'Orb cannot accumulate another full Barrier');
 });
 test('Barrier is cleared at encounter entry and immediately after victory',()=>{
  const {a,r}=fight('Sword','Orb',99101);

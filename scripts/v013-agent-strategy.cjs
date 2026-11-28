@@ -37,11 +37,11 @@ function classify({equipment={},talents={},stats={}}={}){
  if(fundedMagic&&element==='lightning'&&has('overcharge'))add('area',3.3,'funded chain lightning');
  if(fundedMagic&&element==='lightning'&&has('forked_lightning'))add('area',1.2,'storm mastery chain extension');
  if(fundedMagic&&element==='fire'&&has('fire_spread'))add('area',2.8,'funded wildfire burn');
- if(fundedMagic&&element==='frost'&&has('frost_spread'))add('area',1.9,'funded winter field chill');
+ if(fundedMagic&&element==='frost'&&has('frost_spread'))add('defense',1.9,'funded winter field Frost control');
  if(has('plague_spread'))add('area',1.6,'on-kill contagion');
  if(has('vital_pulse'))add('area',2.2,'vital pulse');
  if(has('grasping_roots'))add('area',1.8,'grasping roots');
- if(has('ward_echo')&&(offhand==='Orb'||has('affinity_aegis')||has('barrier_pulse')))add('area',1.9,'barrier-enabled ward echo');
+ if(has('ward_echo')&&(offhand==='Orb'||has('affinity_aegis')))add('defense',1.9,'ward echo Barrier resistance');
  if(has('affinity_decay')&&Number(stats.mana)>0&&!has('carrion_detonation')&&talents.prepared!=='grave_bloom'){
   if(has('contagious_touch')&&has('corrupting_touch'))add('area',2.1,'persistent full-potency Rot contagion');
   if(has('corruption_nova')){add('area',1.9,'shared Overflow pulse');add('focus',1.3,'independent Overflow');}
@@ -50,13 +50,13 @@ function classify({equipment={},talents={},stats={}}={}){
  }
  if(has('carrion_detonation')&&has('affinity_blood')&&has('affinity_decay')&&!magical)add('area',2,'charged carrion detonation');
  if(fundedMagic&&element==='arcane'&&has('arcane_nova')&&talents.prepared!=='grave_bloom')add('area',1.8,'arcane infusion nova');
- if(fundedMagic&&element==='frost'&&has('frost_resonance'))add('area',1.2,'frost resonance');
+ if(fundedMagic&&element==='frost'&&has('frost_resonance'))add('defense',1.2,'frost resonance group control');
  if(has('grave_bloom')&&talents.prepared==='grave_bloom')add('area',1.6,'prepared grave bloom');
  if(has('single_target_mastery'))add('focus',2.1,'single-target mastery');
  if(fundedMagic&&has('static_focus')&&element==='lightning')add('focus',1.3,'static focus redirects part of chain damage');
  if(fundedMagic&&has('storm_conductor')&&element==='lightning')add('focus',1.4,'storm conductor isolated-target bonus');
  if(fundedMagic&&has('cinder_focus')&&element==='fire')add('focus',1.5,'cinder focus');
- if(fundedMagic&&has('glacial_echo')&&element==='frost')add('focus',1.4,'glacial echo');
+ if(fundedMagic&&has('glacial_echo')&&element==='frost')add('defense',1.4,'glacial echo isolated-target control');
  if(has('double_strike'))add('focus',1.2,'double strike');
  if(has('precision'))add('focus',.7,'precision');
  if(has('executioner'))add('focus',1,'executioner');
@@ -73,7 +73,7 @@ function classify({equipment={},talents={},stats={}}={}){
  if(offhand==='Orb')add('defense',.8,'orb ward');
  if(offhand==='Charm')add('defense',.7,'charm renewal');
  if(has('guarded_block'))add('defense',1.2,'guarded block');
- if(has('barrier_pulse'))add('defense',1.2,'barrier pulse');
+ if(has('barrier_pulse'))add('defense',1.2,'barrier mastery');
  if(has('runic_shield'))add('defense',1.4,'runic shield');
  if(has('strong_heart'))add('defense',.9,'strong heart');
  if(has('affinity_decay')&&(has('corrupting_touch')||has('blightburst')||has('corruption_cycle')||has('corruption_nova'))){if(has('wasting_curse'))add('defense',.8,'Rot damage reduction');if(has('wither'))add('defense',.5,'Rot attack reduction');}

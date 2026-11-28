@@ -99,9 +99,9 @@ function tick(r,absoluteNow,infraEvents=[]){
    if(s.cancelNext){s.cancelNext=false;events.push({type:'canceled',enemy:e,ability:'Arcane Convergence'});}
    else{
     const factor=root.WandererV013ExpeditionBoons?.takenFactor(r)||1;
-    const damage=Math.max(1,Math.round(r.maxhp*.07*factor)),absorbed=Math.min(r.barrier||0,damage);
-    r.barrier=Math.max(0,(r.barrier||0)-absorbed);
-    const hit=Math.min(Math.max(0,r.hp||0),damage-absorbed);r.hp=Math.max(0,(r.hp||0)-hit);
+    const damage=Math.max(1,Math.round(r.maxhp*.07*factor));
+    const impact=root.WandererV012Buildcraft?.absorbBarrier(r,damage)??plainBarrierImpact(r,damage),absorbed=impact.absorbed;
+    const hit=Math.min(Math.max(0,r.hp||0),impact.hit);r.hp=Math.max(0,(r.hp||0)-hit);
     events.push({type:'pulse',enemy:e,ability:'Arcane Convergence',damage:hit,absorbed});
    }
    s.nextAt=now+12;
@@ -178,4 +178,6 @@ const API=Object.freeze({PROFILES,profileFor,profileForStyle,attach,tick,spawned
  directFactor,incomingFactor,chargedStrike,interruptCharge,livingMinions,status});
 root.WandererV013BossAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
+// Standalone module fixtures without buildcraft have no player Barrier talents.
+function plainBarrierImpact(run,amount){const absorbed=Math.min(Math.max(0,run.barrier||0),amount);run.barrier=Math.max(0,(run.barrier||0)-absorbed);return {absorbed,hit:amount-absorbed};}
 })(globalThis);

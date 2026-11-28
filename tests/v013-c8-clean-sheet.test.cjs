@@ -119,17 +119,17 @@ test('C8 dual Daggers preserve independent offhand scheduling and nonrecursive d
  // Exact independent cadence through native ticks is covered in the B2.3 clock fixture.
  assert(!feedback.logs.some(x=>/Double Strike/i.test(x.text)));
 });
-test('C8 Wand+Orb Barrier: six-second cooldown, same formula and no cap',()=>{
+test('C8 Wand+Orb Barrier: six-second cooldown, same formula and bounded replenishment',()=>{
  const {a,c}=setup(90805,5,'Wand'),r=firstCombat(a,c);
  assert.equal(r.stats.main.subtype,'Wand');assert.equal(r.stats.off?.subtype,'Orb');
  r.enemy.hp=r.enemy.maxhp=1000000;r.enemy.barrier=0;r.stats.crit=0;r.stats.bonus={};r.stats.spellPower=100;
  r.mp=r.maxmp=1000;r.barrier=0;r.combatSeconds=0;a.rng(1);
  a.gear.weaponAttack(r);const first=r.barrier;assert(first>0);
  a.gear.weaponAttack(r);assert.equal(r.barrier,first);
- r.combatSeconds=6;a.gear.weaponAttack(r);assert(r.barrier>first);
+ r.combatSeconds=6;a.gear.weaponAttack(r);assert.equal(r.barrier,first);
  const expected=r.maxhp*.02+r.stats.spellPower*.05;
  assert(Math.abs(first-expected)<.001);
- r.combatSeconds=12;r.barrier=r.maxhp*2;a.gear.weaponAttack(r);assert(r.barrier>r.maxhp*2);
+ r.combatSeconds=12;r.barrier=first*.5;a.gear.weaponAttack(r);assert(Math.abs(r.barrier-first)<.001);
  r.combatSeconds=18;r.barrier=0;r.mp=0;r.wisdomUsed=true;
  a.gear.weaponAttack(r);assert(r.barrier>0,'unfunded attacks that deal HP damage trigger Orb');
 });

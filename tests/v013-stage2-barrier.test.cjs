@@ -1,5 +1,5 @@
 'use strict';
-// Stage 2 generation coefficients remain exact; native Barrier is now uncapped.
+// B4.1 replaces uncapped generation with independent bounded sources.
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs');
 const create=require('./v012-economy-harness.cjs');
@@ -18,7 +18,7 @@ function combatContext(power=100){
   spendMana:amount=>{if(player.mp<amount)return false;player.mp-=amount;return true;}};
  return {player,enemy,events,c};
 }
-test('Stage 2 Aegis HP/SP generation formulas remain unchanged after cap removal',()=>{
+test('Stage 2 Aegis HP/SP generation formulas remain unchanged with source capacities',()=>{
  for(const hp of [0,20,200,1000]){
   assert.equal(B.barrierAmount(hp,0,.05,.08),hp*.05);
  }
@@ -27,28 +27,19 @@ test('Stage 2 Aegis HP/SP generation formulas remain unchanged after cap removal
  assert.equal(B.barrierAmount(200,-50,.05,.08),10);
  assert(Number.isFinite(B.barrierAmount(0,0,.1,.2)));
 });
-test('Native Barrier adds without cap with or without Aegis, applying Ward Strength only once',()=>{
- const a=create(9101);
- a.state().automaticTalents=buy(['affinity_aegis']);
- const r={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:.2}};
- assert(Math.abs(a.grantBarrier(10,r)-12)<1e-8,'Ward Strength only once');
- assert(Math.abs(a.grantBarrier(9999,r)-9999*1.2)<1e-8);
- assert(Math.abs(r.barrier-(12+9999*1.2))<1e-8);
- assert(Math.abs(a.grantBarrier(12,r)-14.4)<1e-8);
- a.state().automaticTalents=buy(['affinity_arcane']);
- const other={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:0}};
- assert.equal(a.grantBarrier(9999,other),9999);
- assert.equal(other.barrier,9999);
- assert.equal(B.barrierCap,undefined,'obsolete cap function is removed');
+test('Native Barrier is bounded and Ward Strength is applied once',()=>{
+ const a=create(9101),r={barrier:0,maxhp:200,stats:{spellPower:100,wardBonus:.2}};
+ assert(Math.abs(a.grantBarrier(10,r)-12)<1e-8);
+ assert(Math.abs(a.grantBarrier(9999,r)-24)<1e-8);
+ assert(Math.abs(r.barrier-36)<1e-8);
+ assert.equal(a.grantBarrier(12,r),0);
 });
-test('Stage 2 Barrier Pulse and Runic Shield scale with SP, respecting the original 6s/3s cooldowns',()=>{
+test('Barrier Mastery scales initial Barrier; Runic Shield retains its funded cooldown',()=>{
  for(const power of [0,100]){
   const b=build(['barrier_pulse']),{events,c}=combatContext(power);
-  B.onSecond(b,c);
-  assert.equal(events.find(x=>x[0]==='barrier')[1],6+power*.06);
-  c.now=1;B.onSecond(b,c);
-  assert.equal(events.filter(x=>x[0]==='barrier').length,1);
-  c.now=6;B.onSecond(b,c);assert.equal(events.filter(x=>x[0]==='barrier').length,2);
+  assert(Math.abs(B.aegisBarrier(b,200,power)-(10+power*.08)*1.2)<1e-8);
+  for(const now of [0,1,6,12]){c.now=now;B.onSecond(b,c);}
+  assert.equal(events.filter(x=>x[0]==='barrier').length,0);
   const r=build(['runic_shield']),x=combatContext(power);
   B.onCast(r,x.c);
   assert.equal(x.events.find(e=>e[0]==='barrier')[1],4+power*.08);
@@ -62,13 +53,14 @@ test('Stage 2 Arcane Bastion and Prismatic Rebound retain their defensive trigge
  for(const spell of [0,100]){
   const bastion=build(['arcane_bastion']),x=combatContext(spell);
   bastion.runtime.prepared='arcane_bastion';
-  x.c.now=10;B.onDefend(bastion,x.c,0,10);B.onCast(bastion,x.c);
-  const events=x.events.filter(e=>e[0]==='barrier');
-  assert(events.some(e=>e[1]===6+spell*.06));
-  assert.equal(bastion.runtime.passiveTelemetry?.arcane_bastion?.activations,1,'prepared trigger occurred once');
-  const before=events.length;
-  x.c.now=11;B.onCast(bastion,x.c);
-  assert.equal(x.events.filter(e=>e[0]==='barrier').length,before,'Bastion and Runic prerequisite respect cooldowns');
+  x.c.now=10;B.onDefend(bastion,x.c,0,10);
+  assert.equal(B.bastionCost(bastion,20,10),14);
+  assert.equal(B.bastionCost(bastion,20,10),14,'quoting a cost does not consume readiness');
+  B.consumeBastion(bastion,10);
+  assert.equal(B.bastionCost(bastion,20,10),20);
+  B.onCast(bastion,x.c);
+  assert.equal(x.events.filter(e=>e[0]==='barrier').length,1,'only Runic Shield grants Barrier');
+  assert(!x.events.some(e=>e[0]==='damage'&&e[1].includes('Arcane Bastion')));
   const rebound=build(['prismatic_rebound']),y=combatContext(spell);
   B.onDefend(rebound,y.c,0,1000);
   assert.equal(rebound.runtime.prismaticCharge,12+spell*.10);
@@ -83,8 +75,8 @@ test('Stage 2 current Talent Tree tooltips describe HP plus Spell Power, not the
  const nodes=T.NODES;
  const aegis=nodes.find(n=>n.id==='affinity_aegis'),bastion=nodes.find(n=>n.id==='arcane_bastion');
  assert(aegis?.description?.includes('8% Spell Power'),'Aegis selection description must be accurate');
- assert(aegis.description.includes('stacks freely'),'Aegis tooltip must describe uncapped Barrier');
- assert(bastion?.description?.includes('6% Spell Power'),'Arcane Bastion description must reflect scaling');
+ assert(!aegis.description.includes('stacks freely'),'Aegis tooltip must not describe uncapped Barrier');
+ assert(bastion?.description?.includes('30%'),'Arcane Bastion description must reflect mana discount');
 });
 
 test('Stage 2 generated Pages mirrors and current tree descriptions have no stale HP-only Aegis logic',()=>{
@@ -93,7 +85,7 @@ test('Stage 2 generated Pages mirrors and current tree descriptions have no stal
  }
  const graph=fs.readFileSync('docs/combat/talent-graph-next.js','utf8');
  assert(graph.includes('5% Max HP + 8% Spell Power'));
- assert(graph.includes('3% Max HP + 6% Spell Power'));
+ assert(!graph.includes('3% Max HP + 6% Spell Power'));
  assert(!graph.includes('grant 3% maximum Health as Barrier'));
  assert(!graph.includes('total Barrier limit'));
 });

@@ -67,8 +67,7 @@ function deathPulse(run,fallen){
   const amount=Math.max(0,Math.min(Math.round(perDeath*(root.WandererV013ExpeditionBoons?.takenFactor(run)||1)),cap-(run.traitDeathThroesTotal||0)));
   if(!amount)continue;
   run.traitDeathThroesTotal=(run.traitDeathThroesTotal||0)+amount;
-  const blocked=Math.min(run.barrier||0,amount),hit=amount-blocked;
-  run.barrier=Math.max(0,(run.barrier||0)-blocked);
+  const impact=root.WandererV012Buildcraft?.absorbBarrier(run,amount)??plainBarrierImpact(run,amount),blocked=impact.absorbed,hit=impact.hit;
   run.hp=Math.max(0,run.hp-hit);damage+=hit;absorbed+=blocked;triggers++;
  }
  return {damage,absorbed,triggers};
@@ -76,4 +75,6 @@ function deathPulse(run,fallen){
 const API=Object.freeze({get,assign,applyGroup,initialClock,regenTick,deathPulse});
 root.WandererV013EncounterTraits=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
+// Standalone module fixtures without buildcraft have no player Barrier talents.
+function plainBarrierImpact(run,amount){const absorbed=Math.min(Math.max(0,run.barrier||0),amount);run.barrier=Math.max(0,(run.barrier||0)-absorbed);return {absorbed,hit:amount-absorbed};}
 })(globalThis);

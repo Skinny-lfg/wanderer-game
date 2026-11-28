@@ -71,9 +71,8 @@ function tickDeathbound(run){
  if(now+1e-7<current.nextAt)return null;
  current.nextAt=now+DEATHBOUND.tickSeconds;
  const requested=Math.max(1,Math.round(run.maxhp*DEATHBOUND.damagePerStack*current.stacks));
- const absorbed=Math.min(Math.max(0,run.barrier||0),requested);
- run.barrier=Math.max(0,(run.barrier||0)-absorbed);
- const damage=Math.min(Math.max(0,run.hp),Math.max(0,requested-absorbed));
+ const impact=root.WandererV012Buildcraft?.absorbBarrier(run,requested)??plainBarrierImpact(run,requested),absorbed=impact.absorbed;
+ const damage=Math.min(Math.max(0,run.hp),impact.hit);
  run.hp-=damage;
  return {stacks:current.stacks,damage,absorbed,remaining:status.remaining};
 }
@@ -170,4 +169,6 @@ function info(enemy){const s=DEFINITIONS[enemy?.eliteType];return s?{name:s.role
 const API=Object.freeze({DEFINITIONS,DEATHBOUND,boundSoulVariant,boundSoulArchetype,solarRebukeDamage,attach,tick,interrupt,consumeStrike,status,info,livingSummons,applyDeathbound,tickDeathbound,deathboundStatus});
 root.WandererV013EliteAbilities=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
+// Standalone module fixtures without buildcraft have no player Barrier talents.
+function plainBarrierImpact(run,amount){const absorbed=Math.min(Math.max(0,run.barrier||0),amount);run.barrier=Math.max(0,(run.barrier||0)-absorbed);return {absorbed,hit:amount-absorbed};}
 })(globalThis);

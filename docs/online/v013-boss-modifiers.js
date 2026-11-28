@@ -65,9 +65,8 @@ function tick(run){
    // One pulse per real deadline; advance exactly one interval to avoid drifting.
    run.bossNextPulseAt=deadline+p.intervalSec;
    const amount=Math.max(1,Math.round(run.maxhp*p.damagePlayerMaxHpPct*(root.WandererV013ExpeditionBoons?.takenFactor(run)||1)));
-   const blocked=Math.min(run.barrier||0,amount);
-   run.barrier=Math.max(0,(run.barrier||0)-blocked);
-   const actual=Math.min(run.hp,amount-blocked);
+   const impact=root.WandererV012Buildcraft?.absorbBarrier(run,amount)??plainBarrierImpact(run,amount),blocked=impact.absorbed;
+   const actual=Math.min(run.hp,impact.hit);
    run.hp=Math.max(0,run.hp-actual);
    result.pulse=true;result.damage=actual;result.absorbed=blocked;
   }
@@ -78,4 +77,6 @@ function healingFactor(run){return run?.status==='fight'&&bossOf(run)&&run.bossM
 const API=Object.freeze({get,selection,known,check,extraEscorts,activate,tick,healingFactor,bossOf});
 root.WandererV013BossModifiers=API;
 if(typeof module==='object'&&module.exports)module.exports=API;
+// Standalone module fixtures without buildcraft have no player Barrier talents.
+function plainBarrierImpact(run,amount){const absorbed=Math.min(Math.max(0,run.barrier||0),amount);run.barrier=Math.max(0,(run.barrier||0)-absorbed);return {absorbed,hit:amount-absorbed};}
 })(globalThis);

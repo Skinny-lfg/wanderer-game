@@ -70,10 +70,10 @@ test('B2.7: critical multiplier and boundary rolls, physical-only evasion',()=>{
  ports.gameRandom=()=>0;assert.equal(rt.tryDodge(run,'physical'),true);assert.equal(rt.tryDodge(run,'spell'),false);
  assert.equal(C.potionEvasion(.4,.2),.45);assert.equal(C.evasionChance(0,10,1,.45),0);assert.equal(C.evasionChance(1e9,10,1,.45),.45);
 });
-test('B2.8: Barrier HP/SP scaling, additive ward multipliers, uncapped shared pool',()=>{
+test('B2.8: Barrier HP/SP scaling, additive ward multipliers, bounded shared pool',()=>{
  const {rt,run}=fixture();near(B.barrierAmount(100,50,.02,.05),4.5);
- near(rt.setBarrier(run,20),26);near(run.barrier,26);near(rt.setBarrier(run,100),130);near(run.barrier,156);
- assert.equal(rt.setBarrier(run,-10),0);near(run.barrier,156);
+ near(rt.setBarrier(run,20,'aegis'),26);near(run.barrier,26);near(rt.setBarrier(run,20,'aegis'),0);near(rt.setBarrier(run,100),13);near(run.barrier,39);
+ assert.equal(rt.setBarrier(run,-10),0);near(run.barrier,39);
 });
 test('B2.9: healing multiplier, missing HP cap, 40% healing wound; Barrier unaffected',()=>{
  const {rt,run}=fixture();near(rt.setHeal(run,20),25);near(run.hp,75);

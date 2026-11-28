@@ -1317,7 +1317,7 @@ function fightNatural(a,profile,tickLimit,context={}){
  const actualElement=a.state().automaticTalents?.element||null;
  // One classifier, based on the actual native kit; no historical focus IDs.
  const actualCapability=capabilities(a),aoePotential=actualCapability.areaReady;
- const aoePrepared=actualNodes.filter(id=>['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','forked_lightning','fire_spread','frost_spread','plague_spread','contagious_touch','corruption_nova','arcane_nova','frost_resonance','vital_pulse','grasping_roots','ward_echo','stored_force','grave_bloom','carrion_detonation'].includes(id));
+ const aoePrepared=actualNodes.filter(id=>['fan_of_blades','cleave_mastery','bow_pierce','mace_shockwave','sword_sweep','overcharge','forked_lightning','fire_spread','plague_spread','contagious_touch','corruption_nova','arcane_nova','vital_pulse','grasping_roots','stored_force','grave_bloom','carrion_detonation'].includes(id));
  const activationBefore=Object.fromEntries(Object.entries(a.build()?.runtime?.passiveTelemetry||{}).map(([id,x])=>[id,Number(x.activations)||0]));
  const metricBefore=Object.fromEntries(Object.entries(r.metrics||{}).filter(([k,v])=>Number.isFinite(v)));
  const fightStats=Object.fromEntries(['attack','spellPower','defense','maxhp','mana','manaRegen','attacksPerSec','crit','blockChance','evasionRating','healingPower','barrierPower'].map(k=>[k,r.stats?.[k]??null]));
