@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   deterministic:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]') && !contains(github.event.head_commit.message, '[b32a-context]') && !contains(github.event.head_commit.message, '[b32b-adaptive]') && !contains(github.event.head_commit.message, '[b32c-decisions]') && !contains(github.event.head_commit.message, '[b32c1-stability]') && !contains(github.event.head_commit.message, '[b32d-armor]') && !contains(github.event.head_commit.message, '[b32d1-dominance]') && !contains(github.event.head_commit.message, '[b32d2-transition]') && !contains(github.event.head_commit.message, '[b32d3-acquisition]') && !contains(github.event.head_commit.message, '[b32d4-affixes]') && !contains(github.event.head_commit.message, '[b32d5-ev]') && !contains(github.event.head_commit.message, '[b32d6-utility]') && !contains(github.event.head_commit.message, '[b32d6-timeout-replay]') && !contains(github.event.head_commit.message, '[b32d7-combat-aware]') && !contains(github.event.head_commit.message, '[b32d8-identity]') && !contains(github.event.head_commit.message, '[b32d9-power]') && !contains(github.event.head_commit.message, '[b32d9a-identity]') && !contains(github.event.head_commit.message, '[b3-final]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]') && !contains(github.event.head_commit.message, '[b32a-context]') && !contains(github.event.head_commit.message, '[b32b-adaptive]') && !contains(github.event.head_commit.message, '[b32c-decisions]') && !contains(github.event.head_commit.message, '[b32c1-stability]') && !contains(github.event.head_commit.message, '[b32d-armor]') && !contains(github.event.head_commit.message, '[b32d1-dominance]') && !contains(github.event.head_commit.message, '[b32d2-transition]') && !contains(github.event.head_commit.message, '[b32d3-acquisition]') && !contains(github.event.head_commit.message, '[b32d4-affixes]') && !contains(github.event.head_commit.message, '[b32d5-ev]') && !contains(github.event.head_commit.message, '[b32d6-utility]') && !contains(github.event.head_commit.message, '[b32d6-timeout-replay]') && !contains(github.event.head_commit.message, '[b32d7-combat-aware]') && !contains(github.event.head_commit.message, '[b32d8-identity]') && !contains(github.event.head_commit.message, '[b32d9-power]') && !contains(github.event.head_commit.message, '[b32d9a-identity]') && !contains(github.event.head_commit.message, '[b3-final]') && !contains(github.event.head_commit.message, '[b4-ability]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,7 +25,7 @@ jobs:
         if: always()
         run: npm test
   browser-parity:
-    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]') && !contains(github.event.head_commit.message, '[b32a-context]') && !contains(github.event.head_commit.message, '[b32b-adaptive]') && !contains(github.event.head_commit.message, '[b32c-decisions]') && !contains(github.event.head_commit.message, '[b32c1-stability]') && !contains(github.event.head_commit.message, '[b32d-armor]') && !contains(github.event.head_commit.message, '[b32d1-dominance]') && !contains(github.event.head_commit.message, '[b32d2-transition]') && !contains(github.event.head_commit.message, '[b32d3-acquisition]') && !contains(github.event.head_commit.message, '[b32d4-affixes]') && !contains(github.event.head_commit.message, '[b32d5-ev]') && !contains(github.event.head_commit.message, '[b32d6-utility]') && !contains(github.event.head_commit.message, '[b32d6-timeout-replay]') && !contains(github.event.head_commit.message, '[b32d7-combat-aware]') && !contains(github.event.head_commit.message, '[b32d8-identity]') && !contains(github.event.head_commit.message, '[b32d9-power]') && !contains(github.event.head_commit.message, '[b32d9a-identity]') && !contains(github.event.head_commit.message, '[b3-final]'))
+    if: github.event_name != 'push' || (!contains(github.event.head_commit.message, '[b23a-recovery]') && !contains(github.event.head_commit.message, '[b23b-stalemate]') && !contains(github.event.head_commit.message, '[b23c-final]') && !contains(github.event.head_commit.message, '[b31-audit]') && !contains(github.event.head_commit.message, '[b31a-budget]') && !contains(github.event.head_commit.message, '[b31b-compensation]') && !contains(github.event.head_commit.message, '[b31c-validation]') && !contains(github.event.head_commit.message, '[b31d-staff]') && !contains(github.event.head_commit.message, '[b31e-combined]') && !contains(github.event.head_commit.message, '[b31f-final]') && !contains(github.event.head_commit.message, '[b31g-native]') && !contains(github.event.head_commit.message, '[b32a-context]') && !contains(github.event.head_commit.message, '[b32b-adaptive]') && !contains(github.event.head_commit.message, '[b32c-decisions]') && !contains(github.event.head_commit.message, '[b32c1-stability]') && !contains(github.event.head_commit.message, '[b32d-armor]') && !contains(github.event.head_commit.message, '[b32d1-dominance]') && !contains(github.event.head_commit.message, '[b32d2-transition]') && !contains(github.event.head_commit.message, '[b32d3-acquisition]') && !contains(github.event.head_commit.message, '[b32d4-affixes]') && !contains(github.event.head_commit.message, '[b32d5-ev]') && !contains(github.event.head_commit.message, '[b32d6-utility]') && !contains(github.event.head_commit.message, '[b32d6-timeout-replay]') && !contains(github.event.head_commit.message, '[b32d7-combat-aware]') && !contains(github.event.head_commit.message, '[b32d8-identity]') && !contains(github.event.head_commit.message, '[b32d9-power]') && !contains(github.event.head_commit.message, '[b32d9a-identity]') && !contains(github.event.head_commit.message, '[b3-final]') && !contains(github.event.head_commit.message, '[b4-ability]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -2294,4 +2294,75 @@ jobs:
         with:
           name: b3-final-summary
           path: reports/b3-final/summary.json
+          if-no-files-found: warn
+
+  b4-gate:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[b4-ability]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b4-individual-ability-audit.cjs plan
+      - run: node scripts/v013-b4-individual-ability-audit.cjs smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b4-plan-smoke
+          path: |
+            reports/b4/plan.json
+            reports/b4/smoke.json
+          if-no-files-found: warn
+  b4-study:
+    needs: b4-gate
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        family: [blood,fury,radiance,aegis,arcane,decay]
+        band: [first,max]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/v013-b4-individual-ability-audit.cjs run ${{ matrix.family }} ${{ matrix.band }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: b4-study-${{ matrix.family }}-${{ matrix.band }}
+          path: reports/b4/${{ matrix.family }}-${{ matrix.band }}.json
+          if-no-files-found: error
+  b4-summary:
+    needs: b4-study
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: b4-study-*
+          merge-multiple: true
+          path: reports/b4
+      - run: node scripts/v013-b4-individual-ability-audit.cjs aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: b4-summary
+          path: reports/b4/summary.json
           if-no-files-found: warn
