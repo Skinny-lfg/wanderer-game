@@ -936,6 +936,7 @@ function updateFight(){
  if(r.tDot>=1){if(r.pulses>0){r.pulses--;ports.setHeal(r,r.maxhp*.01*learned('second_pulse'));}
 
   r.tDot-=1;
+  if(ports.isPhase1Run()&&ports.phase1Build)WandererV012Buildcraft.outbreakTick(ports.phase1Build,ports.phase2Context(r));
   const renewal=ports.phase6Run?.effects.renewal;
   if(r.phase1&&renewal?.remaining>0&&(r.renewalTicks||0)<15){r.renewalTicks=(r.renewalTicks||0)+1;const healed=ports.setHeal(r,r.maxhp*renewal.power);ports.phase6Metric(r,'renewalHealing',healed);if(healed>0)ports.addLog('💚 Renewal +'+Math.round(healed)+' HP','good');}
   const hasBurn=e.burnStacks>0;

@@ -10,17 +10,7 @@ test('Kindling only redistributes Burn potency; all five ranks retain scaling',(
  B.onCast(b,{enemy:e,player:{hp:100,mp:100,maxmp:100,enemies:[e]},now:1,funded:true,power:100,amp:1,log(){},random:()=>.99,dot:(kind,n)=>hits.push([kind,n])});
  assert.equal(hits.length,1);assert.equal(hits[0][0],'burn');assert(Math.abs(hits[0][1]-13.8)<1e-9);
 });
-test('Plagueheart procs at 40%, not 45%, and preserves the global tick cap, reserve and stack cost',()=>{
- function fixture(random,mp=100,hybrid=false){
-  const {b}=build(['plagueheart']);if(hybrid)b.families.push('fury');
-  const es=[enemy(),enemy()];for(const e of es)e.v012Rot=[{damage:10,remaining:4,primaryPaid:true}];
-  const player={hp:100,maxhp:100,mp,maxmp:100,enemies:es},m={},hits=[];
-  const c={enemy:es[0],player,waveKey:'w',now:1,random:()=>random,metric:(k,n)=>m[k]=(m[k]||0)+n,dotDamage:n=>hits.push(n)};
-  B.tickRot(b,c);c.enemy=es[1];B.tickRot(b,c);return {m,hits,player};
- }
- const a=fixture(.40);assert.equal(a.player.mp,96);assert.equal(a.m.decayPrimaryPaidPlagueheartActivations,1);assert(a.hits[0]>a.hits[1]);
- for(const x of [fixture(.45),fixture(.40,18),fixture(.40,100,true)])assert.equal(x.m.decayPrimaryPaidPlagueheartActivations||0,0);
-});
+// Historical B6.1 Plagueheart coefficients superseded by B7.1B native Outbreak tests.
 test('Lightning Infusion has 80% of the original power while Fire, Frost and Arcane remain unchanged',()=>{
  for(const mode of ['arcane','fire','frost','lightning']){
   const {b}=build(['affinity_arcane','element_choice'],mode==='arcane'?undefined:mode);

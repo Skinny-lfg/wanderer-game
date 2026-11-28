@@ -42,7 +42,7 @@ test('Radiance focused nodes heal and convert healing to barrier',()=>{
 test('Decay focused nodes amplify six-stack Rot, consume paid primary stacks and amplify funded ticks',()=>{
  {const b=build(['lingering_rot']),{c,events}=context();c.enemy.v012Rot=[];C.applyRot(b,c,10);assert.equal(c.enemy.v012Rot[0].remaining,4);c.enemy.v012Rot=Array.from({length:6},()=>({damage:10,remaining:4}));C.tickRot(b,c);assert.equal(events.find(e=>e[0]==='dotDamage')[1],71);}
  {const b=build(['corruption_cycle']),{c,events}=context();c.enemy.v012Rot=Array.from({length:3},()=>({damage:10,remaining:4,primaryPaid:true}));C.onAttack(b,c);assert(events.some(e=>e[0]==='damage'&&e[1].includes('Corruption Cycle')));}
- {const b=build(['plagueheart']),{c,events}=context();c.player.mp=100;for(let i=0;i<3;i++){c.now=i;C.tickRot(b,c);}const ticks=events.filter(e=>e[0]==='dotDamage').map(e=>e[1]);assert(ticks[0]>=30);assert(c.player.mp<100);}
+ {const b=build(['plagueheart']),{c,events}=context();c.player.mp=100;for(let i=0;i<3;i++){c.now=i;C.outbreakTick(b,c);C.tickRot(b,c);}const ticks=events.filter(e=>e[0]==='dotDamage').map(e=>e[1]);assert(ticks[0]>=30);assert(c.player.mp<100);}
 });
 test('each focused Magic node raises Spell Power when purchased alone',()=>{for(const id of ['arcane_resonance','arcane_surge','arcane_mastery']){const p=buy({...T.create(),xp:10000},id),base={attack:10,defense:10,maxhp:100,evasionRating:0,spellPower:100,manaRegen:1,attacksPerSec:1};const full=T.apply({...base},p).spellPower;const without=T.apply({...base},{...p,nodes:p.nodes.filter(n=>n!==id)}).spellPower;assert(full>without,id);}});
 test('catalogue mixed skills trigger their combat effect when purchased alone',()=>{
