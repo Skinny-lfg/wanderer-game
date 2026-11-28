@@ -123,7 +123,8 @@ for(const [kind,expected] of Object.entries({Sword:102,Mace:130,Bow:130,Daggers:
 for(const [kind,expected] of [['Wand',105],['Staff',160]]){
  test('B2.15 native '+kind+' funded SP hit and zero-Mana fallback',()=>{
   const {a,r}=fight(kind);r.mp=0;assert.equal(a.gear.weaponAttack(r),45);assert.equal(r.metrics.unfundedCasterAttacks,1);
-  r.mp=100;assert.equal(a.gear.weaponAttack(r),expected);assert.equal(r.metrics.fundedCasts,1);assert.equal(r.mp,kind==='Wand'?91:87);
+  r.mp=100;assert.equal(a.gear.weaponAttack(r),expected);assert.equal(r.metrics.fundedCasts,1);// B3 Staff specialization reduces base Mana cost by 25% before rounding.
+  assert.equal(r.mp,kind==='Wand'?91:90);
  });
 }
 test('B2.16 native physical critical uses base 1.5 plus Crit Damage',()=>{
