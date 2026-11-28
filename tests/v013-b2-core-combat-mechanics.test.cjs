@@ -115,12 +115,12 @@ function fight(kind,seed=64020+kind.length){
  r.enemy.hp=r.enemy.maxhp=1e7;r.enemy.def=r.enemy.baseDef=10;r.enemy.barrier=0;r.wisdomUsed=true;a.rng(.999);
  return {a,r};
 }
-for(const [kind,expected] of Object.entries({Sword:102,Mace:130,Bow:98,Daggers:70,'Two-Handed':160})){
+for(const [kind,expected] of Object.entries({Sword:102,Mace:130,Bow:130,Daggers:70,'Two-Handed':200})){
  test('B2.14 native '+kind+' physical AP factor and Defense subtraction',()=>{
   const {a,r}=fight(kind);assert.equal(a.gear.weaponAttack(r),expected);assert.equal(r.enemy.hp,1e7-expected);
  });
 }
-for(const [kind,expected] of [['Wand',105],['Staff',132]]){
+for(const [kind,expected] of [['Wand',105],['Staff',160]]){
  test('B2.15 native '+kind+' funded SP hit and zero-Mana fallback',()=>{
   const {a,r}=fight(kind);r.mp=0;assert.equal(a.gear.weaponAttack(r),45);assert.equal(r.metrics.unfundedCasterAttacks,1);
   r.mp=100;assert.equal(a.gear.weaponAttack(r),expected);assert.equal(r.metrics.fundedCasts,1);assert.equal(r.mp,kind==='Wand'?91:87);

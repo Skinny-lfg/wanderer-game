@@ -56,8 +56,15 @@ test('Stage 2 Arcane Bastion and Prismatic Rebound retain their defensive trigge
   x.c.now=10;B.onDefend(bastion,x.c,0,10);
   assert.equal(B.bastionCost(bastion,20,10),14);
   assert.equal(B.bastionCost(bastion,20,10),14,'quoting a cost does not consume readiness');
-  B.consumeBastion(bastion,10);
+  assert.equal(B.consumeBastion(bastion,10,0),false,'free action must not consume readiness');
+  assert.equal(B.bastionCost(bastion,20,10),14);
+  assert.equal(B.consumeBastion(bastion,10,14),true);
   assert.equal(B.bastionCost(bastion,20,10),20);
+  x.c.now=15;B.onDefend(bastion,x.c,0,10);
+  assert.equal(B.bastionCost(bastion,20,15),20,'absorption during cooldown does not arm a discount');
+  x.c.now=16;B.onDefend(bastion,x.c,0,10);
+  assert.equal(B.bastionCost(bastion,20,16),14,'new absorption after cooldown arms a new discount');
+  x.c.now=16;assert.equal(B.consumeBastion(bastion,16,14),true);
   B.onCast(bastion,x.c);
   assert.equal(x.events.filter(e=>e[0]==='barrier').length,1,'only Runic Shield grants Barrier');
   assert(!x.events.some(e=>e[0]==='damage'&&e[1].includes('Arcane Bastion')));
