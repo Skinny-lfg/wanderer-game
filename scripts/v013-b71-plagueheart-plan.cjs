@@ -8,7 +8,7 @@ function profile(id){
  const base=id==='decay-focus-sword-leather'?'decay-focus-sword':id==='decay-focus-wand-plate'?'decay-focus-wand':id;
  const p=G.profile(base),variant=id.endsWith('-leather')?'Leather':id.endsWith('-plate')?'Plate':null;
  const result={...p,id,...(variant?{baseArmor:p.armorType,armorType:variant}:{}),control:CONTROLS.includes(id)};
- assert(T.valid(p.t)&&p.t.nodes.length===30);assert.equal(p.t.nodes.includes('plagueheart'),!result.control,id+' Plagueheart eligibility');
+ assert(T.valid(p.t)&&p.t.nodes.length===30);assert.equal(p.t.nodes.includes('outbreak'),!result.control,id+' Outbreak eligibility');
  if(!result.control)assert.deepEqual(p.families,['decay']);
  return result;
 }

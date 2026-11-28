@@ -18,7 +18,7 @@ add('aegis-mace',['aegis'],'mace',['mace_shockwave','guarded_block','barrier_pul
 add('aegis-orb',['aegis'],'orb',['ward_echo','stored_force','barrier_pulse'],'sustain');
 for(const w of ['daggers','sword','twohand','bow','wand','staff']){
  add('decay-cycle-'+w,['decay'],w,['corruption_cycle','contagious_touch','corruption_nova'],'aoe');
- add('decay-focus-'+w,['decay'],w,['plagueheart','contagious_touch'],'sustain');
+ add('decay-focus-'+w,['decay'],w,['outbreak','contagious_touch'],'sustain');
 }
 const ELEMENT_SKILLS={arcane:['arcane_resonance','arcane_nova','mana_spring'],fire:['kindling','fire_spread','controlled_burn'],frost:['deep_winter','frost_resonance','glacial_echo'],lightning:['overcharge','forked_lightning','static_focus']};
 for(const [element,skills] of Object.entries(ELEMENT_SKILLS))for(const w of ['sword','wand','staff'])add('arcane-'+element+'-'+w,['arcane'],w,['element_choice','arcane_focus',...skills],element==='frost'?'control':'aoe',element);
@@ -50,7 +50,7 @@ function profile(id){
  const mandatory=[...p.families.map(f=>'affinity_'+f),...p.skills];let t=buy(mandatory,options);assert(t.nodes.length<=POINTS,id+' mandatory budget');const used=()=>t.nodes.length;
  for(let pass=0;pass<POINTS&&used()<POINTS;pass++){let changed=false;for(const skill of p.skills){if(used()>=POINTS)break;const n=T.NODES.find(x=>x.id===skill);if(n?.maxRank>1){const next=T.allocate(t,skill);if(next){t=next;changed=true;}}}if(!changed)break;}
  const kindOrder={stat:0,basic:1,extension:2,focused:3,weapon:4,adaptive:5,element:6};
- const candidates=T.NODES.filter(n=>p.families.includes(n.family)&&!n.pair&&!n.advanced&&!n.pending&&(!n.element||n.element===(p.element||'arcane'))&&!(n.id==='plagueheart'&&p.families.length>1)&&Object.hasOwn(kindOrder,n.kind)).sort((a,b)=>kindOrder[a.kind]-kindOrder[b.kind]||((a.tier||1)-(b.tier||1))||a.id.localeCompare(b.id));
+ const candidates=T.NODES.filter(n=>p.families.includes(n.family)&&!n.pair&&!n.advanced&&!n.pending&&(!n.element||n.element===(p.element||'arcane'))&&!(n.id==='outbreak'&&p.families.length>1)&&Object.hasOwn(kindOrder,n.kind)).sort((a,b)=>kindOrder[a.kind]-kindOrder[b.kind]||((a.tier||1)-(b.tier||1))||a.id.localeCompare(b.id));
  for(let pass=0;pass<POINTS&&used()<POINTS;pass++){let changed=false;for(const n of candidates){if(used()>=POINTS)break;if(t.nodes.includes(n.id))continue;const next=T.allocate(t,n.id);if(next){t=next;changed=true;}}if(!changed)break;}
  if(p.prepared)t={...t,prepared:p.prepared};assert(T.valid(t),id+' valid');assert.equal(used(),POINTS,id+' point budget');assert.deepEqual(t.nodes.filter(n=>n.startsWith('affinity_')).sort(),p.families.map(f=>'affinity_'+f).sort(),id+' affinity drift');for(const skill of mandatory)assert(t.nodes.includes(skill),id+' missing '+skill);
  return {...p,weapon,offhandType,armorType,t};

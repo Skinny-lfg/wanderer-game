@@ -529,17 +529,17 @@ function onCast(b,c){
  adaptiveCast(b,c,power,wasBurning);
 }
 function outbreakTick(b,c){
- if(!specialized(b,'plagueheart')||b.families?.length!==1||!hasFamily(b,'decay')||c.player.hp<=0)return false;
+ if(!specialized(b,'outbreak')||b.families?.length!==1||!hasFamily(b,'decay')||c.player.hp<=0)return false;
  const state=decayState(c);if(state.outbreakCheckedAt===c.now)return false;state.outbreakCheckedAt=c.now;
  const living=(c.player.enemies||[c.enemy]).filter(e=>e&&e.hp>0&&!e.stage84Node);
  if(!living.some(e=>(e.v012Rot||[]).some(d=>d.remaining>0&&d.damage>0)))return false;
  c.metric?.('b71GlobalRolls',1);if(c.random()>=.25)return false;
  const cost=16;c.metric?.('b71PaymentAttempts',1);if(c.player.mp-cost<.15*c.player.maxmp)return false;
  const before=c.player.mp;if(!spendDarkMana(c,cost))return false;
- state.outbreakPulseAt=c.now;activated(b,'plagueheart');c.metric?.('decayPrimaryPaidPlagueheartActivations',1);c.metric?.('decayPrimaryPaidPlagueheartMana',Math.max(0,before-c.player.mp));
+ state.outbreakPulseAt=c.now;activated(b,'outbreak');c.metric?.('decayPrimaryPaidOutbreakActivations',1);c.metric?.('decayPrimaryPaidOutbreakMana',Math.max(0,before-c.player.mp));
  if(living.includes(c.enemy)){
   const n=c.random()<.5?1:2;
-  for(let i=0;i<n;i++){applyRot(b,c,rotPotency(c),'ability_plagueheart');c.metric?.('b71ExtraRotSeeds',1);}
+  for(let i=0;i<n;i++){applyRot(b,c,rotPotency(c),'ability_outbreak');c.metric?.('b71ExtraRotSeeds',1);}
  }
  return true;
 }
@@ -554,7 +554,7 @@ function tickRot(b,c){
   const nodes=b.runtime.specializations||[],incubationRank=nodes.filter(id=>id==='incubation'||id.startsWith('incubation_rank')).length;
   e.incubationTicks=(e.incubationTicks||0)+1;
   let bonus=0;
-  if(specialized(b,'plagueheart')&&b.families?.length===1&&hasFamily(b,'decay')&&c.player.hp>0&&e.hp>0&&baseRot>0&&decayState(c).outbreakPulseAt===c.now&&!e.stage84Node){bonus=2*baseRot;c.metric?.('b71AmplifiedTargets',1);c.metric?.('b71AmplifiedStacks',rot.length);}
+  if(specialized(b,'outbreak')&&b.families?.length===1&&hasFamily(b,'decay')&&c.player.hp>0&&e.hp>0&&baseRot>0&&decayState(c).outbreakPulseAt===c.now&&!e.stage84Node){bonus=2*baseRot;c.metric?.('b71AmplifiedTargets',1);c.metric?.('b71AmplifiedStacks',rot.length);}
   if(bonus>0)c.metric?.("b71RawBonus",bonus);
   const terminal=specialized(b,'lingering_rot')?1+.03*Math.min(6,rot.length):1;
   if(terminal>1){activated(b,'lingering_rot');c.metric?.('terminalDecayTicks',1);}

@@ -11,11 +11,11 @@ function compile(file,source){const m=new Module(file,module);m.filename=file;m.
 const G=require('./v013-b71-plagueheart-plan.cjs'),C=require('./v013-b71-plagueheart-candidates.cjs'),ARMS=['current','outbreak'];
 function anchorRoot(){const r=process.env.B71_BASELINE_DIR;assert(r,'B71_BASELINE_DIR required');assert.equal(git(r,'rev-parse','HEAD'),FROZEN);return r;}
 function frozen(){
- const expected=['.github/workflows/v013-b23-offhand-consolidation.yml','research/B7.1B-outbreak-integration.md','scripts/v013-b71b-outbreak-validation.cjs','tests/talent-graph-combat.test.cjs','tests/v013-b61-power-redistribution.test.cjs','tests/v013-b71b-outbreak.test.cjs',...['combat/v012-buildcraft.js','combat/v012-combat-runtime.js','combat/talent-catalog.js'].flatMap(x=>[x,'docs/'+x])].sort();
+ const expected=['.github/workflows/v013-b23-offhand-consolidation.yml','research/B7.1B-outbreak-integration.md','scripts/v013-b71b-outbreak-validation.cjs','tests/talent-graph-combat.test.cjs','tests/v013-b61-power-redistribution.test.cjs','tests/v013-b71b-outbreak.test.cjs','scripts/v013-build-planner.cjs','scripts/v013-global-e10.cjs','scripts/v013-b6-affinity-plan.cjs','scripts/v013-b7-identity-plan.cjs','scripts/v013-b71-plagueheart-plan.cjs','scripts/v013-decay-consolidated.cjs','scripts/v013-decay-natural-e10.cjs','tests/v013-global-e10.test.cjs',...['combat/v012-buildcraft.js','combat/v012-combat-runtime.js','combat/talent-catalog.js','combat/talent-graph-next.js','combat/talent-graph-runtime.js'].flatMap(x=>[x,'docs/'+x])].sort();
  assert.deepEqual(git(ROOT,'diff','--name-only',FROZEN,'HEAD').split('\n').filter(Boolean).sort(),expected);
- for(const f of ['combat/v012-buildcraft.js','combat/v012-combat-runtime.js','combat/talent-catalog.js'])assert.equal(fs.readFileSync(path.join(ROOT,f),'utf8'),fs.readFileSync(path.join(ROOT,'docs',f),'utf8'));
+ for(const f of ['combat/v012-buildcraft.js','combat/v012-combat-runtime.js','combat/talent-catalog.js','combat/talent-graph-next.js','combat/talent-graph-runtime.js'])assert.equal(fs.readFileSync(path.join(ROOT,f),'utf8'),fs.readFileSync(path.join(ROOT,'docs',f),'utf8'));
  const base=anchorRoot(),candidate=C.sources(base,'outbreak');
- for(const [f,v] of Object.entries(candidate))assert.equal(fs.readFileSync(path.join(ROOT,f),'utf8'),v.replaceAll('b71Outbreak','outbreakTick').replaceAll('b71CheckedAt','outbreakCheckedAt').replaceAll('b71PulseAt','outbreakPulseAt'),'Native integration differs from tested candidate '+f);
+ for(const [f,v] of Object.entries(candidate))assert.equal(fs.readFileSync(path.join(ROOT,f),'utf8'),v.replaceAll('b71Outbreak','outbreakTick').replaceAll('b71CheckedAt','outbreakCheckedAt').replaceAll('b71PulseAt','outbreakPulseAt').replaceAll('Plagueheart','Outbreak').replaceAll('plagueheart','outbreak'),'Native integration differs from tested candidate '+f);
 }
 function observedSimulator(root){
  const file=path.join(root,'scripts/simulate-progression.cjs');let src=fs.readFileSync(file,'utf8');
@@ -35,7 +35,10 @@ function observedSimulator(root){
 }
 
 function worker(root,input,output){
- const {p,scenarios,count,revision,arm}=JSON.parse(fs.readFileSync(input,'utf8'));
+ const {p:canonical,scenarios,count,revision,arm}=JSON.parse(fs.readFileSync(input,'utf8'));
+ // Only the historical comparison receives historical IDs. No runtime alias or save migration.
+ const oldId=id=>typeof id==='string'?id.replaceAll('outbreak','plagueheart'):id;
+ const p=arm==='current'?{...canonical,t:{...canonical.t,nodes:canonical.t.nodes.map(oldId),prepared:oldId(canonical.t.prepared)}}:canonical;
  process.chdir(root);assert.equal(git(root,'rev-parse','HEAD'),revision);
  const {S,observer}=observedSimulator(root),T=globalThis.WandererAutomaticTalents,A=require(path.join(root,'scripts/v013-agent-strategy.cjs'));
  assert(T.valid(p.t),'Invalid talent state '+revision+'/'+p.id);assert.equal(p.t.nodes.length,30);
@@ -84,8 +87,8 @@ function sum(xs,k){return xs.reduce((s,r)=>s+(Number(r.observation.nativeMetrics
 function stat(xs,k){return mean(xs.map(r=>r.stats?.[k]).filter(Number.isFinite));}
 function summary(rows){
  const xs=rows.filter(r=>!r.timeout),wins=xs.filter(r=>r.won),avg=f=>mean(xs.map(f).filter(Number.isFinite)),per=(k,r)=>r.seconds>0&&Number.isFinite(r[k])?r[k]/r.seconds:null;
- const rotTicks=sum(xs,'decayPrimaryPaidRotTicks'),stackSum=sum(xs,'decayPrimaryPaidRotStackSum'),procs=sum(xs,'decayPrimaryPaidPlagueheartActivations'),paid=sum(xs,'decayPrimaryPaidPlagueheartMana'),actor=xs.reduce((s,r)=>s+r.observation.actorSeconds,0);
- return {n:rows.length,resolved:xs.length,wins:wins.length,winPct:xs.length?100*wins.length/xs.length:null,winBounds:[100*wins.length/rows.length,100*(wins.length+rows.length-xs.length)/rows.length],timeouts:rows.length-xs.length,surrenders:xs.filter(r=>r.surrendered).length,dps:avg(r=>per('damage',r)),dotDps:avg(r=>per('dot',r)),aoeDps:avg(r=>per('aoe',r)),hpPct:avg(r=>100*r.hp/Math.max(1,r.maxHp)),minHpPct:avg(r=>r.minHpPct),manaPct:avg(r=>r.maxMp>0?100*r.mp/r.maxMp:null),manaSpent:avg(r=>r.paid),manaSpentPerSecond:avg(r=>per('paid',r)),starved:avg(r=>r.starved),damageTaken:avg(r=>r.taken),absorbed:avg(r=>r.absorbed),healing:avg(r=>r.healing),firstKill:avg(r=>r.firstKill),winSeconds:mean(wins.map(r=>r.seconds)),timeAll:avg(r=>r.seconds),rotTicks,averageStacksPerRotTick:rotTicks?stackSum/rotTicks:null,sixStackActorPct:actor?100*xs.reduce((s,r)=>s+r.observation.rotSixActorSeconds,0)/actor:null,plagueheartProcs:procs,plagueheartMana:paid,procsPerFight:xs.length?procs/xs.length:null,manaPerFight:xs.length?paid/xs.length:null,amplifiedTargets:sum(xs,'b71AmplifiedTargets'),amplifiedStacks:sum(xs,'b71AmplifiedStacks'),rawBonus:sum(xs,'b71RawBonus'),extraSeeds:sum(xs,'b71ExtraRotSeeds'),globalRolls:sum(xs,'b71GlobalRolls'),paymentAttempts:sum(xs,'b71PaymentAttempts'),rotDamage:sum(xs,'decayPrimaryPaidTotalRotDamage'),stats:Object.fromEntries(['attack','spellPower','defense','maxhp','attacksPerSec','mana','manaRegen','blockChance','evasionRating'].map(k=>[k,stat(xs,k)]))};
+ const rotTicks=sum(xs,'decayPrimaryPaidRotTicks'),stackSum=sum(xs,'decayPrimaryPaidRotStackSum'),procs=sum(xs,'decayPrimaryPaidPlagueheartActivations')+sum(xs,'decayPrimaryPaidOutbreakActivations'),paid=sum(xs,'decayPrimaryPaidPlagueheartMana')+sum(xs,'decayPrimaryPaidOutbreakMana'),actor=xs.reduce((s,r)=>s+r.observation.actorSeconds,0);
+ return {n:rows.length,resolved:xs.length,wins:wins.length,winPct:xs.length?100*wins.length/xs.length:null,winBounds:[100*wins.length/rows.length,100*(wins.length+rows.length-xs.length)/rows.length],timeouts:rows.length-xs.length,surrenders:xs.filter(r=>r.surrendered).length,dps:avg(r=>per('damage',r)),dotDps:avg(r=>per('dot',r)),aoeDps:avg(r=>per('aoe',r)),hpPct:avg(r=>100*r.hp/Math.max(1,r.maxHp)),minHpPct:avg(r=>r.minHpPct),manaPct:avg(r=>r.maxMp>0?100*r.mp/r.maxMp:null),manaSpent:avg(r=>r.paid),manaSpentPerSecond:avg(r=>per('paid',r)),starved:avg(r=>r.starved),damageTaken:avg(r=>r.taken),absorbed:avg(r=>r.absorbed),healing:avg(r=>r.healing),firstKill:avg(r=>r.firstKill),winSeconds:mean(wins.map(r=>r.seconds)),timeAll:avg(r=>r.seconds),rotTicks,averageStacksPerRotTick:rotTicks?stackSum/rotTicks:null,sixStackActorPct:actor?100*xs.reduce((s,r)=>s+r.observation.rotSixActorSeconds,0)/actor:null,outbreakProcs:procs,outbreakMana:paid,procsPerFight:xs.length?procs/xs.length:null,manaPerFight:xs.length?paid/xs.length:null,amplifiedTargets:sum(xs,'b71AmplifiedTargets'),amplifiedStacks:sum(xs,'b71AmplifiedStacks'),rawBonus:sum(xs,'b71RawBonus'),extraSeeds:sum(xs,'b71ExtraRotSeeds'),globalRolls:sum(xs,'b71GlobalRolls'),paymentAttempts:sum(xs,'b71PaymentAttempts'),rotDamage:sum(xs,'decayPrimaryPaidTotalRotDamage'),stats:Object.fromEntries(['attack','spellPower','defense','maxhp','attacksPerSec','mana','manaRegen','blockChance','evasionRating'].map(k=>[k,stat(xs,k)]))};
 }
 function paired(a,b,f){
  assert.equal(a.length,b.length);
@@ -98,8 +101,9 @@ function verify(x,count,scenarios){
  assert.equal(x.commit,git(ROOT,'rev-parse','HEAD'));assert.equal(x.baseline,FROZEN);assert.deepEqual(JSON.parse(JSON.stringify(x.p)),JSON.parse(JSON.stringify(G.profile(x.id))));
  for(const arm of ARMS){
   const a=x.arms[arm],root=arm==='current'?anchorRoot():ROOT;assert.equal(a.revision,arm==='current'?FROZEN:x.commit);assert.equal(a.arm,arm);assert.equal(a.observer,base.observer);
-  assert.deepEqual(a.moduleGraph,base.moduleGraph.map(m=>({...m,overridden:false,sha256:sha(fs.readFileSync(path.join(root,m.file),'utf8'))})));
-  assert(a.moduleGraph.every(m=>!m.overridden));
+  assert.deepEqual(a.moduleGraph,base.moduleGraph.map(m=>m.file==='index.html'?m:{...m,overridden:false,sha256:sha(fs.readFileSync(path.join(root,m.file),'utf8'))}));
+  // The simulator harness always instruments index.html; require identical transformed HTML across arms.
+  assert(a.moduleGraph.every(m=>m.file==='index.html'||!m.overridden));
   assert.equal(a.rows.length,count*scenarios.length);
   assert.equal(new Set(a.rows.map(r=>r.sc+'/'+r.trial)).size,a.rows.length);
   for(let i=0;i<a.rows.length;i++){const r=a.rows[i],b=base.rows[i],sc=scenarios.find(s=>s.id===r.sc);assert(sc);assert.equal(r.seed,127200091+r.trial*179);assert.equal(r.family,G.family(sc,r.trial));for(const k of ['sc','trial','seed','family','gear','nonArmorGear','scenario'])assert.equal(r[k],b[k],x.id+' '+arm+' mismatch '+k);}
@@ -126,7 +130,7 @@ function aggregate(){
   }return {a,b,arms};
  });
  assert.equal(fights,7000);assert.equal(opponents.size,G.N*G.SC.length);
- const report={stage:'B7.1B Native Outbreak Integration',commit:git(ROOT,'rev-parse','HEAD'),baseline:FROZEN,scope:'Native before/after commits, zero VM combat overrides. Exact source parity with B7.1 Outbreak candidate except internal function and state names. 50 fresh matched seeds, 30 legal points, Rare gear, same 10 profiles and seven scenarios. Armor comparisons retain non-armor gear; no natural population estimate. Raw bonus telemetry is pre-multiplier; baseline lacks candidate-only counters.',fights,profilesCount:all.length,scenarios:G.SC,arms:ARMS,controls:G.CONTROLS,armorComparisons,profiles,timeouts:unresolved.length,surrenders,unresolved};
+ const report={stage:'B7.1B Native Outbreak Integration',commit:git(ROOT,'rev-parse','HEAD'),baseline:FROZEN,scope:'Native before/after commits, zero VM combat overrides. Exact source parity with B7.1 Outbreak candidate except canonical ID, origin, telemetry and internal function/state names; historical IDs translated only in the baseline fixture. 50 fresh matched seeds, 30 legal points, Rare gear, same 10 profiles and seven scenarios. Armor comparisons retain non-armor gear; no natural population estimate. Raw bonus telemetry is pre-multiplier; baseline lacks candidate-only counters.',fights,profilesCount:all.length,scenarios:G.SC,arms:ARMS,controls:G.CONTROLS,armorComparisons,profiles,timeouts:unresolved.length,surrenders,unresolved};
  write('summary',report);console.log('B71B_OVERVIEW='+JSON.stringify({fights,profiles:all.length,timeouts:unresolved.length,surrenders,controls:G.CONTROLS}));
  for(const [id,p] of Object.entries(profiles))console.log('B71B_PROFILE='+JSON.stringify({id,kit:p.kit,arms:Object.fromEntries(ARMS.map(a=>[a,p.arms[a].overall]))}));
  if(unresolved.length)process.exitCode=1;

@@ -8,7 +8,7 @@ const BUILDS=Object.freeze({
  ...Object.fromEntries(Object.entries(DECAY_WEAPONS).flatMap(([id,[weapon,armor]])=>
  ['cycle','overflow','hybrid'].map(role=>['decay-'+role+'-'+id,{primary:'decay',model:'pure',weapons:[weapon],armor,focus:'rot',decayRole:role,
  milestones:['blightburst',...(role==='overflow'?['corruption_nova','contagious_touch']:role==='cycle'?['corruption_cycle','contagious_touch']:['corruption_cycle','corruption_nova','contagious_touch'])],orderedMilestones:true}]))),
- 'decay-plagueheart':{primary:'decay',model:'pure',weapons:['Wand','Staff'],armor:'Cloth',focus:'rot',decayRole:'plagueheart',milestones:['blightburst','contagious_touch','plagueheart','soul_drain'],orderedMilestones:true},
+ 'decay-outbreak':{primary:'decay',model:'pure',weapons:['Wand','Staff'],armor:'Cloth',focus:'rot',decayRole:'outbreak',milestones:['blightburst','contagious_touch','outbreak','soul_drain'],orderedMilestones:true},
  'blood-pure':{primary:'blood',model:'pure',weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','third_cut','heart_of_carnage'],focus:'bleed'},
  'blood-fury':{primary:'blood',secondary:'fury',secondAt:12,model:'two',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_onslaught','reapers_cadence'],focus:'bleed'},
  'blood-fury-radiance':{primary:'blood',secondary:'fury',third:'radiance',secondAt:12,thirdAt:28,model:'adaptive',mix:true,weapons:['Sword','Two-Handed'],armor:'Leather',milestones:['blood_harvest','crimson_onslaught','fervent_life','reapers_cadence'],focus:'bleed'},
@@ -66,7 +66,7 @@ function excludes(node,owned,graph){
  return false;
 }
 function usable(n,active,mode,plan){return !!n&&!n.pending&&
- !(plan.decayRole&&((n.id==='corruption_cycle'&&!['cycle','hybrid'].includes(plan.decayRole))||(n.id==='corruption_nova'&&!['overflow','hybrid'].includes(plan.decayRole))||(n.id==='plagueheart'&&plan.decayRole!=='plagueheart')))&&(!n.family||active.includes(n.family))&&
+ !(plan.decayRole&&((n.id==='corruption_cycle'&&!['cycle','hybrid'].includes(plan.decayRole))||(n.id==='corruption_nova'&&!['overflow','hybrid'].includes(plan.decayRole))||(n.id==='outbreak'&&plan.decayRole!=='outbreak')))&&(!n.family||active.includes(n.family))&&
  (!n.element||n.element===mode)&&(!n.pair||(!!plan.mix&&n.pair.every(f=>active.includes(f))))&&
  (n.kind!=='mixed'||!!plan.mix&&n.pair?.every(f=>active.includes(f)));}
 function scoreNode(n,plan,active,context={}){
