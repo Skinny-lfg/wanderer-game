@@ -1,5 +1,5 @@
 'use strict';
-// B3.2D.7 candidate only. Reference threats are public level-dependent
+// B3.2D.7 proxy, refreshed for B8.2. Reference threats are public level-dependent
 // templates, not the current/future encounter. No simulated loot or RNG.
 const clamp=(v,l,h)=>Math.max(l,Math.min(h,v)),n=v=>Number(v)||0;
 const rankMap=nodes=>nodes.reduce((r,id)=>{const m=id.match(/^(.*)_rank(\d+)$/),k=m?m[1]:id;r[k]=Math.max(r[k]||0,m?+m[2]:1);return r;},{});
@@ -16,7 +16,8 @@ function evaluate({stats:s,equip,talents:t,level,legacy:x,core:CORE}){
  const tome=o==='Tome'&&mana>0?(equip.offhand?.v013Trait==='echoing_recall'?5:3)/6:0;
  const physicalHit=(factor,def)=>Math.max(1,Math.round(ap*factor)-Math.round(def*(r('affinity_fury')?.9:1)));
  const guard=clamp(n(s.blockChance)/100,0,.65),guardReduction=clamp(n(s.blockReduction),0,1),eva=CORE.evasionChance(n(s.evasionRating),level,20,.45),physicalShare=.7;
- const parry=w==='Sword'?.18:0,proc=(rate,chance,icd)=>rate*chance/(1+rate*chance*icd);
+ const parry=w==='Sword'?.12:0,proc=(rate,chance,icd)=>rate*chance/(1+rate*chance*icd);
+ const outbreakEligible=!!r('outbreak')&&!!r('affinity_decay')&&['blood','decay','radiance','aegis','fury','arcane'].filter(f=>r('affinity_'+f)).length===1&&mana*.85>=16;
  const magicHit=Math.max(1,sp*(F[w]||1)*(1+.12*r('elemental_force')));
  // Native talent gated conservative credits, not full runtime emulation.
  const damageScale=(r('blood_focus')?.9:1)*(r('aegis_bulwark')?.9:1);
@@ -27,20 +28,32 @@ function evaluate({stats:s,equip,talents:t,level,legacy:x,core:CORE}){
   const cycleDemand=r('corruption_cycle')?10/Math.max(2.5,Math.min(10,3.5/aps)):0;
   const infusionDemand=attuned?({arcane:10,frost:12,fire:18,lightning:20})[mode]/10:0;
   const automaticDemand=attuned&&!caster&&mode!=='arcane'?({fire:12,frost:8,lightning:14})[mode]/2.5:0;
-  const mainDemand=caster?cost*aps:0,totalDemand=mainDemand+rotDemand+cycleDemand+infusionDemand+automaticDemand;
+  // Conservative infection-uptime proxy from already owned Corrupting Touch.
+  // One global roll per second, never one roll or cost per enemy.
+  const rotOpportunity=r('corrupting_touch')?proc(rate,.42+.04*(r('corrupting_touch')-1),1.3):0;
+  const outbreakOpportunity=outbreakEligible?.25*Math.min(1,rotOpportunity*4):0;
+  const outbreakDemand=16*outbreakOpportunity;
+  const mainDemand=caster?cost*aps:0,otherDemand=mainDemand+rotDemand+cycleDemand+infusionDemand+automaticDemand,totalDemand=otherDemand+outbreakDemand;
   const fraction=totalDemand?clamp(budget/totalDemand,0,1):1, funded=caster?fraction:1;
   const phys=physicalHit(caster?.55:F[w]||1,enemyDef),dag=physicalHit(.8,enemyDef)*.5;
   const hit=caster?funded*magicHit+(1-funded)*phys:phys;
-  let direct=(hit*aps+dag*x.daggerRate)*crit*damageScale;
+  // Main-hand Double Attack is not Fury Double Strike: no extra crit/status roll.
+  const daggerDoubleAttackDps=w==='Daggers'?aps*.25*Math.max(1,Math.round(phys*.55)):0;
+  let direct=(hit*aps+dag*x.daggerRate)*crit*damageScale+daggerDoubleAttackDps;
   if(!group&&!caster&&r('single_target_mastery'))direct*=1.15;
   if(r('double_strike'))direct+=hit*aps*.30*Math.min(.60,.10*Math.sqrt(r('double_strike')));
   if(r('brutal_crit'))direct+=hit*aps*critChance*Math.min(.65,.12*Math.sqrt(r('brutal_crit')));
   // Secondary status estimate retains prior DoT model, adjusted by actual
   // post-defense hit and paid resource share; no double counting old direct.
   const bleed=x.bleed*(hit/Math.max(1,caster?magicHit:ap*(F[w]||1)));
-  const rotOpportunity=r('corrupting_touch')?proc(rate,.42+.04*(r('corrupting_touch')-1),1.3):0;
   const rot=rotOpportunity*fraction*.04*(hit+sp)*4*(1+.15*r('virulent_rot'));
-  const dot=(bleed+rot)*(1+n(s.dotPower));
+  // Protect the native 15% reserve in the expected horizon; not a runtime prediction.
+  const outbreakBudget=Math.max(0,budget-mana*.15/horizon-otherDemand*fraction);
+  const outbreakPaidRate=Math.min(outbreakOpportunity*fraction,outbreakBudget/16);
+  // Conservative existing-stack amplification only. Persistent extra stacks are
+  // not credited in the proxy to avoid inventing uptime/overkill; native runtime owns them.
+  const outbreakBonusDps=2*rot*outbreakPaidRate;
+  const dot=(bleed+rot+outbreakBonusDps)*(1+n(s.dotPower));
   const extraSpell=automaticDemand?sp*.70*(1+.12*r('elemental_force'))*fraction/2.5:0;
   // Modest credit for funded infusion, bounded and explicitly provisional.
   const infusion=attuned?sp*.25*fraction:0;
@@ -61,7 +74,7 @@ function evaluate({stats:s,equip,talents:t,level,legacy:x,core:CORE}){
   const hpDps=Math.max(gross*.03,gross-ward)+multi;
   const survival=hp/Math.max(.05,netIncoming);
   const duration=Math.min(horizon*4,(group?ref.hp*5:ward?tankHp:label==='boss'?ref.hp*5:ref.hp*3)/Math.max(.05,hpDps));
-  return {label,horizon,funded,paidFraction:fraction,gross,hpDps,ward,incoming,netIncoming,survival,duration,margin:survival/Math.max(1,duration),counter,passive,heal,shield};
+  return {label,horizon,funded,paidFraction:fraction,gross,hpDps,ward,incoming,netIncoming,survival,duration,margin:survival/Math.max(1,duration),counter,passive,heal,shield,parry,daggerDoubleAttackDps,outbreakDemand,outbreakPaidRate,outbreakBonusDps};
  }
  const scenarios=[
   {...scenario('solo',25,ref.def,ref.atk,1.8,1,false,0),weight:.18},

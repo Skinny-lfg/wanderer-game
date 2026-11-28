@@ -21,6 +21,7 @@ function classify({equipment={},talents={},stats={}}={}){
  talents=talents||{};
  const owned=new Set((talents.nodes||[]).map(id=>id.replace(/_rank\d+$/,'')).filter(id=>LIVE_IDS.has(id)));
  const has=id=>owned.has(id);
+ const rotOutbreak=has('outbreak')&&has('affinity_decay')&&FAMILIES.filter(f=>has('affinity_'+f)).length===1&&Number(stats.mana)>=16/.85;
  const main=equipment.weapon?.subtype||null,offhand=equipment.offhand?.subtype||null;
  const element=talents.element||'arcane';
  const magical=['Staff','Wand'].includes(main),fundedMagic=magical||owned.has('affinity_arcane')&&Number(stats.mana)>0;
@@ -46,6 +47,8 @@ function classify({equipment={},talents={},stats={}}={}){
   if(has('contagious_touch')&&has('corrupting_touch'))add('area',2.1,'persistent full-potency Rot contagion');
   if(has('corruption_nova')){add('area',1.9,'shared Overflow pulse');add('focus',1.3,'independent Overflow');}
   if(has('corruption_cycle'))add('focus',2.2,'independent Cycle burst');
+  // Conditional sustained Rot amplification, not free cleave or a guaranteed proc.
+  if(rotOutbreak){add('focus',.8,'funded Outbreak sustained Rot');if(has('contagious_touch')&&has('corrupting_touch'))add('area',.8,'Outbreak infected-target amplification');}
   if(has('blightburst'))add('focus',.8,'independent Blight Rot');
  }
  if(has('carrion_detonation')&&has('affinity_blood')&&has('affinity_decay')&&!magical)add('area',2,'charged carrion detonation');
@@ -93,7 +96,7 @@ function classify({equipment={},talents={},stats={}}={}){
   affinities.length>=2?'dual-affinity-only':'not-yet';
  return {role,area:round(area),focus:round(focus),defense:round(defense),
   areaReady,focusReady,weapon:main,offhand,armor,element,earnedNodes:owned.size,
-  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,offhandDagger:{active:daggerOffhand,rate:round(daggerRate),bleed:offhandBleed,rot:offhandRot},rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blightburst'),rotContagion:has('contagious_touch')&&has('corrupting_touch')};
+  affinities,affinityComposition,mixedSkills,synergyStage,preparedMixed,sources,offhandDagger:{active:daggerOffhand,rate:round(daggerRate),bleed:offhandBleed,rot:offhandRot},rotOutbreak,rotCycle:has('corruption_cycle'),rotOverflow:has('corruption_nova'),rotBlight:has('blightburst'),rotContagion:has('contagious_touch')&&has('corrupting_touch')};
 }
 // Only uses card fields rendered by renderRealmCards: family, risk,
 // favoured gear, condition and *one* known omen. Remaining omens are hidden.

@@ -13,7 +13,7 @@ for(const [id,a,b,w,skills,element] of NON_ADJ)G.P['mix-'+id]={id:'mix-'+id,fami
 const CONTROL=[...CONTROL_PURE,...G.IDS.filter(id=>id.startsWith('hybrid-')),...NON_ADJ.map(x=>'mix-'+x[0])];
 const NATURAL=[
  'smart-blood-sword','smart-blood-two-handed','smart-fury-daggers','smart-fury-bow','smart-radiance-pure','smart-aegis-radiance',
- 'smart-decay-cycle-daggers','smart-decay-cycle-twohand','smart-decay-cycle-wand','smart-decay-overflow-wand','smart-decay-hybrid-staff','smart-decay-plagueheart',
+ 'smart-decay-cycle-daggers','smart-decay-cycle-twohand','smart-decay-cycle-wand','smart-decay-overflow-wand','smart-decay-hybrid-staff','smart-decay-outbreak',
  'smart-arcane-arcane-pure','smart-arcane-fire-pure','smart-arcane-lightning-pure','arcane-frost',
  'smart-blood-fury','smart-blood-fury-radiance','smart-blood-fury-radiance-no-mixed','smart-fury-blood-aegis','smart-arcane-fire-aegis','smart-arcane-frost-radiance','smart-decay-arcane-aegis',
  'balanced','hexblade-hybrid','pure-aegis','hybrid-decay-blood','hybrid-fury-radiance'
