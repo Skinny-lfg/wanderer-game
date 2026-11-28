@@ -110,6 +110,11 @@ function applyNormalRoomBudget(group,expedition){
   }
   if(n>=6&&e.role==='minion')hp*=1-.15*(1-opening);
   if(n>=16&&e.role==='minion')hp*=1-.25*(1-Math.exp(-(n-15)/2))*(1-opening);
+  // B8.5C — approved B2: relieve only solo Tank/Skirmisher in E1.
+  if(expedition===1&&n===1){
+   if(e.role==='tank'){hp*=.80;atk*=.85;}
+   else if(e.role==='skirmisher'){hp*=.90;atk*=.90;}
+  }
   e.maxhp=Math.max(1,Math.round(e.maxhp*hp));
   e.hp=e.maxhp;
   e.atk=Math.max(1,Math.round(e.atk*atk));

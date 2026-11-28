@@ -13,7 +13,8 @@ test('Single-budget policy: historical stacked functions are gone',()=>{
 test('Solo and Minion roles are handled inside exactly one native normal budget',()=>{
  const e=make('tank');const out=C.applyNormalRoomBudget([e],1);
  assert.equal(out.affected,1);assert.equal(e.hp,e.maxhp);
- assert.equal(e.maxhp,256);assert.equal(e.atk,46);
+ // B8.5C: the approved E1 solo Tank budget is applied before rounding.
+ assert.equal(e.maxhp,205);assert.equal(e.atk,39);
  assert.throws(()=>C.applyNormalRoomBudget([e],1),/twice/);
  const many=room(3,9),v=C.applyNormalRoomBudget(many,10);
  assert.equal(v.affected,12);assert.equal(v.minions,9);
