@@ -1,0 +1,8 @@
+# B3 Final — Weapon Mechanical Consolidation
+User-approved direction: freeze agent decision optimization, ship targeted weapon changes, then proceed to B4 Individual Ability Audit. Baseline ee95b4f59c3b46b9f9158f108f0d52815f22eb4f; B3.2D.9A run 46069176105 (840 natural accounts, 168 matched groups; A 144 clears, C 140, D 139; dual exposure insufficient). No claim of global weapon balance.
+- Sword physical Parry: 18% → 12%; complete avoidance, no cooldown, with any offhand; no change to other defensive order.
+- Main-hand Dagger Double Attack: retain 25% chance and 55% pre-critical base hit; remove only the dual-wield exclusion. Offhand clock, Fury Double Strike talent, status and resource rules unchanged. No recursive proc.
+- UI strings and Pages runtime mirror updated; old historical research remains immutable.
+- Combat-Aware decision policy intentionally frozen, including its legacy 18% Parry assumption; do not treat natural equipment selection as mechanically updated utility. No economy/talent/enemy changes. Reopen agents only for a demonstrated defect or explicit future decision.
+- Regression: deterministic threshold, offhand exclusion and single dagger controls; fixed native E10 paired comparisons (3 profiles × 4 packages × 4 scenarios × 6 seeds = 288 pairs / 576 fights), same initial gear and roster, unaffected Mace control. Small diagnostic, not population acceptance. No automatic broad tuning; if regression fails, investigate only concrete issue. Rollback: revert this scoped commit. No merge to main or deploy.
+- Gate results pending at authoring. Next B4: audit real individual abilities with fixed legal builds, not successive agent rewrites.

@@ -733,7 +733,7 @@ function weaponAttack(r,offhandStrike=false){
   }
  }
  // Crescent keeps its cooldown-limited Bleed extension without independent off-hand hits.
- if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&!['Daggers','Off-Hand Dagger'].includes(off?.subtype)&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
+ if(!offhandStrike&&ports.WANDERER_DOUBLE_STRIKE_ENABLED&&kind==='Daggers'&&damage>0&&e.hp>0&&ports.gameRandom()<.25){
   // One ordinary pre-critical main-hand hit, with no further rolls or recursive triggers.
   ports.setDirectEnemyDamage(r,Math.max(1,Math.round(base*.55)),'🗡 Double Attack!');
  }
@@ -975,7 +975,7 @@ function updateFight(){
   const special=e.miniboss||e.boss;
   if(special)raw=Math.round(raw*(1-.04*learned('brace')));
   const attackType=ports.enemyAttackType(e);
-  if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.18){
+  if(attackType==='physical'&&s.main?.subtype==='Sword'&&ports.gameRandom()<.12){
    r.lastImpact={parry:true,source:e.name,at:r.combatSeconds};ports.floatText('PARRY','hero');ports.phase6Metric(r,'parries',1);
   }else if(ports.tryDodge(r,attackType)){
   r.lastImpact={source:e.name,at:r.combatSeconds,dodge:true};

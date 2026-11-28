@@ -84,3 +84,35 @@ test('B2.3C: H23 pair-score uses owned status and rejects two-handed secondary g
  const gain=p=>N.adaptiveGearGain(d,p,'offhand',e);assert(gain(h23)>gain(h));assert(gain({...h23,adaptiveNodes:['bleeding_edge']})>gain(h23));assert(gain({...h23,adaptiveNodes:['corrupting_touch']})>gain(h23));
  assert.equal(N.adaptiveGearGain(d,h23,'offhand',{weapon:item('weapon','Staff')}),-Infinity);
 });
+
+test('B3 Final: main-hand Double Attack works with either offhand; offhand itself cannot proc it',()=>{
+ const {execFileSync}=require('node:child_process');
+ const old=execFileSync('git',['show','ee95b4f59c3b46b9f9158f108f0d52815f22eb4f:combat/v012-combat-runtime.js'],{encoding:'utf8'});
+ const hit=(source,off,roll,secondary=false)=>{
+  const {a,r}=fight('Daggers',null,source);
+  r.stats.off=off; r.stats.main={...r.stats.main,effect:null};a.rng(roll);
+  const hp=r.enemy.hp;
+  a.gear.weaponAttack(r,secondary);
+  return {damage:hp-r.enemy.hp,base:r.lastBaseHit,offhand:r.metrics.secondaryEquipmentStatusOffhandStrikes||0};
+ };
+ for(const off of [dagger,item('offhand','Daggers')]){
+  const before=hit(old,off,.249),after=hit(null,off,.249);
+  assert.equal(after.damage-before.damage,Math.max(1,Math.round(after.base*.55)));
+  assert.equal(hit(null,off,.25).damage,hit(old,off,.25).damage);
+  assert.deepEqual(hit(null,off,.249,true),hit(old,off,.249,true));
+ }
+ const shield=item('offhand','Shield');
+ assert.deepEqual(hit(null,shield,.249),hit(old,shield,.249));
+});
+test('B3 Final: Sword physical Parry has a strict 12% threshold, not a spell dodge',()=>{
+ function strike(roll,type,weapon,off){
+  const {a,r}=fight(weapon);r.stats.off=off;r.hp=r.maxhp=1000;r.barrier=0;r.stats.defense=0;r.stats.blockChance=0;r.stats.attacksPerSec=.1;r.enemy.atk=100;r.enemy.attackType=type;r.enemy.attackEvery=1;r.tEnemy=1;r.enemy.groupClock=1;r.enemy.effect=null;a.rng(roll);a.tick();
+  return {parries:r.metrics.parries||0,hp:r.hp};
+ }
+ for(const off of [dagger,item('offhand','Shield')]){
+  const yes=strike(.119,'physical','Sword',off),no=strike(.12,'physical','Sword',off);
+  assert.equal(yes.parries,1);assert.equal(yes.hp,1000);assert.equal(no.parries,0);assert(no.hp<1000);
+  assert.equal(strike(.119,'spell','Sword',off).parries,0);
+  assert.equal(strike(.119,'physical','Mace',off).parries,0);
+ }
+});
