@@ -23,7 +23,8 @@ test('Plagueheart procs at 40%, not 45%, and preserves the global tick cap, rese
 });
 test('Lightning Infusion has 80% of the original power while Fire, Frost and Arcane remain unchanged',()=>{
  for(const mode of ['arcane','fire','frost','lightning']){
-  const {b}=build(['affinity_arcane','element_choice'],mode);
+  const {b}=build(['affinity_arcane','element_choice'],mode==='arcane'?undefined:mode);
+  assert.equal(B.magicMode(b),mode);
   for(const [weapon,base] of [['Sword',.85],['Wand',.35],['Staff',.95]]){
    const expected=(base+(mode==='arcane'?.10:0))*(mode==='lightning'?.80:1);
    assert(Math.abs(B.infusionConfig(b,weapon).power-expected)<1e-10);
